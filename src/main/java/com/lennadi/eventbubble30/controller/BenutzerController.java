@@ -1,6 +1,5 @@
 package com.lennadi.eventbubble30.controller;
 
-import com.lennadi.eventbubble30.dto.BenutzerDTO;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
@@ -30,14 +29,14 @@ public class BenutzerController {
             String password
     ) {}
 
-    private BenutzerDTO toDTO(Benutzer user) {
-        return new BenutzerDTO(user.getId(), user.getEmail(), user.getUsername());
+    private Benutzer.BenutzerDTO toDTO(Benutzer user) {
+        return new Benutzer.BenutzerDTO(user.getId(), user.getEmail(), user.getUsername());
     }
 
     // ===== Endpoints =====
 
     @PostMapping("/create")
-    public ResponseEntity<BenutzerDTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
+    public ResponseEntity<Benutzer.BenutzerDTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
         Benutzer neu = service.createBenutzer(
                 req.email(),
@@ -45,7 +44,7 @@ public class BenutzerController {
                 req.password()
         );
 
-        BenutzerDTO dto = toDTO(neu);
+        Benutzer.BenutzerDTO dto = toDTO(neu);
 
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getId())) // Location Header
@@ -54,17 +53,17 @@ public class BenutzerController {
 
 
     @GetMapping("/{id}")
-    public BenutzerDTO findUserById(@PathVariable long id) {
+    public Benutzer.BenutzerDTO findUserById(@PathVariable long id) {
         return toDTO(service.getById(id));
     }
 
     @GetMapping("/name/{username}")
-    public BenutzerDTO findUserByUsername(@PathVariable String username) {
+    public Benutzer.BenutzerDTO findUserByUsername(@PathVariable String username) {
         return toDTO(service.getByUsername(username));
     }
 
     @GetMapping({"", "/"})
-    public Page<BenutzerDTO> listUsers(
+    public Page<Benutzer.BenutzerDTO> listUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

@@ -1,6 +1,5 @@
 package com.lennadi.eventbubble30.controller;
 
-import com.lennadi.eventbubble30.dto.BenutzerDTO;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.security.CaptchaService;
@@ -78,11 +77,11 @@ public class AuthController {
         // 5. 201 Created zurück
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getId()))
-                .body(BenutzerDTO.fromBenutzer(neu));
+                .body(neu.toDTO());
     }
 
     @PostMapping("/login")
-    public BenutzerDTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
+    public Benutzer.BenutzerDTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
             // Passwort prüfen
             Authentication auth = authManager.authenticate(
@@ -97,7 +96,7 @@ public class AuthController {
             Benutzer benutzer = benutzerRepository.findByUsername(req.username())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-            return BenutzerDTO.fromBenutzer(benutzer);
+            return benutzer.toDTO();
 
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
@@ -118,8 +117,8 @@ public class AuthController {
     // ==== CURRENT USER ====
 
     @GetMapping("/me")
-    public BenutzerDTO me() {
+    public Benutzer.BenutzerDTO me() {
         Benutzer benutzer = benutzerService.getCurrentUser();
-        return BenutzerDTO.fromBenutzer(benutzer);
+        return benutzer.toDTO();
     }
 }

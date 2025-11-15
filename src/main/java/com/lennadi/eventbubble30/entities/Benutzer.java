@@ -27,4 +27,15 @@ public class Benutzer {
 
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
+
+
+    public BenutzerDTO toDTO() {
+        return new BenutzerDTO(this.getId(), this.getEmail(), this.getUsername());
+    }
+
+    public static record BenutzerDTO(
+            Long id,
+            String email,
+            String username
+    ) { }
 }

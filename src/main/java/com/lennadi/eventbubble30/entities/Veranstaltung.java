@@ -24,4 +24,20 @@ public class Veranstaltung {
     @ManyToOne
     @JoinColumn(name = "besitzer_id")
     private Benutzer besitzer;
+
+    public static record VeranstaltungDTO(
+            Instant creationDate,
+            Instant termin,
+            String title,
+            String description
+    ) {}
+
+    public VeranstaltungDTO toDTO() {
+        return new VeranstaltungDTO(
+                this.getCreationDate(),
+                this.getTermin(),
+                this.getTitle(),
+                this.getDescription()
+        );
+    }
 }

@@ -13,12 +13,13 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class VeranstaltungsService {
-    private final VeranstaltungsRepository veranstaltungsRepo;
+public class VeranstaltungService {
+    private final VeranstaltungsRepository veranstaltungRepo;
+    private final BenutzerService benutzerService;
 
 
     public Veranstaltung getVeranstaltungById(Long id) {
-        return veranstaltungsRepo.findById(id)
+        return veranstaltungRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Veranstaltung mit id [" + id + "] nicht gefunden"
@@ -28,15 +29,36 @@ public class VeranstaltungsService {
     public void deleteVeranstaltungById(Long id) {
         Veranstaltung v = getVeranstaltungById(id);
 
-        Benutzer current = v.getBesitzer();
-        // Besitzerprüfung wird vom Controller NICHT gemacht — nur hier!
+        Benutzer current = benutzerService.getCurrentUser();
 
         if (!v.getBesitzer().getId().equals(current.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the owner");
         }
 
-        veranstaltungsRepo.delete(v);
+        veranstaltungRepo.delete(v);
     }
+
+    public Veranstaltung patchVeranstaltungById(Long id, Instant termin, String title, String description) {
+        Veranstaltung veranstaltung = veranstaltungRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
+
+        Benutzer current = benutzerService.getCurrentUser();
+        if (!veranstaltung.getBesitzer().getId().equals(current.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the owner");
+        }
+
+        if(termin!=null)
+            veranstaltung.setTermin(termin);
+        if(title!=null)
+            veranstaltung.setTitle(title);
+        if(description!=null)
+            veranstaltung.setDescription(description);
+
+        //todo last edit date
+
+        return veranstaltungRepo.save(veranstaltung);
+    }
+
 
     public Veranstaltung createVeranstaltung(Instant termin, String title, String description, Benutzer besitzer){
         Veranstaltung veranstaltung = new Veranstaltung();
@@ -47,11 +69,11 @@ public class VeranstaltungsService {
 
         veranstaltung.setCreationDate(Instant.now());
 
-        return veranstaltungsRepo.save(veranstaltung);
+        return veranstaltungRepo.save(veranstaltung);
     }
 
     public org.springframework.data.domain.Page<Veranstaltung> list(int page, int size) {
-        return veranstaltungsRepo.findAll(
+        return veranstaltungRepo.findAll(
                 org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
         );
     }
