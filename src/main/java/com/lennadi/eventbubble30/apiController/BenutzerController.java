@@ -15,8 +15,11 @@ import java.net.URI;
 @RestController
 public class BenutzerController {
 
-    @Autowired
-    private BenutzerService service;
+    private final BenutzerService service;
+
+    public BenutzerController(BenutzerService service) {
+        this.service = service;
+    }
 
     // ===== DTOs =====
 
