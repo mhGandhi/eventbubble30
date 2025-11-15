@@ -1,0 +1,5 @@
+server:
+  error:
+    include-stacktrace: never
+    include-exception: false
+    include-message: always
