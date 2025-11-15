@@ -4,6 +4,7 @@ import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +13,10 @@ import java.net.URI;
 
 @RequestMapping("/api/user")
 @RestController
+@RequiredArgsConstructor
 public class BenutzerController {
 
     private final BenutzerService service;
-
-    public BenutzerController(BenutzerService service) {
-        this.service = service;
-    }
 
     // ===== DTOs =====
 

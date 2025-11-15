@@ -2,6 +2,7 @@ package com.lennadi.eventbubble30.service;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -10,16 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class BenutzerService {
 
     private final BenutzerRepository repository;
 
     private final PasswordEncoder passwordEncoder;
 
-    public BenutzerService(BenutzerRepository repository, PasswordEncoder passwordEncoder) {
-        this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public Benutzer createBenutzer(String email, String username, String password) {
 

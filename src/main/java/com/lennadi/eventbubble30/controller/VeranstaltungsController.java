@@ -5,6 +5,7 @@ import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
 import com.lennadi.eventbubble30.service.VeranstaltungsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +16,9 @@ import java.time.Instant;
 
 @RequestMapping("/api/events")
 @RestController
+@RequiredArgsConstructor
 public class VeranstaltungsController {
     private final VeranstaltungsService veranstaltungsService;
-
-
-    VeranstaltungsController(VeranstaltungsService vs) {
-        veranstaltungsService = vs;
-    }
 
     /// /////////////////////////////
     public record CreateVeranstaltungRequest(

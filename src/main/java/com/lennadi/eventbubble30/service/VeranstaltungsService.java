@@ -3,6 +3,7 @@ package com.lennadi.eventbubble30.service;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,12 +12,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 
 @Service
+@RequiredArgsConstructor
 public class VeranstaltungsService {
     private final VeranstaltungsRepository veranstaltungsRepo;
 
-    public VeranstaltungsService(VeranstaltungsRepository veranstaltungsRepository) {
-        this.veranstaltungsRepo = veranstaltungsRepository;
-    }
 
     public Veranstaltung getVeranstaltungById(Long id) {
         return veranstaltungsRepo.findById(id)
