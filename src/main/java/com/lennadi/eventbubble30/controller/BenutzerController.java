@@ -1,10 +1,9 @@
-package com.lennadi.eventbubble30.apiController;
+package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
