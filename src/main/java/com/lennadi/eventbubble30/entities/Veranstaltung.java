@@ -20,4 +20,8 @@ public class Veranstaltung {
 
     private String title;
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "besitzer_id")
+    private Benutzer besitzer;
 }

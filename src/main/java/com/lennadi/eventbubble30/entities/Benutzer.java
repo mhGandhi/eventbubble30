@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
+
 @Entity
 @Getter
 @Setter
@@ -22,4 +24,7 @@ public class Benutzer {
 
     @Column(unique = true, nullable = false, length = 255)
     private String email;
+
+    @OneToMany(mappedBy = "besitzer")
+    private Collection<Veranstaltung> veranstaltungen;
 }
