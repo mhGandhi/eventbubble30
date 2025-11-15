@@ -26,7 +26,16 @@ public class VeranstaltungsService {
     }
 
     public void deleteVeranstaltungById(Long id) {
-        veranstaltungsRepo.deleteById(id);//todo respond appropriately
+        Veranstaltung v = getVeranstaltungById(id);
+
+        Benutzer current = v.getBesitzer();
+        // Besitzerprüfung wird vom Controller NICHT gemacht — nur hier!
+
+        if (!v.getBesitzer().getId().equals(current.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the owner");
+        }
+
+        veranstaltungsRepo.delete(v);
     }
 
     public Veranstaltung createVeranstaltung(Instant termin, String title, String description, Benutzer besitzer){
