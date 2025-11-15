@@ -16,7 +16,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -83,16 +85,24 @@ public class AuthController {
     @PostMapping("/login")
     public Benutzer.BenutzerDTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
-            // Passwort prüfen
+            // 1. Login durchführen
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.username(), req.password())
             );
 
+            // 2. SecurityContext erstellen und setzen
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
 
-            SecurityContextHolder.getContext().setAuthentication(auth);//todo in redis saven
-            request.getSession(true); // Session erzeugen
+            // 3. Session erzeugen und SecurityContext hineinspeichern
+            HttpSession session = request.getSession(true);
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context
+            );
 
-            // Benutzer aus DB holen
+            // 4. Benutzer laden
             Benutzer benutzer = benutzerRepository.findByUsername(req.username())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
@@ -104,12 +114,14 @@ public class AuthController {
     }
 
 
+
     // ==== LOGOUT ====
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) session.invalidate();
+        SecurityContextHolder.clearContext();
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 

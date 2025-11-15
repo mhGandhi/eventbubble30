@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -63,12 +64,14 @@ public class BenutzerService {
     }
 
     public Benutzer getCurrentUser() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null ||
-                auth instanceof AnonymousAuthenticationToken ||
-                auth.getPrincipal() == null ||
-                "anonymousUser".equals(auth.getPrincipal())) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(auth);
+        if (auth == null
+            //||
+//                auth instanceof AnonymousAuthenticationToken ||
+//                auth.getPrincipal() == null ||
+//                "anonymousUser".equals(auth.getPrincipal())
+        ) {
 
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
         }
