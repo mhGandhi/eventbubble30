@@ -6,6 +6,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,11 +34,20 @@ public class BenutzerController {
             String username,
             @Size(min = 8, max = 20) @NotNull @NotBlank String password) {};
 
+    public record BenutzerDTO(Long id, String email, String username) {}
+    private BenutzerDTO toDTO(Benutzer user) {
+        return new BenutzerDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername()
+        );
+    }
+
 
     //todo nd ganzen benutzer returnen
 
     @PostMapping("/create")
-    public Benutzer createUser(@Valid @RequestBody CreateBenutzerRequest benutzerRequest) {
+    public BenutzerDTO createUser(@Valid @RequestBody CreateBenutzerRequest benutzerRequest) {
 
         if (benutzerRepository.existsByUsername((benutzerRequest.username()))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username existiert bereits");
@@ -50,24 +62,30 @@ public class BenutzerController {
         neuerBenutzer.setUsername(benutzerRequest.username);
         neuerBenutzer.setPasswordHash(passwordEncoder.encode(benutzerRequest.password));
 
-        return benutzerRepository.save(neuerBenutzer);
+        return toDTO(benutzerRepository.save(neuerBenutzer));
     }
 
     @GetMapping("/{id}")
-    public Benutzer findUserById(@PathVariable long id) {
-        return benutzerRepository.findById(id)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer mit id ["+id+"] nicht gefunden"));
+    public BenutzerDTO findUserById(@PathVariable long id) {
+        return toDTO(benutzerRepository.findById(id)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer mit id ["+id+"] nicht gefunden")));
     }
 
     @GetMapping("/name/{username}")
-    public Benutzer findUserById(@PathVariable String username) {
-        return benutzerRepository.findByUsername(username)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer mit name ["+username+"] nicht gefunden"));
+    public BenutzerDTO findUserByUsername(@PathVariable String username) {
+        return toDTO(benutzerRepository.findByUsername(username)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer mit name ["+username+"] nicht gefunden")));
     }
 
     @GetMapping({"", "/"})
-    public List<Benutzer> listUsers() {
-        return benutzerRepository.findAll();
-        //todo paginate or sth
+    public Page<BenutzerDTO> listUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return benutzerRepository.findAll(
+                PageRequest.of(page, size, Sort.by("id").ascending())
+        ).map(this::toDTO);
     }
+
+
 }
