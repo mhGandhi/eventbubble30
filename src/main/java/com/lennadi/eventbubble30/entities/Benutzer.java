@@ -5,13 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(
-        name = "benutzer",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_benutzer_username", columnNames = "username"),
-                @UniqueConstraint(name = "uq_benutzer_email", columnNames = "email")
-        }
-)
 @Getter
 @Setter
 public class Benutzer {
