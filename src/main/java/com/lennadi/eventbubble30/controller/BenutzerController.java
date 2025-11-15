@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.controller;
 
+import com.lennadi.eventbubble30.dto.BenutzerDTO;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
@@ -27,12 +28,6 @@ public class BenutzerController {
             String username,
             @NotBlank @Size(min = 8, max = 20)
             String password
-    ) {}
-
-    public record BenutzerDTO(
-            Long id,
-            String email,
-            String username
     ) {}
 
     private BenutzerDTO toDTO(Benutzer user) {
