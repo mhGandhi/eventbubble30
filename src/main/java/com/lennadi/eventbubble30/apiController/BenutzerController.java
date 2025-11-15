@@ -6,7 +6,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RequestMapping("/api/user")
 @RestController
@@ -39,13 +42,21 @@ public class BenutzerController {
     // ===== Endpoints =====
 
     @PostMapping("/create")
-    public BenutzerDTO createUser(@Valid @RequestBody CreateBenutzerRequest req) {
-        return toDTO(service.createBenutzer(
+    public ResponseEntity<BenutzerDTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
+
+        Benutzer neu = service.createBenutzer(
                 req.email(),
                 req.username(),
                 req.password()
-        ));
+        );
+
+        BenutzerDTO dto = toDTO(neu);
+
+        return ResponseEntity
+                .created(URI.create("/api/user/" + neu.getId())) // Location Header
+                .body(dto);                                     // Response Body
     }
+
 
     @GetMapping("/{id}")
     public BenutzerDTO findUserById(@PathVariable long id) {
