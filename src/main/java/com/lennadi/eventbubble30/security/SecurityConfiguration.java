@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,24 +25,29 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())                // CSRF für REST deaktivieren
+                .csrf(AbstractHttpConfigurer::disable)
+
+                // KEINE automatische Session-Erstellung außer bei explizitem Login
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
+                .securityContext(sc -> sc.requireExplicitSave(false))
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/create").permitAll()
+                        .requestMatchers("/api/auth/signup").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/user/create").permitAll()//todo nuh uh
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-                        .requestMatchers("/api/auth/logout").authenticated()
-                        .anyRequest().authenticated()   // Rest geschützt
+                        .requestMatchers("/api/auth/logout").fullyAuthenticated()
+                        .anyRequest().fullyAuthenticated()
                 )
-                .formLogin(login -> login.disable()) // wir machen unser eigenes Login
-                .httpBasic(basic -> basic.disable()) // Basic-Auth aus
-                .logout(logout -> logout.disable())  // wir machen eigenes Logout
-                .sessionManagement(sess -> sess
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                )
-                .securityContext(sc -> sc.requireExplicitSave(false));
+
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
+
 
     /*
     @Bean//todo move or rename file

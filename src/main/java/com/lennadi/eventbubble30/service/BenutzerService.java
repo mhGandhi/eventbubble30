@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -63,11 +64,19 @@ public class BenutzerService {
     public Benutzer getCurrentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (auth == null ||
+                auth instanceof AnonymousAuthenticationToken ||
+                auth.getPrincipal() == null ||
+                "anonymousUser".equals(auth.getPrincipal())) {
+
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
         }
 
-        return getByUsername(auth.getName());
+        String username = auth.getName();
+
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
+
 
 }
