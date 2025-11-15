@@ -12,11 +12,14 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class BenutzerService {
 
-    @Autowired
-    private BenutzerRepository repository;
+    private final BenutzerRepository repository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
+    public BenutzerService(BenutzerRepository repository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public Benutzer createBenutzer(String email, String username, String password) {
 
