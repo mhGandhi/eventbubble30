@@ -1,9 +1,6 @@
 package com.lennadi.eventbubble30.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -14,8 +11,9 @@ import lombok.Setter;
 @Entity
 public class Benutzer {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
+    @Column(unique = true)
     private Long id;
 
     @Getter @Setter
@@ -23,6 +21,7 @@ public class Benutzer {
     @Size(min = 3, max = 20)
     @Pattern(regexp = "^[a-zA-Z0-9_]+$",
             message = "Benutzername darf nur Buchstaben, Zahlen und _ enthalten")
+    @Column(unique = true)
     private String username;
 
     @Getter @Setter
@@ -32,5 +31,6 @@ public class Benutzer {
     @Getter @Setter
     @Email
     @NotBlank
+    @Column(unique = true)
     private String email;
 }
