@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.service;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +77,10 @@ public class BenutzerService {
 
         return repository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+    }
+
+    public void deleteUserById(long id) {
+        repository.delete(getById(id));
     }
 
 

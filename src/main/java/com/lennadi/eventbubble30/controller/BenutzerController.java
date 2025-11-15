@@ -51,6 +51,14 @@ public class BenutzerController {
                 .body(dto);                                     // Response Body
     }
 
+    // ===== DELETE EVENT =====
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+        service.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
     @GetMapping("/{id}")
     public Benutzer.BenutzerDTO findUserById(@PathVariable long id) {
