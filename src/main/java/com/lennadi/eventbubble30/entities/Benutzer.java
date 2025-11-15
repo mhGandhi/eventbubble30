@@ -1,36 +1,32 @@
 package com.lennadi.eventbubble30.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(
+        name = "benutzer",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_benutzer_username", columnNames = "username"),
+                @UniqueConstraint(name = "uq_benutzer_email", columnNames = "email")
+        }
+)
+@Getter
+@Setter
 public class Benutzer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Getter
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private Long id;
 
-    @Getter @Setter
-    @NotBlank
-    @Size(min = 3, max = 20)
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$",
-            message = "Benutzername darf nur Buchstaben, Zahlen und _ enthalten")
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 20)
     private String username;
 
-    @Getter @Setter
-    @NotBlank
+    @Column(nullable = false)
     private String passwordHash;
 
-    @Getter @Setter
-    @Email
-    @NotBlank
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 255)
     private String email;
 }
