@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
@@ -35,8 +36,9 @@ public class SecurityConfiguration {
                 .httpBasic(basic -> basic.disable()) // Basic-Auth aus
                 .logout(logout -> logout.disable())  // wir machen eigenes Logout
                 .sessionManagement(sess -> sess
-                        .maximumSessions(1)          // nur 1 Login pro User
-                );
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                )
+                .securityContext(sc -> sc.requireExplicitSave(false));
 
         return http.build();
     }

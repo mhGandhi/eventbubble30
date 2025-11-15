@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,12 +41,13 @@ public class AuthController {
     public BenutzerDTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
             // Passwort prüfen
-            authManager.authenticate(
+            Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.username(), req.password())
             );
 
-            // Session erzeugen (dadurch wird die "JSESSIONID"-Cookie gesetzt)
-            request.getSession(true);
+
+            SecurityContextHolder.getContext().setAuthentication(auth);//todo in redis saven
+            request.getSession(true); // Session erzeugen
 
             // Benutzer aus DB holen
             Benutzer benutzer = benutzerRepository.findByUsername(req.username())
