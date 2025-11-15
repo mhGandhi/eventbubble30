@@ -26,6 +26,7 @@ public class Veranstaltung {
     private Benutzer besitzer;
 
     public static record VeranstaltungDTO(
+            Long id,
             Instant creationDate,
             Instant termin,
             String title,
@@ -34,6 +35,7 @@ public class Veranstaltung {
 
     public VeranstaltungDTO toDTO() {
         return new VeranstaltungDTO(
+                this.getId(),
                 this.getCreationDate(),
                 this.getTermin(),
                 this.getTitle(),
