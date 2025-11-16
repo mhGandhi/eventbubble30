@@ -123,4 +123,17 @@ public class AuthController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
+    @GetMapping("/validate-session")
+    public ResponseEntity<Void> validateSession() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+
 }
