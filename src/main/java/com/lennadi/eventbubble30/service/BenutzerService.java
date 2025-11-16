@@ -1,24 +1,15 @@
 package com.lennadi.eventbubble30.service;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
