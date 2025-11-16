@@ -1,0 +1,2 @@
+captcha:
+ secret: ${GOOGLE_CAPTCHA_SECRET}

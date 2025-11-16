@@ -1,7 +1,7 @@
-package com.lennadi.eventbubble30.security;
+package com.lennadi.eventbubble30.security.captcha;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -9,15 +9,15 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
-@Service
-@RequiredArgsConstructor
-public class CaptchaService {
-
+@Service()
+@Profile("googleCaptcha")
+public class GoogleCaptchaService implements CaptchaService {
     @Value("${captcha.secret}")
     private String secret;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Override
     public boolean verify(String token) {
 
         String url = "https://www.google.com/recaptcha/api/siteverify";

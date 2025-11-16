@@ -3,3 +3,8 @@ server:
     include-stacktrace: never
     include-exception: false
     include-message: always
+spring:
+  profiles:
+    active: googleCaptcha
+  application:
+    name: "eventbubble30"

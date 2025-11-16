@@ -2,7 +2,7 @@ package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
-import com.lennadi.eventbubble30.security.CaptchaService;
+import com.lennadi.eventbubble30.security.captcha.CaptchaService;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -11,9 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import jdk.jshell.spi.ExecutionControl;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,9 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
