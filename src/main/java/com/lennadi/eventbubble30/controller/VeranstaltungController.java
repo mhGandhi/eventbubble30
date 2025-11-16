@@ -5,6 +5,7 @@ import com.lennadi.eventbubble30.service.BenutzerService;
 import com.lennadi.eventbubble30.service.VeranstaltungService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,16 @@ public class VeranstaltungController {
     private final BenutzerService benutzerService;
 
     // ===== DTOs =====
-
-    public record PatchVeranstaltungRequest(
+    public record CreateVeranstaltungRequest(
             Instant termin,
-            @NotBlank String title,
+            @NotEmpty String title,
             String description
     ) {}
-
+    public record PatchVeranstaltungRequest(
+            Instant termin,
+            String title,
+            String description
+    ) {}
 
     // ===== GET EVENT =====
 
@@ -49,13 +53,13 @@ public class VeranstaltungController {
 
     @PostMapping("/create")
     public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
-            @Valid @RequestBody PatchVeranstaltungRequest req
+            @Valid @RequestBody CreateVeranstaltungRequest req
     ) {
         Veranstaltung vs = veranstaltungService.createVeranstaltung(
                 req.termin(),
                 req.title(),
                 req.description(),
-                benutzerService.getCurrentUser() // <-- automatisch der eingeloggte User
+                benutzerService.getCurrentUser()
         );
 
         return ResponseEntity

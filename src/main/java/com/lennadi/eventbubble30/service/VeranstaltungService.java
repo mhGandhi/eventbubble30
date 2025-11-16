@@ -49,7 +49,7 @@ public class VeranstaltungService {
 
         if(termin!=null)
             veranstaltung.setTermin(termin);
-        if(title!=null)
+        if(title!=null && !title.isBlank())
             veranstaltung.setTitle(title);
         if(description!=null)
             veranstaltung.setDescription(description);
