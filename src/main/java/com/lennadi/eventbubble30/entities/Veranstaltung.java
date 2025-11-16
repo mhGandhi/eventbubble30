@@ -25,21 +25,24 @@ public class Veranstaltung {
     @JoinColumn(name = "besitzer_id")
     private Benutzer besitzer;
 
-    public static record VeranstaltungDTO(
+    public static record DTO(
             Long id,
             Instant creationDate,
             Instant termin,
             String title,
-            String description
+            String description,
+
+            Benutzer.DTO besitzer
     ) {}
 
-    public VeranstaltungDTO toDTO() {
-        return new VeranstaltungDTO(
+    public DTO toDTO() {
+        return new DTO(
                 this.getId(),
                 this.getCreationDate(),
                 this.getTermin(),
                 this.getTitle(),
-                this.getDescription()
+                this.getDescription(),
+                this.getBesitzer().toDTO()
         );
     }
 }

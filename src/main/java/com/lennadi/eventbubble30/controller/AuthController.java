@@ -83,7 +83,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Benutzer.BenutzerDTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
+    public Benutzer.DTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
             // 1. Login durchführen
             Authentication auth = authManager.authenticate(
@@ -129,7 +129,7 @@ public class AuthController {
     // ==== CURRENT USER ====
 
     @GetMapping("/me")
-    public Benutzer.BenutzerDTO me() {
+    public Benutzer.DTO me() {
         Benutzer benutzer = benutzerService.getCurrentUser();
         return benutzer.toDTO();
     }

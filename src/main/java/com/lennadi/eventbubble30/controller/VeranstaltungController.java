@@ -33,7 +33,7 @@ public class VeranstaltungController {
     // ===== GET EVENT =====
 
     @GetMapping("/{id}")
-    public Veranstaltung.VeranstaltungDTO getVeranstaltungById(@PathVariable Long id) {
+    public Veranstaltung.DTO getVeranstaltungById(@PathVariable Long id) {
         return veranstaltungService.getVeranstaltungById(id).toDTO();
     }
 
@@ -48,7 +48,7 @@ public class VeranstaltungController {
     // ===== CREATE EVENT (Besitzer = current user) =====
 
     @PostMapping("/create")
-    public ResponseEntity<Veranstaltung.VeranstaltungDTO> createVeranstaltung(
+    public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
             @Valid @RequestBody PatchVeranstaltungRequest req
     ) {
         Veranstaltung vs = veranstaltungService.createVeranstaltung(
@@ -66,7 +66,7 @@ public class VeranstaltungController {
     // ===== Patch =====
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Veranstaltung.VeranstaltungDTO> patchVeranstaltung(
+    public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
             @PathVariable Long id,
             @Valid @RequestBody PatchVeranstaltungRequest req
     ) {
@@ -85,7 +85,7 @@ public class VeranstaltungController {
     // ===== LIST =====
 
     @GetMapping({"", "/"})
-    public Page<Veranstaltung.VeranstaltungDTO> listVeranstaltungen(
+    public Page<Veranstaltung.DTO> listVeranstaltungen(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

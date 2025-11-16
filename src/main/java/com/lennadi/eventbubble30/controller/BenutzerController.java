@@ -29,14 +29,10 @@ public class BenutzerController {
             String password
     ) {}
 
-    private Benutzer.BenutzerDTO toDTO(Benutzer user) {
-        return new Benutzer.BenutzerDTO(user.getId(), user.getEmail(), user.getUsername());
-    }
-
     // ===== Endpoints =====
 
     @PostMapping("/create")
-    public ResponseEntity<Benutzer.BenutzerDTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
+    public ResponseEntity<Benutzer.DTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
         Benutzer neu = service.createBenutzer(
                 req.email(),
@@ -44,11 +40,9 @@ public class BenutzerController {
                 req.password()
         );
 
-        Benutzer.BenutzerDTO dto = toDTO(neu);
-
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getId())) // Location Header
-                .body(dto);                                     // Response Body
+                .body(neu.toDTO());                                     // Response Body
     }
 
     // ===== DELETE EVENT =====
@@ -61,20 +55,20 @@ public class BenutzerController {
 
 
     @GetMapping("/{id}")
-    public Benutzer.BenutzerDTO findUserById(@PathVariable long id) {
-        return toDTO(service.getById(id));
+    public Benutzer.DTO findUserById(@PathVariable long id) {
+        return service.getById(id).toDTO();
     }
 
     @GetMapping("/name/{username}")
-    public Benutzer.BenutzerDTO findUserByUsername(@PathVariable String username) {
-        return toDTO(service.getByUsername(username));
+    public Benutzer.DTO findUserByUsername(@PathVariable String username) {
+        return service.getByUsername(username).toDTO();
     }
 
     @GetMapping({"", "/"})
-    public Page<Benutzer.BenutzerDTO> listUsers(
+    public Page<Benutzer.DTO> listUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return service.list(page, size).map(this::toDTO);
+        return service.list(page, size).map(Benutzer::toDTO);
     }
 }

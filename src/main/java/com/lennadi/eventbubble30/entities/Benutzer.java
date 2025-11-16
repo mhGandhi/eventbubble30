@@ -29,13 +29,12 @@ public class Benutzer {
     private Collection<Veranstaltung> veranstaltungen;
 
 
-    public BenutzerDTO toDTO() {
-        return new BenutzerDTO(this.getId(), this.getEmail(), this.getUsername());
+    public DTO toDTO() {
+        return new DTO(this.getId(), this.getUsername());
     }
 
-    public static record BenutzerDTO(
+    public static record DTO(
             Long id,
-            String email,
             String username
     ) { }
 }
