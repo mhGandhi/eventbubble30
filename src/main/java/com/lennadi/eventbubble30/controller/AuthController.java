@@ -113,8 +113,6 @@ public class AuthController {
         }
     }
 
-
-
     // ==== LOGOUT ====
 
     @PostMapping("/logout")
@@ -125,12 +123,4 @@ public class AuthController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
-
-    // ==== CURRENT USER ====
-
-    @GetMapping("/me")
-    public Benutzer.DTO me() {
-        Benutzer benutzer = benutzerService.getCurrentUser();
-        return benutzer.toDTO();
-    }
 }

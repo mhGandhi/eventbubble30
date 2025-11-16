@@ -97,4 +97,10 @@ public class BenutzerController {
     ) {
         return service.list(page, size).map(Benutzer::toDTO);
     }
+
+    @GetMapping("/me")
+    public Benutzer.DTO me() {
+        Benutzer benutzer = service.getCurrentUser();
+        return benutzer.toDTO();
+    }
 }
