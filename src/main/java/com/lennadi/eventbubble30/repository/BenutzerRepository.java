@@ -11,4 +11,6 @@ public interface BenutzerRepository extends JpaRepository<Benutzer, Long> {
 
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
+
+    //todo Methoden zum Aktualisieren einzelner Felder (zB lastSeen) -> bessere Performance
 }
