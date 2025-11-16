@@ -16,10 +16,6 @@ public class BenutzerDetailsService implements UserDetailsService {
         var benutzer = repo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        return User
-                .withUsername(benutzer.getUsername())
-                .password(benutzer.getPasswordHash())
-                .roles("USER")  // falls später mehr Rollen
-                .build();
+        return new BenutzerDetails(benutzer);
     }
 }

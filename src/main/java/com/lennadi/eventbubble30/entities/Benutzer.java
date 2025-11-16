@@ -10,6 +10,9 @@ import java.util.Collection;
 @Getter
 @Setter
 public class Benutzer {
+    public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +33,13 @@ public class Benutzer {
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
 
+    @Column(nullable = false, length = 255)//todo enum/set oder so
+    private String role = ROLE_USER;
+
+
+    public boolean hasRole(String role) {
+        return this.role!=null&&this.role.equals(role);
+    }
 
     public DTO toDTO() {
         return new DTO(this.getId(), this.getUsername());
