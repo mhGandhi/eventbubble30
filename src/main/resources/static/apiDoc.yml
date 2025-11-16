@@ -1,0 +1,413 @@
+openapi: 3.0.1
+info:
+  title: EventBubble API
+  version: 1.0.0
+  description: >
+    API Dokumentation der Auth-, Benutzer- und Event-Endpunkte der EventBubble Webanwendung.
+    Authentifizierung erfolgt per Session (JSESSIONID Cookie).
+
+servers:
+  - url: /api
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+
+  schemas:
+
+    # ===== Benutzer / User =====
+    BenutzerDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+      required: [id, username]
+
+    CreateBenutzerRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: "^[a-zA-Z0-9_]+$"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+      required: [email, username, password]
+
+    PatchBenutzerRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: "^[a-zA-Z0-9_]+$"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 20
+      required: [email, username, password]
+
+    UpdateOwnPasswordRequest:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 20
+      required: [oldPassword, newPassword]
+
+    # ===== Auth =====
+    SignupRequest:
+      type: object
+      properties:
+        username: { type: string }
+        password: { type: string }
+        email:
+          type: string
+          format: email
+        captchaToken: { type: string }
+      required: [username, password, email, captchaToken]
+
+    LoginRequest:
+      type: object
+      properties:
+        username: { type: string }
+        password: { type: string }
+      required: [username, password]
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token: { type: string }
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 20
+      required: [token, newPassword]
+
+    # ===== Veranstaltung / Event =====
+    VeranstaltungDTO:
+      type: object
+      properties:
+        id: { type: integer }
+        creationDate: { type: string, format: date-time }
+        modificationDate: { type: string, format: date-time }
+        termin: { type: string, format: date-time }
+        title: { type: string }
+        description: { type: string }
+        besitzer:
+          $ref: "#/components/schemas/BenutzerDTO"
+      required: [id]
+
+    CreateVeranstaltungRequest:
+      type: object
+      properties:
+        termin: { type: string, format: date-time }
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+      required: [title]
+
+    PatchVeranstaltungRequest:
+      type: object
+      properties:
+        termin: { type: string, format: date-time }
+        title: { type: string }
+        description: { type: string }
+
+
+paths:
+
+  #############################
+  # AUTH
+  #############################
+
+  /auth/signup:
+    post:
+      summary: Benutzerregistrierung
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: Benutzer erstellt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenutzerDTO"
+        "409":
+          description: Username oder Email existiert bereits
+        "403":
+          description: CAPTCHA ungültig
+
+  /auth/login:
+    post:
+      summary: Login und Session Erstellung
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login erfolgreich
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenutzerDTO"
+        "401":
+          description: Ungültige Zugangsdaten
+
+  /auth/logout:
+    post:
+      summary: Session beenden
+      responses:
+        "204": { description: Logout erfolgreich }
+
+  /auth/validate-session:
+    get:
+      summary: Prüfe, ob Session gültig ist
+      security: [ { sessionAuth: [] } ]
+      responses:
+        "200": { description: Session gültig }
+        "401": { description: Nicht eingeloggt }
+
+  /auth/request-password-reset:
+    post:
+      summary: Passwortreset anfordern
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string, format: email }
+          required: true
+      responses:
+        "501": { description: Noch nicht implementiert }
+
+  /auth/reset-password:
+    post:
+      summary: Passwort mittels Reset-Token setzen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "501": { description: Noch nicht implementiert }
+
+
+  #############################
+  # BENUTZER
+  #############################
+
+  /user/create:
+    post:
+      summary: Benutzer ohne CAPTCHA erstellen (Admin/Intern)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBenutzerRequest"
+      responses:
+        "201": { description: Benutzer erstellt }
+
+  /user/{id}:
+    get:
+      summary: Benutzer per ID abrufen
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Benutzer gefunden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenutzerDTO"
+        "404": { description: Benutzer nicht gefunden }
+
+    patch:
+      summary: Benutzer bearbeiten (Owner oder Admin)
+      security: [ { sessionAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchBenutzerRequest"
+      responses:
+        "200": { description: Benutzer aktualisiert }
+        "403": { description: Keine Berechtigung }
+        "404": { description: Benutzer nicht gefunden }
+
+    delete:
+      summary: Benutzer löschen
+      responses:
+        "204": { description: Benutzer gelöscht }
+        "404": { description: Benutzer nicht gefunden }
+
+  /user/name/{username}:
+    get:
+      summary: Benutzer per Username abrufen
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+        "404": { description: Benutzer nicht gefunden }
+
+  /user:
+    get:
+      summary: Benutzerliste
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        "200":
+          description: Seite von Benutzern
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /user/me:
+    get:
+      summary: Aktuell eingeloggter Benutzer
+      security: [ { sessionAuth: [] } ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenutzerDTO"
+        "401": { description: Nicht eingeloggt }
+
+  /user/me/change-password:
+    post:
+      summary: Passwort des eingeloggten Benutzers ändern
+      security: [ { sessionAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOwnPasswordRequest"
+      responses:
+        "204": { description: Passwort geändert }
+        "403": { description: altes Passwort falsch }
+
+
+  #############################
+  # EVENTS
+  #############################
+
+  /events/{id}:
+    get:
+      summary: Veranstaltung per ID abrufen
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VeranstaltungDTO"
+        "404": { description: Event nicht gefunden }
+
+    delete:
+      summary: Veranstaltung löschen (Owner/Admin)
+      security: [ { sessionAuth: [] } ]
+      parameters:
+        - name: id
+          in: path
+          schema: { type: integer }
+          required: true
+      responses:
+        "204": { description: Event gelöscht }
+        "403": { description: Keine Berechtigung }
+        "404": { description: Event nicht gefunden }
+
+    patch:
+      summary: Event bearbeiten (Owner/Admin)
+      security: [ { sessionAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          schema: { type: integer }
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchVeranstaltungRequest"
+      responses:
+        "200": { description: Event aktualisiert }
+        "403": { description: Keine Berechtigung }
+        "404": { description: Event nicht gefunden }
+
+  /events/create:
+    post:
+      summary: Event erstellen (Owner = eingeloggter Benutzer)
+      security: [ { sessionAuth: [] } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVeranstaltungRequest"
+      responses:
+        "201": { description: Event erstellt }
+
+  /events:
+    get:
+      summary: Eventliste
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        "200": { description: Liste der Events }
