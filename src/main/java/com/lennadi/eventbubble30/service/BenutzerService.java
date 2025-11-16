@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 public class BenutzerService {
@@ -34,6 +36,8 @@ public class BenutzerService {
         user.setEmail(email);
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
+        user.setCreationDate(Instant.now());
+        user.setModificationDate(Instant.now());
 
         return repository.save(user);
     }
@@ -56,6 +60,8 @@ public class BenutzerService {
         if(password!=null && !password.isEmpty()) {
             b.setPasswordHash(passwordEncoder.encode(password));
         }
+
+        b.setModificationDate(Instant.now());
 
         return repository.save(b);
     }
@@ -119,6 +125,12 @@ public class BenutzerService {
     public void setPasswordById(Long id, String password) {
         Benutzer b = getById(id);
         b.setPasswordHash(passwordEncoder.encode(password));
+        repository.save(b);
+    }
+
+    public void seen(Long id) {
+        Benutzer b = getById(id);
+        b.setLastSeen(Instant.now());
         repository.save(b);
     }
 

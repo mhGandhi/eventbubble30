@@ -118,6 +118,7 @@ public class AuthController {
             Benutzer benutzer = benutzerRepository.findByUsername(req.username())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
+            benutzer.setLastLoginDate(Instant.now());
             return benutzer.toDTO();
 
         } catch (AuthenticationException ex) {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.Collection;
 
 @Entity
@@ -16,7 +17,7 @@ public class Benutzer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, updatable = false)
     private Long id;
 
     @Column(unique = true, nullable = false, length = 20)
@@ -26,15 +27,22 @@ public class Benutzer {
     @Column(nullable = false)
     private String passwordHash;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false)
     private String email;
     //todo email verification (+removal job nach nh woche ohne)
 
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
 
-    @Column(nullable = false, length = 255)//todo enum/set oder so
+    @Column(nullable = false)//todo enum/set oder so
     private String role = ROLE_USER;
+
+    @Column(nullable = false, updatable = false)
+    private Instant creationDate;
+    @Column(nullable = false)
+    private Instant modificationDate;
+    private Instant lastLoginDate;
+    private Instant lastSeen;
 
 
     public boolean hasRole(String role) {
