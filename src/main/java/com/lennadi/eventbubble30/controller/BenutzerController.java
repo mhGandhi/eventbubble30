@@ -7,8 +7,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
@@ -37,6 +41,13 @@ public class BenutzerController {
             String username,
             @NotBlank @Size(min = 8, max = 20)
             String password
+    ) {}
+
+    public record UpdateOwnPasswordRequest(
+            @NotEmpty
+            String oldPassword,
+            @NotEmpty @Size(min = 8, max = 20)
+            String newPassword
     ) {}
 
     // ===== Endpoints =====
@@ -103,4 +114,20 @@ public class BenutzerController {
         Benutzer benutzer = service.getCurrentUser();
         return benutzer.toDTO();
     }
+
+    @PostMapping("/me/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody UpdateOwnPasswordRequest req
+    ) {
+        Benutzer current = service.getCurrentUser();
+
+        if(!service.isPasswordValidForId(current.getId(), req.oldPassword)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect old password");
+        }
+
+        service.setPasswordById(current.getId(), req.newPassword);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

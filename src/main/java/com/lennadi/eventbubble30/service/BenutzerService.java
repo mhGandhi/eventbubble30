@@ -118,4 +118,16 @@ public class BenutzerService {
         repository.delete(getById(id));
     }
 
+
+    public boolean isPasswordValidForId(Long id, String password){
+        Benutzer b = getById(id);
+        return b.getPasswordHash().equals(passwordEncoder.encode(password));
+    }
+
+    public void setPasswordById(Long id, String password) {
+        Benutzer b = getById(id);
+        b.setPasswordHash(passwordEncoder.encode(password));
+        repository.save(b);
+    }
+
 }
