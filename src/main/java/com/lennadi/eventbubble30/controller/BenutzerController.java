@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -21,6 +22,15 @@ public class BenutzerController {
     // ===== DTOs =====
 
     public record CreateBenutzerRequest(
+            @Email @NotEmpty String email,
+            @NotEmpty @Size(min = 3, max = 20)
+            @Pattern(regexp = "^[a-zA-Z0-9_]+$")
+            String username,
+            @NotEmpty @Size(min = 8, max = 20)
+            String password
+    ) {}
+
+    public record PatchBenutzerRequest(
             @Email @NotBlank String email,
             @NotBlank @Size(min = 3, max = 20)
             @Pattern(regexp = "^[a-zA-Z0-9_]+$")
@@ -45,7 +55,23 @@ public class BenutzerController {
                 .body(neu.toDTO());                                     // Response Body
     }
 
-    // ===== DELETE EVENT =====
+    @PatchMapping("/{id}")
+    public ResponseEntity<Benutzer.DTO> patchVeranstaltung(
+            @PathVariable Long id,
+            @Valid @RequestBody PatchBenutzerRequest req
+    ) {
+        Benutzer b = service.patchBenutzerById(
+                id,
+                req.email,
+                req.username,
+                req.password
+        );
+
+        return ResponseEntity
+                .ok()
+                .body(b.toDTO());
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {

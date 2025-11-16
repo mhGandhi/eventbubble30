@@ -3,6 +3,10 @@ package com.lennadi.eventbubble30.service;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -13,6 +17,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +45,27 @@ public class BenutzerService {
         user.setPasswordHash(passwordEncoder.encode(password));
 
         return repository.save(user);
+    }
+
+    public Benutzer patchBenutzerById(Long id, String email, String username, String password) {
+        Benutzer b = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer nicht gefunden"));
+
+        if(!b.getId().equals(getCurrentUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Nicht Autorisiert");//todo oder admin
+        }
+
+        if(email!=null && !email.isEmpty()) {
+            b.setEmail(email);
+        }
+        if(username!=null && !username.isEmpty()) {
+            b.setUsername(username);
+        }
+        if(password!=null && !password.isEmpty()) {
+            b.setPasswordHash(passwordEncoder.encode(password));
+        }
+
+        return repository.save(b);
     }
 
     public Benutzer getById(long id) {
@@ -85,6 +112,5 @@ public class BenutzerService {
     public void deleteUserById(long id) {
         repository.delete(getById(id));
     }
-
 
 }
