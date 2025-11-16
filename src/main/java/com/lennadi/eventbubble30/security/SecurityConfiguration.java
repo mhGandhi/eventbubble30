@@ -41,7 +41,10 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         //todo temp
                         .requestMatchers("/api/user/create").permitAll()
+                        //static (kommt dann weg iwann)
                         .requestMatchers("/index.html").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/apiDoc.yml").permitAll()
 
                         //auth
                         .requestMatchers("/api/auth/logout").authenticated()
