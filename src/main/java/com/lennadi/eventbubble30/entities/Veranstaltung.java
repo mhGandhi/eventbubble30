@@ -16,6 +16,8 @@ public class Veranstaltung {
 
     private Instant creationDate;
 
+    private Instant modificationDate;
+
     private Instant termin;
 
     private String title;
@@ -28,6 +30,7 @@ public class Veranstaltung {
     public static record DTO(
             Long id,
             Instant creationDate,
+            Instant modificationDate,
             Instant termin,
             String title,
             String description,
@@ -39,6 +42,7 @@ public class Veranstaltung {
         return new DTO(
                 this.getId(),
                 this.getCreationDate(),
+                this.getModificationDate(),
                 this.getTermin(),
                 this.getTitle(),
                 this.getDescription(),
