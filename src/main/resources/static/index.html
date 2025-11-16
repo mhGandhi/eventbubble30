@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EventBubble Minimal Frontend</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        h2 { margin-top: 40px; }
+        .box {
+            background: white;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        }
+        input, button, textarea {
+            margin: 5px 0;
+            padding: 6px;
+        }
+        pre {
+            background: #222; color: #0f0; padding: 10px; white-space: pre-wrap;
+        }
+    </style>
+    <!-- reCAPTCHA v3 Script -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lenyw4sAAAAAJa6XIj4Jt2r4RR3HYfcrxEZOGZB"></script>
+</head>
+<body>
+
+<h1>EventBubble Minimal Frontend</h1>
+
+<div id="output"><pre></pre></div>
+
+<script>
+    const out = msg => document.querySelector("#output pre").textContent = msg;
+    const api = (method, url, body) =>
+        fetch("http://localhost:8080" + url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: body ? JSON.stringify(body) : undefined
+        }).then(async r => {
+            let t = await r.text();
+            try { t = JSON.stringify(JSON.parse(t), null, 2); } catch {}
+            out(method + " " + url + "\nStatus: " + r.status + "\n\n" + t);
+            return r;
+        });
+
+</script>
+
+<!-- ======================== LOGIN ======================== -->
+<div class="box">
+    <h2>Login</h2>
+    <input id="login_user" placeholder="Username"><br>
+    <input id="login_pass" placeholder="Password" type="password"><br>
+    <button onclick="login()">Login</button>
+
+    <script>
+        function login() {
+            api("POST", "/api/auth/login", {
+                username: login_user.value,
+                password: login_pass.value
+            });
+        }
+    </script>
+</div>
+
+<!-- ======================== LOGOUT ======================== -->
+<div class="box">
+    <h2>Logout</h2>
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        function logout() {
+            api("POST", "/api/auth/logout");
+        }
+    </script>
+</div>
+
+<!-- ======================== SIGNUP (with reCAPTCHA v3) ======================== -->
+<div class="box">
+    <h2>Signup</h2>
+    <input id="su_username" placeholder="Username"><br>
+    <input id="su_email" placeholder="Email"><br>
+    <input id="su_pass" placeholder="Password" type="password"><br>
+
+    <button onclick="signup()">Signup</button>
+
+    <script>
+        function signup() {
+            grecaptcha.execute("6Lenyw4sAAAAAJa6XIj4Jt2r4RR3HYfcrxEZOGZB", {action: "signup"}).then(token => {
+
+                // Token wird automatisch vom reCAPTCHA-Dienst erzeugt.
+                api("POST", "/api/auth/signup", {
+                    username: su_username.value,
+                    email: su_email.value,
+                    password: su_pass.value,
+                    captchaToken: token
+                });
+
+            });
+        }
+    </script>
+</div>
+
+<!-- ======================== SESSION VALIDATION ======================== -->
+<div class="box">
+    <h2>Validate Session</h2>
+    <button onclick="api('GET','/api/auth/validate-session')">Validate</button>
+</div>
+
+<!-- ======================== CURRENT USER ======================== -->
+<div class="box">
+    <h2>Me</h2>
+    <button onclick="api('GET','/api/user/me')">Get Current User</button>
+</div>
+
+<!-- ======================== CHANGE OWN PASSWORD ======================== -->
+<div class="box">
+    <h2>Change Password</h2>
+    <input id="old_pw" placeholder="Old Password" type="password"><br>
+    <input id="new_pw" placeholder="New Password" type="password"><br>
+    <button onclick="changePw()">Change</button>
+
+    <script>
+        function changePw() {
+            api("POST", "/api/user/me/change-password", {
+                oldPassword: old_pw.value,
+                newPassword: new_pw.value
+            });
+        }
+    </script>
+</div>
+
+<!-- ======================== USER CRUD ======================== -->
+<div class="box">
+    <h2>Find User By ID</h2>
+    <input id="find_uid" placeholder="User ID"><br>
+    <button onclick="api('GET','/api/user/' + find_uid.value)">Find</button>
+</div>
+
+<div class="box">
+    <h2>List Users</h2>
+    <button onclick="api('GET','/api/user')">List</button>
+</div>
+
+<div class="box">
+    <h2>Delete User</h2>
+    <input id="del_uid" placeholder="User ID"><br>
+    <button onclick="api('DELETE','/api/user/' + del_uid.value)">Delete</button>
+</div>
+
+<!-- ======================== EVENTS ======================== -->
+
+<div class="box">
+    <h2>Create Event</h2>
+    <input id="event_time" placeholder="ISO Instant (optional)"><br>
+    <input id="event_title" placeholder="Title"><br>
+    <textarea id="event_desc" placeholder="Description"></textarea><br>
+    <button onclick="createEvent()">Create</button>
+
+    <script>
+        function createEvent() {
+            let term = event_time.value || null;
+            api("POST", "/api/events/create", {
+                termin: term,
+                title: event_title.value,
+                description: event_desc.value
+            });
+        }
+    </script>
+</div>
+
+<div class="box">
+    <h2>Get Event</h2>
+    <input id="ev_id" placeholder="Event ID"><br>
+    <button onclick="api('GET','/api/events/' + ev_id.value)">Get</button>
+</div>
+
+<div class="box">
+    <h2>Patch Event</h2>
+    <input id="pev_id" placeholder="Event ID"><br>
+    <input id="pev_time" placeholder="ISO Instant"><br>
+    <input id="pev_title" placeholder="Title"><br>
+    <textarea id="pev_desc" placeholder="Description"></textarea><br>
+    <button onclick="patchEvent()">Patch</button>
+
+    <script>
+        function patchEvent() {
+            api("PATCH", "/api/events/" + pev_id.value, {
+                termin: pev_time.value || null,
+                title: pev_title.value || null,
+                description: pev_desc.value || null
+            });
+        }
+    </script>
+</div>
+
+<div class="box">
+    <h2>Delete Event</h2>
+    <input id="del_ev" placeholder="Event ID"><br>
+    <button onclick="api('DELETE','/api/events/' + del_ev.value)">Delete</button>
+</div>
+
+<div class="box">
+    <h2>List Events</h2>
+    <button onclick="api('GET','/api/events')">List</button>
+</div>
+
+</body>
+</html>

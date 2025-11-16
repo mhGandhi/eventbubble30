@@ -41,6 +41,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         //todo temp
                         .requestMatchers("/api/user/create").permitAll()
+                        .requestMatchers("/index.html").permitAll()
 
                         //auth
                         .requestMatchers("/api/auth/logout").authenticated()
