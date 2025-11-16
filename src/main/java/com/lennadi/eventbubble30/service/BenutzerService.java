@@ -91,7 +91,12 @@ public class BenutzerService {
     }
 
     public Benutzer getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        var context = SecurityContextHolder.getContext();
+        Authentication auth = null;
+        if(context != null) {
+            auth = SecurityContextHolder.getContext().getAuthentication();
+        }
+
         System.out.println(auth);
         if (auth == null
             //||
