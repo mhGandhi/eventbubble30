@@ -3,6 +3,9 @@ server:
     include-stacktrace: never
     include-exception: false
     include-message: always
+  servlet:
+    session:
+      timeout: 30m # das wird noch Kacke. Vlt doch lieber Tokens....
 spring:
   profiles:
     active: keinCaptcha
