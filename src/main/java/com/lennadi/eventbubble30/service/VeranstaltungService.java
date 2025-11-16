@@ -75,7 +75,7 @@ public class VeranstaltungService {
 
     public org.springframework.data.domain.Page<Veranstaltung> list(int page, int size) {
         return veranstaltungRepo.findAll(
-                org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
+                org.springframework.data.domain.PageRequest.of(page, size, Sort.by("modificationDate").descending())
         );
     }
 }
