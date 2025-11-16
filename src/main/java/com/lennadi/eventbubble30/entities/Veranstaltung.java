@@ -46,7 +46,7 @@ public class Veranstaltung {
                 this.getTermin(),
                 this.getTitle(),
                 this.getDescription(),
-                this.getBesitzer().toDTO()
+                (this.getBesitzer()!=null?this.getBesitzer().toDTO():null)
         );
     }
 }
