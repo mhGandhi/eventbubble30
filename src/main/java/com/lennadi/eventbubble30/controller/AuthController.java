@@ -9,7 +9,11 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+import jdk.jshell.spi.ExecutionControl;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -46,6 +53,11 @@ public class AuthController {
             @NotBlank String password,
             @NotBlank @Email String email,
             @NotBlank String captchaToken
+    ) {}
+
+    public record ResetPasswordRequest(
+            @NotEmpty String token,
+            @NotEmpty @Size(min = 8, max = 20) String newPassword
     ) {}
 
 
@@ -135,5 +147,31 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    //PW reset etc
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<Void> requestPasswordReset(@RequestParam String email) {
+        var userOpt = benutzerRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            //todo token generieren, speichern und verschicken
+            //(token mit id, token, expiresAt und User neues repository etc)
+        }
+
+        // Immer 200 zurück, egal ob User existiert oder nicht
+        //return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+
+        //todo Token in Speicher finden, überprüfen ob null und ob abgelaufen, Token löschen
+
+
+        //benutzerService.setPasswordById(0L/*todo userId aus Token extrahieren*/, req.newPassword);
+
+        //return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
 
 }
