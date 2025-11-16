@@ -11,11 +11,12 @@ import java.time.Instant;
 public class Veranstaltung {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, updatable = false)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
     private Instant creationDate;
-
+    @Column(nullable = false)
     private Instant modificationDate;
 
     private Instant termin;
