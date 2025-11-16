@@ -31,8 +31,8 @@ public class VeranstaltungService {
 
         Benutzer current = benutzerService.getCurrentUser();
 
-        if (!v.getBesitzer().getId().equals(current.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the owner");
+        if (!v.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 
         veranstaltungRepo.delete(v);
@@ -43,8 +43,8 @@ public class VeranstaltungService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
 
         Benutzer current = benutzerService.getCurrentUser();
-        if (!veranstaltung.getBesitzer().getId().equals(current.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the owner");
+        if (!veranstaltung.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 
         if(termin!=null)

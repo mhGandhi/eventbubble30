@@ -50,9 +50,10 @@ public class BenutzerService {
     public Benutzer patchBenutzerById(Long id, String email, String username, String password) {
         Benutzer b = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer nicht gefunden"));
+        Benutzer current = getCurrentUser();
 
-        if(!b.getId().equals(getCurrentUser().getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Nicht Autorisiert");//todo oder admin
+        if(!b.getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 
         if(email!=null && !email.isEmpty()) {
