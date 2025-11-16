@@ -5,6 +5,6 @@ server:
     include-message: always
 spring:
   profiles:
-    active: googleCaptcha
+    active: keinCaptcha
   application:
     name: "eventbubble30"
