@@ -39,16 +39,22 @@ public class SecurityConfiguration {
                 .securityContext(sc -> sc.requireExplicitSave(false))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/signup").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/user/create").permitAll()//todo nuh uh
-                        .requestMatchers(HttpMethod.DELETE,"/api/user/**").permitAll()//todo nuh uh
-                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                        //todo temp
+                        .requestMatchers("/api/user/create").permitAll()
 
-                        //gesichert
-                        .requestMatchers("/api/user", "/api/user/").authenticated()
+                        //auth
                         .requestMatchers("/api/auth/logout").authenticated()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        //user
+                        .requestMatchers(HttpMethod.GET,"/api/user/**").authenticated()
+                        .requestMatchers("/api/user/**").hasRole("ADMIN")
+
+                        //events
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                        .requestMatchers("/api/events/**").authenticated()
+
+                        .anyRequest().denyAll()
                 )
 
                 .formLogin(AbstractHttpConfigurer::disable)
