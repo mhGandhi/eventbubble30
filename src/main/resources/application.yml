@@ -3,11 +3,13 @@ server:
     include-stacktrace: never
     include-exception: false
     include-message: always
-  servlet:
-    session:
-      timeout: 30m # das wird noch Kacke. Vlt doch lieber Tokens....
 spring:
   profiles:
     active: keinCaptcha
   application:
     name: "eventbubble30"
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-validity: 900000 #15m
+    refresh-token-validity: 2592000000 #30d

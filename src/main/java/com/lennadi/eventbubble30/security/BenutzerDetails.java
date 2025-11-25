@@ -18,7 +18,9 @@ public class BenutzerDetails implements UserDetails {
     private final String passwordHash;
     private final String role;
 
+    @Getter
     private final Instant passwordChangedAt;
+    @Getter
     private final Instant tokensInvalidatedAt;
 
     public BenutzerDetails(Benutzer b) {
