@@ -139,4 +139,10 @@ public class BenutzerService {
         repository.save(b);
     }
 
+    public void invalidateTokens(Long id) {
+        Benutzer b = getById(id);
+        b.setTokensInvalidatedAt(Instant.now());
+        repository.save(b);
+    }
+
 }

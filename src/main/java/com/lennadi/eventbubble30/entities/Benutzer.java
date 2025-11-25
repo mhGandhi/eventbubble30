@@ -45,6 +45,7 @@ public class Benutzer {
     private Instant lastSeen;
 
     private Instant passwordChangedAt;
+    private Instant tokensInvalidatedAt = Instant.EPOCH;
 
 
     public boolean hasRole(String role) {
