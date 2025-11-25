@@ -38,6 +38,7 @@ public class BenutzerService {
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setCreationDate(Instant.now());
         user.setModificationDate(Instant.now());
+        user.setPasswordChangedAt(Instant.now());
 
         return repository.save(user);
     }
@@ -58,7 +59,10 @@ public class BenutzerService {
             b.setUsername(username);
         }
         if(password!=null && !password.isEmpty()) {
-            b.setPasswordHash(passwordEncoder.encode(password));
+            if(!passwordEncoder.matches(password, current.getPasswordHash())) {
+                b.setPasswordHash(passwordEncoder.encode(password));
+                b.setPasswordChangedAt(Instant.now());
+            }
         }
 
         b.setModificationDate(Instant.now());
@@ -125,10 +129,11 @@ public class BenutzerService {
     public void setPasswordById(Long id, String password) {
         Benutzer b = getById(id);
         b.setPasswordHash(passwordEncoder.encode(password));
+        b.setPasswordChangedAt(Instant.now());
         repository.save(b);
     }
 
-    public void seen(Long id) {
+    public void seen(Long id) {//todo insert more efficiently
         Benutzer b = getById(id);
         b.setLastSeen(Instant.now());
         repository.save(b);

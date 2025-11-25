@@ -44,6 +44,8 @@ public class Benutzer {
     private Instant lastLoginDate;
     private Instant lastSeen;
 
+    private Instant passwordChangedAt;
+
 
     public boolean hasRole(String role) {
         return this.role!=null&&this.role.equals(role);
