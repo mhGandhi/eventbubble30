@@ -7,13 +7,12 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
+@Getter @Setter
 public class ServerConfig {
     @Id
     @Column(unique = true, nullable = false, updatable = false)
     private Long id = 1L;
 
-    @Getter
-    @Setter
     @Column(nullable = false)
     private Instant globalTokensInvalidatedAt = Instant.EPOCH;
 }
