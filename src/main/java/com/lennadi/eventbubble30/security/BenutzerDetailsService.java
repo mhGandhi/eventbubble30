@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.security;
 
+import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
@@ -16,6 +17,10 @@ public class BenutzerDetailsService implements UserDetailsService {
         var benutzer = repo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        return loadUser(benutzer);
+    }
+
+    public UserDetails loadUser(Benutzer benutzer) {
         return new BenutzerDetails(benutzer);
     }
 }

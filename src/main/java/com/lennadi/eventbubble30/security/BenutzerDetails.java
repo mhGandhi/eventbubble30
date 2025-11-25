@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,11 +18,16 @@ public class BenutzerDetails implements UserDetails {
     private final String passwordHash;
     private final String role;
 
+    private final Instant passwordChangedAt;
+    private final Instant tokensInvalidatedAt;
+
     public BenutzerDetails(Benutzer b) {
         this.id = b.getId();
         this.username = b.getUsername();
         this.passwordHash = b.getPasswordHash();
         this.role = b.getRole();
+        this.passwordChangedAt = b.getPasswordChangedAt();
+        this.tokensInvalidatedAt = b.getTokensInvalidatedAt();
     }
 
 
