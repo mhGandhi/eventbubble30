@@ -20,6 +20,13 @@ public class BenutzerDetailsService implements UserDetailsService {
         return loadUser(benutzer);
     }
 
+    public Object loadUserById(Long userId) {
+        var benutzer = repo.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
+
+        return loadUser(benutzer);
+    }
+
     public UserDetails loadUser(Benutzer benutzer) {
         return new BenutzerDetails(benutzer);
     }
