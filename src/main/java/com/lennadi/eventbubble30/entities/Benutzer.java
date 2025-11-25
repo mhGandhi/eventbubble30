@@ -44,7 +44,10 @@ public class Benutzer {
     private Instant lastLoginDate;
     private Instant lastSeen;
 
-    private Instant passwordChangedAt;
+    @Column(nullable = false)
+    private Instant passwordChangedAt = Instant.EPOCH;
+
+    @Column(nullable = false)
     private Instant tokensInvalidatedAt = Instant.EPOCH;
 
 
