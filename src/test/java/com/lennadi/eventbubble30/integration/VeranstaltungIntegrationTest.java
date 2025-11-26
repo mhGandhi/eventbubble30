@@ -172,8 +172,6 @@ class VeranstaltungIntegrationTest {
         v.setDescription(desc);
         v.setTermin(termin);
         v.setBesitzer(owner);
-        v.setCreationDate(Instant.now());
-        v.setModificationDate(Instant.now());
         return v;
     }
 }
