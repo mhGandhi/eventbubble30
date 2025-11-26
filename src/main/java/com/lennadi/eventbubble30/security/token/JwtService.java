@@ -9,12 +9,14 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.rmi.ServerError;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
@@ -25,7 +27,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:}")
     private String secret;
 
     @Value("${app.jwt.access-token-validity-ms:900000}")
@@ -35,6 +37,13 @@ public class JwtService {
     private long refreshTokenValidityMs;
 
     private final ServerConfigService serverConfigService;
+
+    @PostConstruct
+    public void init() {
+        if(secret==null||secret.isBlank()) {
+            System.err.println("WARNING: No JWT secret set!");
+        }
+    }
 
     /// //////////////////////////////////////////////
     public String generateAccessToken(BenutzerDetails user){

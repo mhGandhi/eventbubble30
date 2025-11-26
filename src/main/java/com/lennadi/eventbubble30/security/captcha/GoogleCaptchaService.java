@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.security.captcha;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,17 @@ import java.util.Map;
 @Service()
 @Profile("googleCaptcha")
 public class GoogleCaptchaService implements CaptchaService {
-    @Value("${captcha.secret}")
+    @Value("${captcha.secret:}")
     private String secret;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    @PostConstruct
+    public void init() {
+        if(secret==null||secret.isBlank()) {
+            System.err.println("WARNING: No GoogleCaptcha secret set!");
+        }
+    }
 
     @Override
     public boolean verify(String token) {
