@@ -139,6 +139,12 @@ public class BenutzerService {
         repository.save(b);
     }
 
+    public void lastLoginDate(Long id) {
+        Benutzer b = getById(id);
+        b.setLastLoginDate(Instant.now());
+        repository.save(b);
+    }
+
     public void invalidateTokens(Long id) {
         Benutzer b = getById(id);
         b.setTokensInvalidatedAt(Instant.now());

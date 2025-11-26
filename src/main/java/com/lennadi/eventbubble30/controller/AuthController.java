@@ -2,7 +2,9 @@ package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.captcha.CaptchaService;
+import com.lennadi.eventbubble30.security.token.JwtService;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -36,6 +38,7 @@ public class AuthController {
     private final BenutzerRepository benutzerRepository;
     private final BenutzerService benutzerService;
     private final CaptchaService captchaService;
+    private final JwtService jwtService;
 
     // ==== DTO ====
 
@@ -43,6 +46,10 @@ public class AuthController {
             @NotBlank String username,
             @NotBlank String password
     ) {}
+
+    public record RefreshRequest(
+            @NotEmpty String refreshToken
+    ){}
 
     public record SignupRequest(
             @NotBlank String username,
@@ -54,6 +61,12 @@ public class AuthController {
     public record ResetPasswordRequest(
             @NotEmpty String token,
             @NotEmpty @Size(min = 8, max = 20) String newPassword
+    ) {}
+
+    public record AuthResponse(
+            String accessToken,
+            String refreshToken,
+            Benutzer.DTO benutzerDTO
     ) {}
 
 
@@ -90,54 +103,65 @@ public class AuthController {
                 .body(neu.toDTO());
     }
 
-    @PostMapping("/login")
-    public Benutzer.DTO login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
+    @PostMapping("/login")//todo require captcha (mby filter?)
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
-            // 1. Login durchführen
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.username(), req.password())
             );
 
-            // 2. SecurityContext erstellen und setzen
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
+            BenutzerDetails user = (BenutzerDetails) auth.getPrincipal();
+            benutzerService.lastLoginDate(user.getId());
 
-            // 3. Session erzeugen und SecurityContext hineinspeichern
-            HttpSession session = request.getSession(true);
-            session.setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    context
+            String accessToken = jwtService.generateAccessToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user);
+
+            Benutzer benutzer = benutzerService.getById(user.getId());
+
+            return ResponseEntity.ok(
+                    new AuthResponse(accessToken, refreshToken, benutzer.toDTO())
             );
-
-            // 4. Benutzer laden
-            Benutzer benutzer = benutzerRepository.findByUsername(req.username())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-
-            benutzer.setLastLoginDate(Instant.now());
-            return benutzer.toDTO();
-
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
     }
 
-    // ==== LOGOUT ====
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
+        String refreshToken = req.refreshToken();
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) session.invalidate();
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.noContent().build(); // 204 No Content
+        Long userId = jwtService.extractUserId(refreshToken);
+
+        Benutzer benutzer = benutzerService.getById(userId);
+
+        BenutzerDetails details = new  BenutzerDetails(benutzer);
+
+        jwtService.validateRefreshToken(refreshToken, details);
+
+        String newAccess = jwtService.generateAccessToken(details);
+        //todo mby System zum refresh Token rotieren?
+
+        return ResponseEntity.ok(
+                new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
+        );
     }
 
-    @GetMapping("/validate-session")
+    @PostMapping("invalidate-tokens")
+    public ResponseEntity<Void> invalidateOwnTokens() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth==null||!(auth.getPrincipal() instanceof BenutzerDetails user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        benutzerService.invalidateTokens(user.getId());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/validate")
     public ResponseEntity<Void> validateSession() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated()
-                || auth.getPrincipal().equals("anonymousUser")) {
+        if(auth==null||!(auth.getPrincipal() instanceof BenutzerDetails user)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
