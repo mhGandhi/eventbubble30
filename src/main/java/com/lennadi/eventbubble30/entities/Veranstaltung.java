@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.entities;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,19 +10,7 @@ import java.time.Instant;
 
 @Entity
 @Getter @Setter
-public class Veranstaltung {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, updatable = false)
-    private Long id;
-
-    @Column(nullable = false, updatable = false)
-    @Setter(AccessLevel.NONE)
-    private Instant creationDate;
-    @Column(nullable = false)
-    @Setter(AccessLevel.NONE)
-    private Instant modificationDate;
-
+public class Veranstaltung extends BaseEntity {
     private Instant termin;
 
     private String title;
@@ -31,16 +20,6 @@ public class Veranstaltung {
     @JoinColumn(name = "besitzer_id")
     private Benutzer besitzer;
 
-    @PrePersist
-    protected void onCreate() {
-        this.creationDate = Instant.now();
-        this.modificationDate = Instant.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.modificationDate = Instant.now();
-    }
 
     public static record DTO(
             Long id,

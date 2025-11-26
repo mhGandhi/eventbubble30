@@ -11,15 +11,9 @@ import java.util.Collection;
 @Entity
 @Getter
 @Setter
-public class Benutzer {
+public class Benutzer extends BaseEntity{
     public static final String ROLE_USER = "ROLE_USER";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, updatable = false)
-    private Long id;
 
     @Column(unique = true, nullable = false, length = 20)
     private String username;
@@ -38,12 +32,6 @@ public class Benutzer {
     @Column(nullable = false)//todo enum/set oder so
     private String role = ROLE_USER;
 
-    @Column(nullable = false, updatable = false)
-    @Setter(AccessLevel.NONE)
-    private Instant creationDate;
-    @Column(nullable = false)
-    @Setter(AccessLevel.NONE)
-    private Instant modificationDate;
     private Instant lastLoginDate;
     private Instant lastSeen;
 
@@ -56,17 +44,6 @@ public class Benutzer {
 
     public boolean hasRole(String role) {
         return this.role!=null&&this.role.equals(role);
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.creationDate = Instant.now();
-        this.modificationDate = Instant.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.modificationDate = Instant.now();
     }
 
     public DTO toDTO() {
