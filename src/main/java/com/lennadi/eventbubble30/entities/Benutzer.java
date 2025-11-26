@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,8 +39,10 @@ public class Benutzer {
     private String role = ROLE_USER;
 
     @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant creationDate;
     @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant modificationDate;
     private Instant lastLoginDate;
     private Instant lastSeen;
@@ -53,6 +56,17 @@ public class Benutzer {
 
     public boolean hasRole(String role) {
         return this.role!=null&&this.role.equals(role);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.creationDate = Instant.now();
+        this.modificationDate = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.modificationDate = Instant.now();
     }
 
     public DTO toDTO() {

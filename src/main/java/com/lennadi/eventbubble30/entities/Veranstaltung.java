@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,8 +16,10 @@ public class Veranstaltung {
     private Long id;
 
     @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant creationDate;
     @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant modificationDate;
 
     private Instant termin;
@@ -27,6 +30,17 @@ public class Veranstaltung {
     @ManyToOne
     @JoinColumn(name = "besitzer_id")
     private Benutzer besitzer;
+
+    @PrePersist
+    protected void onCreate() {
+        this.creationDate = Instant.now();
+        this.modificationDate = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.modificationDate = Instant.now();
+    }
 
     public static record DTO(
             Long id,

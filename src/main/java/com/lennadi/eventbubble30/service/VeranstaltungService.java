@@ -54,8 +54,6 @@ public class VeranstaltungService {
         if(description!=null)
             veranstaltung.setDescription(description);
 
-        veranstaltung.setModificationDate(Instant.now());
-
         return veranstaltungRepo.save(veranstaltung);
     }
 
@@ -66,9 +64,6 @@ public class VeranstaltungService {
         veranstaltung.setTitle(title);
         veranstaltung.setDescription(description);
         veranstaltung.setBesitzer(besitzer);
-
-        veranstaltung.setCreationDate(Instant.now());
-        veranstaltung.setModificationDate(Instant.now());
 
         return veranstaltungRepo.save(veranstaltung);
     }

@@ -36,8 +36,6 @@ public class BenutzerService {
         user.setEmail(email);
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setCreationDate(Instant.now());
-        user.setModificationDate(Instant.now());
         user.setPasswordChangedAt(Instant.now());
 
         return repository.save(user);
@@ -64,8 +62,6 @@ public class BenutzerService {
                 b.setPasswordChangedAt(Instant.now());
             }
         }
-
-        b.setModificationDate(Instant.now());
 
         return repository.save(b);
     }
