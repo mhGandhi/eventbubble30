@@ -31,7 +31,7 @@ public class VeranstaltungService {
 
         Benutzer current = benutzerService.getCurrentUser();
 
-        if (!v.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+        if (!v.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.Role.ADMIN)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 
@@ -43,7 +43,7 @@ public class VeranstaltungService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
 
         Benutzer current = benutzerService.getCurrentUser();
-        if (!veranstaltung.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+        if (!veranstaltung.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.Role.ADMIN)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 

@@ -46,7 +46,7 @@ public class BenutzerService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer nicht gefunden"));
         Benutzer current = getCurrentUser();
 
-        if(!b.getId().equals(current.getId()) && !current.hasRole(Benutzer.ROLE_ADMIN)) {
+        if(!b.getId().equals(current.getId()) && !current.hasRole(Benutzer.Role.ADMIN)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
         }
 

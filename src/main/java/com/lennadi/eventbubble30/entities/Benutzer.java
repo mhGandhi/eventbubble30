@@ -7,13 +7,14 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 public class Benutzer extends BaseEntity{
-    public static final String ROLE_USER = "ROLE_USER";
-    public static final String ROLE_ADMIN = "ROLE_ADMIN";
 
     @Column(unique = true, nullable = false, length = 20)
     private String username;
@@ -29,8 +30,14 @@ public class Benutzer extends BaseEntity{
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
 
-    @Column(nullable = false)//todo enum/set oder so
-    private String role = ROLE_USER;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(
+            name = "benutzer_roles",
+            joinColumns = @JoinColumn(name = "benutzer_id")
+    )
+    @Column(nullable = false)
+    private Set<Role> roles = new HashSet<>(List.of(Role.USER));
 
     private Instant lastLoginDate;
     private Instant lastSeen;
@@ -42,8 +49,8 @@ public class Benutzer extends BaseEntity{
     private Instant tokensInvalidatedAt = Instant.EPOCH;
 
 
-    public boolean hasRole(String role) {
-        return this.role!=null&&this.role.equals(role);
+    public boolean hasRole(Role role) {
+        return roles.contains(role);
     }
 
     public DTO toDTO() {
@@ -54,4 +61,10 @@ public class Benutzer extends BaseEntity{
             Long id,
             String username
     ) { }
+
+    public enum Role{
+        USER,
+        ADMIN,
+        MODERATOR
+    }
 }

@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BenutzerDetails implements UserDetails {
 
@@ -16,7 +18,8 @@ public class BenutzerDetails implements UserDetails {
     private final Long id;
     private final String username;
     private final String passwordHash;
-    private final String role;
+    private final Collection<? extends GrantedAuthority> authorities;
+
 
     @Getter
     private final Instant passwordChangedAt;
@@ -27,7 +30,13 @@ public class BenutzerDetails implements UserDetails {
         this.id = b.getId();
         this.username = b.getUsername();
         this.passwordHash = b.getPasswordHash();
-        this.role = b.getRole();
+        // Convert roles → Spring Security authorities
+        this.authorities = b.getRoles().stream()
+                .map(Benutzer.Role::name)                     // USER → "USER"
+                .map(r -> "ROLE_" + r)               // add prefix
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toUnmodifiableSet());
+
         this.passwordChangedAt = b.getPasswordChangedAt();
         this.tokensInvalidatedAt = b.getTokensInvalidatedAt();
     }
@@ -35,7 +44,7 @@ public class BenutzerDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return authorities;
     }
 
     @Override
