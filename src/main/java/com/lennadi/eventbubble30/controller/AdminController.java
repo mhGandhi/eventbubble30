@@ -1,16 +1,17 @@
 package com.lennadi.eventbubble30.controller;
 
+import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.logging.AuditLogRepository;
+import com.lennadi.eventbubble30.repository.ServerConfigRepository;
+import com.lennadi.eventbubble30.service.ServerConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
     private final AuditLogRepository auditLogRepository;
+    private final ServerConfigService serverConfigService;
 
 
     @GetMapping("/audit-log")
@@ -75,6 +77,17 @@ public class AdminController {
                         : Specification.allOf(filters);
 
         return auditLogRepository.findAll(finalSpec, pageable);
+    }
+
+    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "ServerConfig")
+    @PostMapping("invalidate-tokens")
+    public ResponseEntity<Void> invalidateTokens() {
+        try{
+            serverConfigService.invalidateAllTokensNow();
+            return ResponseEntity.noContent().build();
+        }catch(Exception e){
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }
