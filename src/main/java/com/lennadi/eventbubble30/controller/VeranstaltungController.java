@@ -1,6 +1,8 @@
 package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Veranstaltung;
+import com.lennadi.eventbubble30.logging.Audit;
+import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import com.lennadi.eventbubble30.service.VeranstaltungService;
 import jakarta.validation.Valid;
@@ -43,6 +45,11 @@ public class VeranstaltungController {
 
     // ===== DELETE EVENT (mit Besitzprüfung – aber im Service!) =====
 
+    @Audit(
+            action = AuditLog.Action.DELETE,
+            resourceType = "Veranstaltung",
+            resourceIdParam = "id"
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVeranstaltung(@PathVariable Long id) {
         veranstaltungService.deleteVeranstaltungById(id);
@@ -51,6 +58,10 @@ public class VeranstaltungController {
 
     // ===== CREATE EVENT (Besitzer = current user) =====
 
+    @Audit(
+            action = AuditLog.Action.CREATE,
+            resourceType = "Veranstaltung"
+    )
     @PostMapping("/create")
     public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
             @Valid @RequestBody CreateVeranstaltungRequest req
@@ -69,6 +80,11 @@ public class VeranstaltungController {
 
     // ===== Patch =====
 
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = "Veranstaltung",
+            resourceIdParam = "id"
+    )
     @PatchMapping("/{id}")
     public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
             @PathVariable Long id,

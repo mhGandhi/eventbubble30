@@ -1,7 +1,8 @@
 package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.entities.Veranstaltung;
+import com.lennadi.eventbubble30.logging.Audit;
+import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -9,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -52,6 +51,7 @@ public class BenutzerController {
 
     // ===== Endpoints =====
 
+    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer")
     @PostMapping("/create")
     public ResponseEntity<Benutzer.DTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
@@ -66,8 +66,9 @@ public class BenutzerController {
                 .body(neu.toDTO());                                     // Response Body
     }
 
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "id")
     @PatchMapping("/{id}")
-    public ResponseEntity<Benutzer.DTO> patchVeranstaltung(
+    public ResponseEntity<Benutzer.DTO> patchUser(
             @PathVariable Long id,
             @Valid @RequestBody PatchBenutzerRequest req
     ) {
@@ -83,24 +84,21 @@ public class BenutzerController {
                 .body(b.toDTO());
     }
 
-
+    @Audit(action = AuditLog.Action.DELETE, resourceType = "Benutzer", resourceIdParam = "id")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
         service.deleteUserById(id);
         return ResponseEntity.noContent().build();
     }
 
-
+    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer", resourceIdParam = "id")
     @GetMapping("/{id}")
     public Benutzer.DTO findUserById(@PathVariable long id) {
         return service.getById(id).toDTO();
     }
 
-    @GetMapping("/name/{username}")
-    public Benutzer.DTO findUserByUsername(@PathVariable String username) {
-        return service.getByUsername(username).toDTO();
-    }
 
+    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer")
     @GetMapping({"", "/"})
     public Page<Benutzer.DTO> listUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -109,12 +107,14 @@ public class BenutzerController {
         return service.list(page, size).map(Benutzer::toDTO);
     }
 
+    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer", resourceIdParam = "currentUser")
     @GetMapping("/me")
     public Benutzer.DTO me() {
         Benutzer benutzer = service.getCurrentUser();
         return benutzer.toDTO();
     }
 
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "currentUser")
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody UpdateOwnPasswordRequest req

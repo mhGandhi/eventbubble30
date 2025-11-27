@@ -1,6 +1,8 @@
 package com.lennadi.eventbubble30.controller;
 
 import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.logging.Audit;
+import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.captcha.CaptchaService;
@@ -69,7 +71,7 @@ public class AuthController {
             Benutzer.DTO benutzerDTO
     ) {}
 
-
+    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer")
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest req) {
 
@@ -103,6 +105,7 @@ public class AuthController {
                 .body(neu.toDTO());
     }
 
+    @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer", resourceIdParam = "username")
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
@@ -126,6 +129,7 @@ public class AuthController {
         }
     }
 
+    @Audit(action = AuditLog.Action.REFRESH, resourceType = "Benutzer")
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
         String refreshToken = req.refreshToken();
@@ -146,6 +150,7 @@ public class AuthController {
         );
     }
 
+    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")
     @PostMapping("invalidate-tokens")
     public ResponseEntity<Void> invalidateOwnTokens() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -169,6 +174,7 @@ public class AuthController {
     }
 
     //PW reset etc
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
     @PostMapping("/request-password-reset")
     public ResponseEntity<Void> requestPasswordReset(@RequestParam String email) {
         var userOpt = benutzerRepository.findByEmail(email);
@@ -183,6 +189,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
 
