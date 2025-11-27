@@ -17,8 +17,11 @@ public class Eventbubble30Application {
         iCal Export: api/events/{id}/export.ics -> Endpunkt für Kalenderexport
 
         api/admin endpoint: das bisschen von dem regulären Betrieb trennen.
-        Extra Endpunkte wie active-users, invalidate all tokens user-count und Audit-Log Abruf etc.
+        Extra Endpunkte wie active-users, invalidate all tokens, user-count etc.
         -> später im Frontend Admin Dashboard
+
+        @PreAuthorize: das benutzen anstelle der Sicherheitschecks in den Services die grade bestehen
+        -> übersichtlicher und eif geiler
 
         Email Verifikation: an bestehende, unimplementierte Endpunkte in AuthController anknüpfen.
         Email Schicken + Token Speichern (mit Ablauf @Scheduled)->Token Abgleichen und Löschen (wenn pw geändert)
@@ -35,6 +38,8 @@ public class Eventbubble30Application {
         Rate-Limiting: login, refresh und signup pro IP + pro Username limitieren
 
         Moderation: Nutzer suspendieren, bannen, löschen. Beiträge melden. Moderator Ansicht für gemeldete Beiträge
+
+        Captcha: Altcha o.Ä. (free und am besten self hosted)
 
         Event-Erinnerungen, Tags+Kategorien für Events, einfache Suche +Filter, Privatsphäreeinstellungen Profile+Events, Webhooks, Session Overview, MFA, Cache Layer, Telemetrie
      */

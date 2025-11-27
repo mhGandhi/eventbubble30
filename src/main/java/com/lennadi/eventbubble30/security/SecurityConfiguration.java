@@ -49,13 +49,14 @@ public class SecurityConfiguration {
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/apiDoc.yml").permitAll()
 
+                        //admin
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         //auth
-                        .requestMatchers("/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
 
                         //user
-                        .requestMatchers(HttpMethod.GET,"/api/user/**").authenticated()
-                        .requestMatchers("/api/user/**").hasRole("ADMIN")
+                        .requestMatchers("/api/user/**").authenticated()
 
                         //events
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
