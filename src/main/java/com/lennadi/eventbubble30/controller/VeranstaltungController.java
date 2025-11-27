@@ -6,11 +6,11 @@ import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import com.lennadi.eventbubble30.service.VeranstaltungService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -24,7 +24,6 @@ public class VeranstaltungController {
     private final VeranstaltungService veranstaltungService;
     private final BenutzerService benutzerService;
 
-    // ===== DTOs =====
     public record CreateVeranstaltungRequest(
             Instant termin,
             @NotEmpty String title,
@@ -36,32 +35,20 @@ public class VeranstaltungController {
             String description
     ) {}
 
-    // ===== GET EVENT =====
 
     @GetMapping("/{id}")
     public Veranstaltung.DTO getVeranstaltungById(@PathVariable Long id) {
         return veranstaltungService.getVeranstaltungById(id).toDTO();
     }
 
-    // ===== DELETE EVENT (mit Besitzprüfung – aber im Service!) =====
-
-    @Audit(
-            action = AuditLog.Action.DELETE,
-            resourceType = "Veranstaltung",
-            resourceIdParam = "id"
-    )
+    @Audit(action = AuditLog.Action.DELETE, resourceType = "Veranstaltung", resourceIdParam = "id")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVeranstaltung(@PathVariable Long id) {
         veranstaltungService.deleteVeranstaltungById(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ===== CREATE EVENT (Besitzer = current user) =====
-
-    @Audit(
-            action = AuditLog.Action.CREATE,
-            resourceType = "Veranstaltung"
-    )
+    @Audit(action = AuditLog.Action.CREATE, resourceType = "Veranstaltung")
     @PostMapping("/create")
     public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
             @Valid @RequestBody CreateVeranstaltungRequest req
@@ -78,13 +65,7 @@ public class VeranstaltungController {
                 .body(vs.toDTO());
     }
 
-    // ===== Patch =====
-
-    @Audit(
-            action = AuditLog.Action.UPDATE,
-            resourceType = "Veranstaltung",
-            resourceIdParam = "id"
-    )
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Veranstaltung", resourceIdParam = "id")
     @PatchMapping("/{id}")
     public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
             @PathVariable Long id,
@@ -101,8 +82,6 @@ public class VeranstaltungController {
                 .ok()
                 .body(vs.toDTO());
     }
-
-    // ===== LIST =====
 
     @GetMapping({"", "/"})
     public Page<Veranstaltung.DTO> listVeranstaltungen(

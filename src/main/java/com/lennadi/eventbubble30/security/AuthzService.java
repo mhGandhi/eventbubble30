@@ -1,0 +1,26 @@
+package com.lennadi.eventbubble30.security;
+
+import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.entities.Veranstaltung;
+import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.service.VeranstaltungService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service("authz")
+@RequiredArgsConstructor
+public class AuthzService {
+    private final VeranstaltungService veranstaltungService;
+    private final BenutzerService benutzerService;
+
+    public boolean isEventOwner(Long eventId){
+        Benutzer current = benutzerService.getCurrentUser();
+        Veranstaltung v = veranstaltungService.getVeranstaltungById(eventId);
+        return v != null && v.getBesitzer().equals(current);
+    }
+
+    public boolean isSelf(Long userId) {
+        var current = benutzerService.getCurrentUser();
+        return current != null && current.getId().equals(userId);
+    }
+}

@@ -6,6 +6,7 @@ import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,26 +27,15 @@ public class VeranstaltungService {
                 ));
     }
 
+    @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
     public void deleteVeranstaltungById(Long id) {
-        Veranstaltung v = getVeranstaltungById(id);
-
-        Benutzer current = benutzerService.getCurrentUser();
-
-        if (!v.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.Role.ADMIN)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
-        }
-
-        veranstaltungRepo.delete(v);
+        veranstaltungRepo.delete(getVeranstaltungById(id));
     }
 
+    @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
     public Veranstaltung patchVeranstaltungById(Long id, Instant termin, String title, String description) {
         Veranstaltung veranstaltung = veranstaltungRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
-
-        Benutzer current = benutzerService.getCurrentUser();
-        if (!veranstaltung.getBesitzer().getId().equals(current.getId()) && !current.hasRole(Benutzer.Role.ADMIN)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Keine Erlaubnis");
-        }
 
         if(termin!=null)
             veranstaltung.setTermin(termin);
@@ -57,7 +47,7 @@ public class VeranstaltungService {
         return veranstaltungRepo.save(veranstaltung);
     }
 
-
+    @PreAuthorize("isAuthenticated()")
     public Veranstaltung createVeranstaltung(Instant termin, String title, String description, Benutzer besitzer){
         Veranstaltung veranstaltung = new Veranstaltung();
         veranstaltung.setTermin(termin);

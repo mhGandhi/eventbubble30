@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -93,7 +94,7 @@ public class AuthController {
         }
 
         // 4. Benutzer erstellen
-        Benutzer neu = benutzerService.createBenutzer(
+        Benutzer neu = benutzerService.FORCEcreateBenutzer(
                 req.email(),
                 req.username(),
                 req.password()
@@ -105,7 +106,7 @@ public class AuthController {
                 .body(neu.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer", resourceIdParam = "username")
+    @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer")
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
         try {
@@ -152,24 +153,17 @@ public class AuthController {
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")
     @PostMapping("invalidate-tokens")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> invalidateOwnTokens() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth==null||!(auth.getPrincipal() instanceof BenutzerDetails user)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        benutzerService.invalidateTokens(user.getId());
+        Benutzer benutzer = benutzerService.getCurrentUser();
+        benutzerService.invalidateTokens(benutzer.getId());
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/validate")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> validateSession() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth==null||!(auth.getPrincipal() instanceof BenutzerDetails user)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         return ResponseEntity.ok().build();
     }
 
