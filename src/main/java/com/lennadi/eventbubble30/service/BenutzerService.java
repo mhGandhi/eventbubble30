@@ -155,4 +155,8 @@ public class BenutzerService {
         repository.save(b);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public int getUserCount() {
+        return repository.findAll().size();
+    }
 }

@@ -130,4 +130,9 @@ public class BenutzerController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/count")
+    public int getUserCount() {
+        return service.getUserCount();
+    }
+
 }
