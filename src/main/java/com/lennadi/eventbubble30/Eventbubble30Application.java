@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class Eventbubble30Application {
+    public static final String DOMAIN = "eventbubble.lennadi.com";
 
     public static void main(String[] args) {
         SpringApplication.run(Eventbubble30Application.class, args);
@@ -12,12 +13,8 @@ public class Eventbubble30Application {
 
     /*todo
     Inspo:
-        Ortschaften: Orte von Veranstaltungen irgendwie Speichern. Dazu vlt OpenStreetmapAPI oder so
+        Ortschaften: Orte von Veranstaltungen irgendwie Speichern. Dazu vlt OpenStreetmapAPI oder so, (Nominatim?)
 
-        iCal Export: api/events/{id}/export.ics -> Endpunkt für Kalenderexport
-
-        api/admin endpoint: das bisschen von dem regulären Betrieb trennen.
-        Extra Endpunkte wie active-users, invalidate all tokens, user-count etc.
         -> später im Frontend Admin Dashboard
 
         @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/

@@ -90,4 +90,15 @@ public class VeranstaltungController {
     ) {
         return veranstaltungService.list(page, size).map(Veranstaltung::toDTO);
     }
+
+    @GetMapping("/{id}/export.ics")
+    public ResponseEntity<String> exportIcs(@PathVariable Long id) {
+        String icsData = veranstaltungService.exportAsIcs(id);
+
+        return ResponseEntity
+                .ok()
+                .header("Content-Disposition", "attachment; filename=event-"+id+".ics")
+                .header("Content-Type", "text/calender; charset=utf-8")
+                .body(icsData);
+    }
 }

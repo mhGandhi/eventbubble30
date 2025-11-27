@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.service;
 
+import com.lennadi.eventbubble30.Eventbubble30Application;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
@@ -26,6 +27,47 @@ public class VeranstaltungService {
                         "Veranstaltung mit id [" + id + "] nicht gefunden"
                 ));
     }
+
+    public String exportAsIcs(Long id) {//todo abchecken mal ka
+        Veranstaltung vs = getVeranstaltungById(id);
+
+        // ICS requires UTC timestamps in format: yyyyMMdd'T'HHmmss'Z'
+        Instant start = vs.getTermin();
+        String dtStart = java.time.format.DateTimeFormatter
+                .ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                .withZone(java.time.ZoneOffset.UTC)
+                .format(start);
+
+        String uid = "event-" + id + "@"+ Eventbubble30Application.DOMAIN;
+
+        return """
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            PRODID:-//EventBubble30//EN
+            BEGIN:VEVENT
+            UID:%s
+            DTSTAMP:%s
+            DTSTART:%s
+            SUMMARY:%s
+            DESCRIPTION:%s
+            END:VEVENT
+            END:VCALENDAR
+            """.formatted(
+                uid,
+                dtStart,
+                dtStart,
+                escape(vs.getTitle()),
+                escape(vs.getDescription() == null ? "" : vs.getDescription())
+        );
+    }
+    private String escape(String s) {
+        return s
+                .replace("\\", "\\\\")
+                .replace(",", "\\,")
+                .replace(";", "\\;")
+                .replace("\n", "\\n");
+    }
+
 
     @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
     public void deleteVeranstaltungById(Long id) {
