@@ -20,8 +20,11 @@ public class Eventbubble30Application {
         Extra Endpunkte wie active-users, invalidate all tokens, user-count etc.
         -> später im Frontend Admin Dashboard
 
-        @PreAuthorize: das benutzen anstelle der Sicherheitschecks in den Services die grade bestehen
-        -> übersichtlicher und eif geiler
+        @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/
+
+        JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt
+
+        Gelöschte Nutzer nicht Authentifizieren: Gültige Tokens für nicht existierende Benutzer sind gefährlich!
 
         Email Verifikation: an bestehende, unimplementierte Endpunkte in AuthController anknüpfen.
         Email Schicken + Token Speichern (mit Ablauf @Scheduled)->Token Abgleichen und Löschen (wenn pw geändert)

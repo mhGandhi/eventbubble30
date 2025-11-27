@@ -42,6 +42,10 @@ public class BenutzerService {
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setPasswordChangedAt(Instant.now());
 
+        if(repository.count() == 0) {
+            user.getRoles().add(Benutzer.Role.ADMIN);
+        }
+
         return repository.save(user);
     }
 

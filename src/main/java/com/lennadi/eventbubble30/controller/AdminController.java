@@ -25,7 +25,7 @@ public class AdminController {
 
 
     @GetMapping("/audit-log")
-    public Page<AuditLog> listAuditLogs(
+    public Page<AuditLog.DTO> listAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
 
@@ -76,7 +76,10 @@ public class AdminController {
                         ? Specification.allOf()
                         : Specification.allOf(filters);
 
-        return auditLogRepository.findAll(finalSpec, pageable);
+        return auditLogRepository
+                .findAll(finalSpec, pageable)
+                .map(AuditLog::toDTO);
+
     }
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "ServerConfig")

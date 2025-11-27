@@ -20,7 +20,7 @@ public class AuditLog {
     private Long id;
 
     //WHO
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "benutzer_id", nullable = true, updatable = false)
     private Benutzer benutzer;
     @Column(nullable = false, updatable = false, length = 45)
@@ -97,4 +97,18 @@ public class AuditLog {
         public static final Set<Action> CRUD = new HashSet<>(List.of(CREATE, READ, UPDATE, DELETE));
         public static final Set<Action> AUTH = new HashSet<>(List.of(LOGIN, REFRESH, INVALIDATE_TOKENS));
     }
+    public DTO toDTO(){
+        return new DTO(
+                this.id, this.benutzer!=null?this.benutzer.toDTO():null, this.ipAddress, this.usernameSnapshot, this.roleSnapshot,
+                this.action, this.payload, this.success, this.endpoint,
+                this.timestamp,
+                this.resourceType, this.resourceId
+        );
+    }
+    public record DTO (
+        Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
+        Action action, String payload, boolean success, String endpoint,
+        Instant timestamp,
+        String resourceType, Long resourceId
+    ) { }
 }
