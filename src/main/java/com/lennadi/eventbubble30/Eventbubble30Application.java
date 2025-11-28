@@ -1,11 +1,15 @@
 package com.lennadi.eventbubble30;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class Eventbubble30Application {
-    public static final String DOMAIN = "eventbubble.lennadi.com";
+    @Value("${server.domain:localhost:8080}")
+    public static String DOMAIN;//todo fix
 
     public static void main(String[] args) {
         SpringApplication.run(Eventbubble30Application.class, args);
@@ -18,6 +22,8 @@ public class Eventbubble30Application {
         -> später im Frontend Admin Dashboard
 
         @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/
+
+        vlt kein Login erlauben wenn schon drin? (eig unnötig)
 
         JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt
 

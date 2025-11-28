@@ -1,11 +1,12 @@
 server:
+  domain: "eventbubble.lennadi.com"
   error:
     include-stacktrace: never
     include-exception: false
     include-message: always
 spring:
   profiles:
-    active: keinCaptcha
+    active: keinCaptcha, EMAIL_dummy
   application:
     name: "eventbubble30"
 app:

@@ -6,10 +6,11 @@ import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.captcha.CaptchaService;
+import com.lennadi.eventbubble30.security.password.PasswordResetService;
 import com.lennadi.eventbubble30.security.token.JwtService;
 import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.mail.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -23,14 +24,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,6 +39,8 @@ public class AuthController {
     private final BenutzerService benutzerService;
     private final CaptchaService captchaService;
     private final JwtService jwtService;
+    private final PasswordResetService  passwordResetService;
+    private final EmailService emailService;
 
     // ==== DTO ====
 
@@ -56,7 +55,7 @@ public class AuthController {
 
     public record SignupRequest(
             @NotBlank String username,
-            @NotBlank String password,
+            @NotBlank @Size(min = 8, max = 20) String password,
             @NotBlank @Email String email,
             @NotBlank String captchaToken
     ) {}
@@ -170,30 +169,24 @@ public class AuthController {
     //PW reset etc
     @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
     @PostMapping("/request-password-reset")
-    public ResponseEntity<Void> requestPasswordReset(@RequestParam String email) {
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestParam String email) {
         var userOpt = benutzerRepository.findByEmail(email);
 
-        if (userOpt.isPresent()) {
-            //todo token generieren, speichern und verschicken
-            //(token mit id, token, expiresAt und User neues repository etc)
-        }
+        userOpt.ifPresent(passwordResetService::requestReset);
 
-        // Immer 200 zurück, egal ob User existiert oder nicht
-        //return ResponseEntity.ok().build();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok().build(); // always 200
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
-
-        //todo Token in Speicher finden, überprüfen ob null und ob abgelaufen, Token löschen
-
-
-        //benutzerService.setPasswordById(0L/*todo userId aus Token extrahieren*/, req.newPassword);
-
-        //return ResponseEntity.noContent().build();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        try {
+            Benutzer user = passwordResetService.validateTokenAndConsume(req.token());
+            benutzerService.FORCEsetPasswordById(user.getId(), req.newPassword());
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
 }
