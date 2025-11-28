@@ -1,4 +1,4 @@
-package com.lennadi.eventbubble30.entities;
+package com.lennadi.eventbubble30.config;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Entity
 @Getter @Setter
-public class ServerConfig {
+public class ServerConfigSingletonEntity {
     @Id
     @Column(unique = true, nullable = false, updatable = false)
     private Long id = 1L;

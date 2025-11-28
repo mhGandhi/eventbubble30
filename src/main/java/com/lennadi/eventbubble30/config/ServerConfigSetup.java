@@ -1,7 +1,5 @@
-package com.lennadi.eventbubble30;
+package com.lennadi.eventbubble30.config;
 
-import com.lennadi.eventbubble30.entities.ServerConfig;
-import com.lennadi.eventbubble30.repository.ServerConfigRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 
@@ -12,7 +10,7 @@ public class ServerConfigSetup {
     CommandLineRunner initServerConfig(ServerConfigRepository rp) {
         return args ->{
             if(!rp.existsById(1L)){
-                ServerConfig cfg = new ServerConfig();
+                ServerConfigSingletonEntity cfg = new ServerConfigSingletonEntity();
                 cfg.setGlobalTokensInvalidatedAt(Instant.EPOCH);
                 rp.save(cfg);
             }

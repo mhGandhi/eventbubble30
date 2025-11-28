@@ -8,12 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 public class Eventbubble30Application {
-    public static String DOMAIN;//todo fix?
-
-    @Value("${server.domain:localhost:8080}")
-    public void setDomain(String domain) {
-        DOMAIN = domain;
-    }
 
     public static void main(String[] args) {
         SpringApplication.run(Eventbubble30Application.class, args);

@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.security.password;
 
 import com.lennadi.eventbubble30.Eventbubble30Application;
+import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.service.BenutzerService;
 import com.lennadi.eventbubble30.mail.EmailService;
@@ -34,7 +35,7 @@ public class PasswordResetService {
         tokenRepo.save(prt);
 
         // send email
-        String resetUrl = "https://"+ Eventbubble30Application.DOMAIN +"/api/auth/reset-password?token=" + token;//todo different link? Frontend mäßig?
+        String resetUrl = "https://"+ ServerConfig.DOMAIN +"/api/auth/reset-password?token=" + token;//todo different link? Frontend mäßig?
 
         emailService.send(//todo translate (maybe offload to frontend?)
                 user.getEmail(),

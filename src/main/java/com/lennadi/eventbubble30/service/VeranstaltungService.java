@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.service;
 
 import com.lennadi.eventbubble30.Eventbubble30Application;
+import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.entities.Benutzer;
 import com.lennadi.eventbubble30.entities.Veranstaltung;
 import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
@@ -38,7 +39,7 @@ public class VeranstaltungService {
                 .withZone(java.time.ZoneOffset.UTC)
                 .format(start);
 
-        String uid = "event-" + id + "@"+ Eventbubble30Application.DOMAIN;
+        String uid = "event-" + id + "@"+ ServerConfig.DOMAIN;
 
         return """
             BEGIN:VCALENDAR

@@ -2,7 +2,7 @@ package com.lennadi.eventbubble30.security.token;
 
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.token.exceptions.*;
-import com.lennadi.eventbubble30.service.ServerConfigService;
+import com.lennadi.eventbubble30.config.ServerConfigService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.rmi.ServerError;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;

@@ -1,7 +1,5 @@
-package com.lennadi.eventbubble30.service;
+package com.lennadi.eventbubble30.config;
 
-import com.lennadi.eventbubble30.entities.ServerConfig;
-import com.lennadi.eventbubble30.repository.ServerConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +15,14 @@ public class ServerConfigService {
     public Instant getGlobalTokenRevokationTime()
     {
         return repo.findById(SINGLETON_ID)
-                .map(ServerConfig::getGlobalTokensInvalidatedAt)
+                .map(ServerConfigSingletonEntity::getGlobalTokensInvalidatedAt)
                 .orElse(Instant.EPOCH);
     }
 
     public void invalidateAllTokensNow(){
-        ServerConfig cfg = repo.findById(SINGLETON_ID)
+        ServerConfigSingletonEntity cfg = repo.findById(SINGLETON_ID)
                 .orElseGet(()->{
-                    ServerConfig c = new ServerConfig();
+                    ServerConfigSingletonEntity c = new ServerConfigSingletonEntity();
                     c.setId(SINGLETON_ID);
                     return c;
                 });
