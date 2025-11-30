@@ -1,7 +1,7 @@
 package com.lennadi.eventbubble30.filter;
 
 import com.lennadi.eventbubble30.security.BenutzerDetails;
-import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

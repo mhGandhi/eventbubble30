@@ -1,16 +1,15 @@
-package com.lennadi.eventbubble30.controller;
+package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.entities.Veranstaltung;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
-import com.lennadi.eventbubble30.service.BenutzerService;
-import com.lennadi.eventbubble30.service.VeranstaltungService;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;

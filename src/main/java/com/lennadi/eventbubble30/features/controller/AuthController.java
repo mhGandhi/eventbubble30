@@ -1,14 +1,14 @@
-package com.lennadi.eventbubble30.controller;
+package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
-import com.lennadi.eventbubble30.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.captcha.CaptchaService;
 import com.lennadi.eventbubble30.security.password.PasswordResetService;
 import com.lennadi.eventbubble30.security.token.JwtService;
-import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.mail.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

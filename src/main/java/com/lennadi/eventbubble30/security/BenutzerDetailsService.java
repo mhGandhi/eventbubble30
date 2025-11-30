@@ -1,7 +1,7 @@
 package com.lennadi.eventbubble30.security;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

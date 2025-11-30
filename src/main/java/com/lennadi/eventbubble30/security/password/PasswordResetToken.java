@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.security.password;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
 import jakarta.persistence.*;
 import lombok.*;
 

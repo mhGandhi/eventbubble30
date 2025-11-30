@@ -1,9 +1,9 @@
 package com.lennadi.eventbubble30.security;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.entities.Veranstaltung;
-import com.lennadi.eventbubble30.service.BenutzerService;
-import com.lennadi.eventbubble30.service.VeranstaltungService;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

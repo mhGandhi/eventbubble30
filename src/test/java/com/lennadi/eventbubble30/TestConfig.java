@@ -1,8 +1,7 @@
 package com.lennadi.eventbubble30;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.repository.BenutzerRepository;
-import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

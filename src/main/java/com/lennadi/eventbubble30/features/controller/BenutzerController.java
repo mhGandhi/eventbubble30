@@ -1,9 +1,9 @@
-package com.lennadi.eventbubble30.controller;
+package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
-import com.lennadi.eventbubble30.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;

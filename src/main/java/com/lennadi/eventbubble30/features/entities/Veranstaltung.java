@@ -1,8 +1,6 @@
-package com.lennadi.eventbubble30.entities;
+package com.lennadi.eventbubble30.features.entities;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 

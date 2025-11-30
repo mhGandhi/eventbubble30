@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.security;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -8,8 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class BenutzerDetails implements UserDetails {

@@ -2,9 +2,10 @@ package com.lennadi.eventbubble30.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.TestConfig;
-import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.repository.BenutzerRepository;
-import com.lennadi.eventbubble30.repository.VeranstaltungsRepository;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.repository.VeranstaltungsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,12 +163,12 @@ class VeranstaltungIntegrationTest {
     // Helper
     // ---------------------------------------------------------
 
-    private com.lennadi.eventbubble30.entities.Veranstaltung createEvent(
+    private Veranstaltung createEvent(
             String title, String desc, Instant termin
     ) {
         var owner = benutzerRepo.findById(1L).orElseThrow();
 
-        var v = new com.lennadi.eventbubble30.entities.Veranstaltung();
+        var v = new Veranstaltung();
         v.setTitle(title);
         v.setDescription(desc);
         v.setTermin(termin);

@@ -1,4 +1,4 @@
-package com.lennadi.eventbubble30.controller;
+package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;

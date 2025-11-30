@@ -1,10 +1,11 @@
 package com.lennadi.eventbubble30.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lennadi.eventbubble30.entities.Benutzer;
-import com.lennadi.eventbubble30.entities.Veranstaltung;
-import com.lennadi.eventbubble30.service.BenutzerService;
-import com.lennadi.eventbubble30.service.VeranstaltungService;
+import com.lennadi.eventbubble30.features.controller.VeranstaltungController;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

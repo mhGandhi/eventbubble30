@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
-import com.lennadi.eventbubble30.entities.Benutzer;
+import com.lennadi.eventbubble30.features.entities.Benutzer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
