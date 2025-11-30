@@ -1,7 +1,5 @@
 name: Bauch-Beine-Po
 run-name: ${{github.actor}} hat Änderungen gepusht.
-  
-
 on:
   push:
     branches: ["main"]
