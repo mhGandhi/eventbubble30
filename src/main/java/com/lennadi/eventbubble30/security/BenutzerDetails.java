@@ -18,6 +18,8 @@ public class BenutzerDetails implements UserDetails {
     private final String passwordHash;
     private final Collection<? extends GrantedAuthority> authorities;
 
+    private final boolean emailVerified;
+
 
     @Getter
     private final Instant passwordChangedAt;
@@ -37,6 +39,7 @@ public class BenutzerDetails implements UserDetails {
 
         this.passwordChangedAt = b.getPasswordChangedAt();
         this.tokensInvalidatedAt = b.getTokensInvalidatedAt();
+        this.emailVerified = b.isEmailVerified();
     }
 
 
@@ -72,6 +75,10 @@ public class BenutzerDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true; // Optional später erweitern
+        if (authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            return true;
+        }
+        return emailVerified;
+        // Optional später erweitern
     }
 }

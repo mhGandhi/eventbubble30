@@ -47,6 +47,11 @@ public class Benutzer extends BaseEntity{
     @Column(nullable = false)
     private Instant tokensInvalidatedAt = Instant.EPOCH;
 
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+    private String verificationToken;
+    private Instant verificationTokenExpiresAt;
+
 
     public boolean hasRole(Role role) {
         return roles.contains(role);

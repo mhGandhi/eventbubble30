@@ -1,7 +1,9 @@
 package com.lennadi.eventbubble30.features.service;
 
+import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.mail.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -12,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class BenutzerService {
 
     private final BenutzerRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @PreAuthorize("hasRole('ADMIN')")
     public Benutzer createBenutzer(String email, String username, String password) {
@@ -41,13 +46,56 @@ public class BenutzerService {
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setPasswordChangedAt(Instant.now());
+        user.setEmailVerified(false);
 
-        if(repository.count() == 0) {
+        if(repository.count() == 0) {//todo stop doing that mby
             user.getRoles().add(Benutzer.Role.ADMIN);
+            user.setEmailVerified(true);
         }
 
         return repository.save(user);
     }
+
+
+    private String generateVerificationToken() {
+        return UUID.randomUUID().toString().replace("-", "");//todo solider?
+    }
+
+    public void sendVerificationEmail(Benutzer user) {
+        if (user.isEmailVerified()) return;
+
+        Instant expiry = Instant.now().plus(Duration.ofHours(24));
+
+        user.setVerificationToken(generateVerificationToken());
+        user.setVerificationTokenExpiresAt(expiry);
+        repository.save(user);
+
+        String link = "https://"+ ServerConfig.DOMAIN+"/api/auth/verify-email?token=" + user.getVerificationToken();
+
+        emailService.send(//todo übersetzen etc
+                user.getEmail(),
+                "Email Verifizieren",
+                "Link aufrufen zum verifizieren (gültig bis "+expiry+"):\n\n" + link
+        );
+    }
+
+    public void verifyEmail(String token) {
+        Benutzer b = repository.findByVerificationToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token"));
+
+        if (b.getVerificationTokenExpiresAt() != null &&
+                b.getVerificationTokenExpiresAt().isBefore(Instant.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+        }
+
+        b.setEmailVerified(true);
+        b.setVerificationToken(null);
+        b.setVerificationTokenExpiresAt(null);
+
+        repository.save(b);
+    }
+
+
 
     @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
     public Benutzer patchBenutzerById(Long id, String email, String username, String password) {

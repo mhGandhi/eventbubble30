@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -107,27 +110,41 @@ public class AuthController {
 
     @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer")
     @PostMapping("/login")//todo require captcha (mby filter?)
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+
+        Benutzer b = benutzerRepository.findByUsername(req.username())
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"));
+        BenutzerDetails user;
+        boolean emailVerified = b.isEmailVerified();
+
         try {
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.username(), req.password())
             );
-
-            BenutzerDetails user = (BenutzerDetails) auth.getPrincipal();
-            benutzerService.lastLoginDate(user.getId());
-
-            String accessToken = jwtService.generateAccessToken(user);
-            String refreshToken = jwtService.generateRefreshToken(user);
-
-            Benutzer benutzer = benutzerService.getById(user.getId());
-
-            return ResponseEntity.ok(
-                    new AuthResponse(accessToken, refreshToken, benutzer.toDTO())
-            );
+            user = (BenutzerDetails) auth.getPrincipal();
+        } catch (DisabledException e) {
+            if(emailVerified) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account nicht aktiv");
+            }else{
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email nicht verifiziert");
+            }
+        } catch (BadCredentialsException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten");
         } catch (AuthenticationException ex) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Fehler bei der Anmeldung");
         }
+
+
+        benutzerService.lastLoginDate(b.getId());
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        return ResponseEntity.ok(
+                new AuthResponse(accessToken, refreshToken, b.toDTO())
+        );
     }
+
 
     @Audit(action = AuditLog.Action.REFRESH, resourceType = "Benutzer")
     @PostMapping("/refresh")
@@ -188,5 +205,25 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+
+    @PostMapping("/request-email-verification")
+    public ResponseEntity<Void> requestEmailVerification(@RequestParam @Email String email) {
+
+        benutzerRepository.findByEmail(email).ifPresent(user -> {
+            if (!user.isEmailVerified()) {
+                benutzerService.sendVerificationEmail(user);
+            }
+        });
+
+        return ResponseEntity.ok().build(); // always 200 for security
+    }
+
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+    @GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+        benutzerService.verifyEmail(token);
+        return ResponseEntity.ok("Email successfully verified.");
+    }
+
 
 }

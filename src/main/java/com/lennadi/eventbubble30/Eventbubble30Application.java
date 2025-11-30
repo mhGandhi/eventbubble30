@@ -25,8 +25,6 @@ public class Eventbubble30Application {
         Medien: Object Storage, URLs in Entities speichern, ans Frontend nur temporär signierte URLs
         -> Avatare, Bilder für Veranstaltungen, Banner etc
 
-        Email-Auth: Email Addresse bestätigen bevor Login möglich
-
         Soft-Delete: Gelöschte Entitäten mit "boolean: deleted" o.Ä. flaggen + timestamp setzen um Wiederherstellung
         zu erlauben. Nach bestimmter Zeit dann löschen.
 
@@ -37,7 +35,7 @@ public class Eventbubble30Application {
         Captcha: Altcha o.Ä. (free und am besten self hosted)
 
 
-        -> später im Frontend Admin Dashboard
+        -> später im Frontend Admin/Mod Dashboard
         vlt kein Login erlauben wenn schon drin? (eig unnötig)
         Gelöschte Nutzer nicht Authentifizieren: Gültige Tokens für nicht existierende Benutzer sind gefährlich!
 
