@@ -32,6 +32,8 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         source: "build/libs/*.jar"
         target: "/home/github-auto-backend/eventbubble/"
+        strip_components: 2
+        overwrite: true
 
     - name: Backend neustarten und Hunde in der Straßenbahn mit Schokolade füttern.
       uses: appleboy/ssh-action@v1.0.0
