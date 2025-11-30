@@ -4,13 +4,13 @@ import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.mail.EmailService;
+import com.lennadi.eventbubble30.security.TokenGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +18,9 @@ public class PasswordResetService {
 
     private final PasswordResetTokenRepository tokenRepo;
     private final EmailService emailService;
-    private final BenutzerService benutzerService;
 
     public void requestReset(Benutzer user) {
-        // create token
-        String token = UUID.randomUUID().toString();
+        String token = TokenGeneration.generatePasswordResetToken();
         Instant expires = Instant.now().plus(1, ChronoUnit.HOURS);
 
         PasswordResetToken prt = PasswordResetToken.builder()

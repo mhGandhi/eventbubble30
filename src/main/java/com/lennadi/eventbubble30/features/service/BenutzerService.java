@@ -4,9 +4,11 @@ import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.mail.EmailService;
+import com.lennadi.eventbubble30.security.TokenGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,16 +58,12 @@ public class BenutzerService {
     }
 
 
-    private String generateVerificationToken() {
-        return UUID.randomUUID().toString().replace("-", "");//todo solider?
-    }
-
     public void sendVerificationEmail(Benutzer user) {
         if (user.isEmailVerified()) return;
 
         Instant expiry = Instant.now().plus(Duration.ofHours(24));
 
-        user.setVerificationToken(generateVerificationToken());
+        user.setVerificationToken(TokenGeneration.generateVerificationToken());
         user.setVerificationTokenExpiresAt(expiry);
         repository.save(user);
 
@@ -93,6 +90,11 @@ public class BenutzerService {
         b.setVerificationTokenExpiresAt(null);
 
         repository.save(b);
+    }
+
+    @Scheduled(cron = "0 0 3 * * *")//täglich
+    public void cleanupUnverifiedAccounts() {
+        //todo
     }
 
 
