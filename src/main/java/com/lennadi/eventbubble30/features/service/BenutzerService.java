@@ -92,9 +92,18 @@ public class BenutzerService {
         repository.save(b);
     }
 
-    @Scheduled(cron = "0 0 3 * * *")//täglich
+    @Scheduled(cron = "0 0 3 * * *") // every day at 03:00
     public void cleanupUnverifiedAccounts() {
-        //todo
+
+        Instant cutoff = Instant.now().minus(Duration.ofDays(7));
+
+        var toDelete = repository.findAll().stream()
+                .filter(u -> !u.isEmailVerified())
+                .filter(u -> u.getVerificationTokenExpiresAt() != null)
+                .filter(u -> u.getVerificationTokenExpiresAt().isBefore(cutoff))
+                .toList();
+
+        repository.deleteAll(toDelete);
     }
 
 
