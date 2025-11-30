@@ -2,7 +2,7 @@ name: Bauch-Beine-Po
 run-name: ${{github.actor}} hat Änderungen gepusht.
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
 jobs: 
   build:
     runs-on: ubuntu-latest
