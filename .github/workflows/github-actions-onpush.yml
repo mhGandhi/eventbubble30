@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Aufstehen (checkout)
+    - name: Checkout und Aufstehen. Zehennägel schneiden.
       uses: actions/checkout@v3
 
     - name: JDK 17 aufsetzen und Hose anziehen.
