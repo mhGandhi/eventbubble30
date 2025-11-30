@@ -92,9 +92,7 @@ public class BenutzerService {
         repository.save(b);
     }
 
-    @Scheduled(cron = "0 0 3 * * *") // every day at 03:00
     public void cleanupUnverifiedAccounts() {
-
         Instant cutoff = Instant.now().minus(Duration.ofDays(7));
 
         var toDelete = repository.findAll().stream()
@@ -105,8 +103,6 @@ public class BenutzerService {
 
         repository.deleteAll(toDelete);
     }
-
-
 
     @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
     public Benutzer patchBenutzerById(Long id, String email, String username, String password) {

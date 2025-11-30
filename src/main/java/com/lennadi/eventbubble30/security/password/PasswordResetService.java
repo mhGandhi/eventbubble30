@@ -58,8 +58,7 @@ public class PasswordResetService {
         return user;
     }
 
-    @Scheduled(cron = "0 0 3 * * *")//täglich
-    public void cleanupExpiredTokens() {
+    public void cleanupExpiredPasswordResetTokens() {
         tokenRepo.deleteByExpiresAtBefore(Instant.now());
     }
 }
