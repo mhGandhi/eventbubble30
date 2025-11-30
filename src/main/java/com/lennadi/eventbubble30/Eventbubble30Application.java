@@ -15,8 +15,6 @@ public class Eventbubble30Application {
 
     /*todo
     Inspo:
-        Ortschaften: Orte von Veranstaltungen irgendwie Speichern. Dazu vlt OpenStreetmapAPI oder so, (Nominatim?)
-
         @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/
 
         JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt

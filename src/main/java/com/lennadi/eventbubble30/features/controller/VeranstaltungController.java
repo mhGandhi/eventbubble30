@@ -1,11 +1,13 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.Location;
 import com.lennadi.eventbubble30.features.entities.Veranstaltung;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,12 +28,14 @@ public class VeranstaltungController {
     public record CreateVeranstaltungRequest(
             Instant termin,
             @NotEmpty String title,
-            String description
+            String description,
+            Location location
     ) {}
     public record PatchVeranstaltungRequest(
             Instant termin,
-            String title,
-            String description
+            @NotBlank String title,
+            String description,
+            Location location
     ) {}
 
 
@@ -56,6 +60,7 @@ public class VeranstaltungController {
                 req.termin(),
                 req.title(),
                 req.description(),
+                req.location(),
                 benutzerService.getCurrentUser()
         );
 
@@ -74,7 +79,8 @@ public class VeranstaltungController {
                 id,
                 req.termin(),
                 req.title(),
-                req.description()
+                req.description(),
+                req.location()
         );
 
         return ResponseEntity

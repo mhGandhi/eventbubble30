@@ -96,7 +96,7 @@ class VeranstaltungControllerTest {
         //created.setOwner(owner);
 
         when(benutzerService.getCurrentUser()).thenReturn(owner);
-        when(veranstaltungService.createVeranstaltung(any(), any(), any(), eq(owner)))
+        when(veranstaltungService.createVeranstaltung(any(), any(), any(), any(), eq(owner)))
                 .thenReturn(created);
 
         var json = """
@@ -145,7 +145,7 @@ class VeranstaltungControllerTest {
         v.setTitle("Neu");
         v.setTermin(time);
 
-        when(veranstaltungService.patchVeranstaltungById(eq(8L), any(), any(), any()))
+        when(veranstaltungService.patchVeranstaltungById(eq(8L), any(), any(), any(), any()))
                 .thenReturn(v);
 
         var json = """

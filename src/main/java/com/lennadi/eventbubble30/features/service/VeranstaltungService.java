@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
+import com.lennadi.eventbubble30.features.Location;
 import com.lennadi.eventbubble30.features.entities.Benutzer;
 import com.lennadi.eventbubble30.features.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.repository.VeranstaltungsRepository;
@@ -75,7 +76,7 @@ public class VeranstaltungService {
     }
 
     @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
-    public Veranstaltung patchVeranstaltungById(Long id, Instant termin, String title, String description) {
+    public Veranstaltung patchVeranstaltungById(Long id, Instant termin, String title, String description, Location location) {
         Veranstaltung veranstaltung = veranstaltungRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
 
@@ -85,17 +86,20 @@ public class VeranstaltungService {
             veranstaltung.setTitle(title);
         if(description!=null)
             veranstaltung.setDescription(description);
+        if(location!=null)
+            veranstaltung.setLocation(location);
 
         return veranstaltungRepo.save(veranstaltung);
     }
 
     @PreAuthorize("isAuthenticated()")
-    public Veranstaltung createVeranstaltung(Instant termin, String title, String description, Benutzer besitzer){
+    public Veranstaltung createVeranstaltung(Instant termin, String title, String description, Location loc, Benutzer besitzer){
         Veranstaltung veranstaltung = new Veranstaltung();
         veranstaltung.setTermin(termin);
         veranstaltung.setTitle(title);
         veranstaltung.setDescription(description);
         veranstaltung.setBesitzer(besitzer);
+        veranstaltung.setLocation(loc);
 
         return veranstaltungRepo.save(veranstaltung);
     }

@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.entities;
 
+import com.lennadi.eventbubble30.features.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,9 @@ public class Veranstaltung extends BaseEntity {
     @JoinColumn(name = "besitzer_id")
     private Benutzer besitzer;
 
+    @Embedded
+    private Location location;
+
 
     public static record DTO(
             Long id,
@@ -26,6 +30,7 @@ public class Veranstaltung extends BaseEntity {
             Instant termin,
             String title,
             String description,
+            Location location,
 
             Benutzer.DTO besitzer
     ) {}
@@ -38,6 +43,7 @@ public class Veranstaltung extends BaseEntity {
                 this.getTermin(),
                 this.getTitle(),
                 this.getDescription(),
+                this.getLocation(),
                 (this.getBesitzer()!=null?this.getBesitzer().toDTO():null)
         );
     }

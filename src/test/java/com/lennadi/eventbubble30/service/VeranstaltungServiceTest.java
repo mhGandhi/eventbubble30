@@ -117,7 +117,7 @@ class VeranstaltungServiceTest {
         when(benutzerService.getCurrentUser()).thenReturn(current);
 
         var ex = assertThrows(ResponseStatusException.class,
-                () -> service.patchVeranstaltungById(4L, null, null, null));
+                () -> service.patchVeranstaltungById(4L, null, null, null, null));
 
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
     }
@@ -144,7 +144,8 @@ class VeranstaltungServiceTest {
                 4L,
                 newTime,
                 "NewTitle",
-                "NewDesc"
+                "NewDesc",
+                null
         );
 
         assertEquals("NewTitle", result.getTitle());
@@ -165,7 +166,7 @@ class VeranstaltungServiceTest {
 
         when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Veranstaltung v = service.createVeranstaltung(t, "Event", "Desc", owner);
+        Veranstaltung v = service.createVeranstaltung(t, "Event", "Desc", null,owner);
 
         assertEquals("Event", v.getTitle());
         assertEquals("Desc", v.getDescription());
