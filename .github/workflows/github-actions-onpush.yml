@@ -1,5 +1,5 @@
-name: On Push
-run-name: ${{github.actor}} Push Changes
+name: Bauch-Beine-Po
+run-name: ${{github.actor}} Änderungen auf den Server pushen
 on: [push]
 jobs:
   Explore-Github-Actions:
