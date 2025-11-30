@@ -1,0 +1,8 @@
+name: On Push
+run-name: ${{github.actor}} Push Changes
+on: [push]
+jobs:
+  Explore-Github-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "bock and calls"
