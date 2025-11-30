@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EventBubble Minimal Frontend</title>
+    <title>EventBubble Minimal Frontend (JWT Version)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,37 +88,94 @@
 </div>
 
 <script>
-    const API = "http://localhost:8080/api";
-    const json = x => JSON.stringify(x, null, 2);
 
-    async function api(url, method="GET", body=null) {
+    const API = "http://localhost:8080/api";
+
+    // ----------------------
+    // JWT STORAGE
+    // ----------------------
+    let accessToken = null;
+    let refreshToken = localStorage.getItem("refreshToken") || null;
+
+    function saveTokens(access, refresh) {
+        accessToken = access;
+        refreshToken = refresh;
+        localStorage.setItem("refreshToken", refreshToken);
+    }
+
+    function clearTokens() {
+        accessToken = null;
+        refreshToken = null;
+        localStorage.removeItem("refreshToken");
+    }
+
+    // --------------------------
+    // F E T C H   W R A P P E R
+    // --------------------------
+    async function api(url, method = "GET", body = null, retry = true) {
+        let headers = {};
+        if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
+        if (body) headers["Content-Type"] = "application/json";
+
         const res = await fetch(API + url, {
             method,
-            credentials: "include",
-            headers: body ? {"Content-Type": "application/json"} : {},
+            headers,
             body: body ? JSON.stringify(body) : null
         });
 
-        if (!res.ok) {
-            const t = await res.text();
-            throw new Error("HTTP " + res.status + ": " + t);
+        // Unauthorized? Try refresh once
+        if (res.status === 401 && retry && refreshToken) {
+            try {
+                await refreshAccessToken();
+                return api(url, method, body, false);
+            } catch (_) {
+                clearTokens();
+            }
         }
 
-        const ct = res.headers.get("Content-Type") || "";
-        if (ct.includes("application/json")) return res.json();
-        return res.text();
+        const text = await res.text();
+        if (!res.ok) throw new Error("HTTP " + res.status + ": " + text);
+
+        try { return JSON.parse(text); }
+        catch { return text; }
     }
 
-    function setStatus(msg){
+    // --------------------------
+    // REFRESH TOKEN
+    // --------------------------
+    async function refreshAccessToken() {
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const data = await api("/auth/refresh", "POST",
+            {refreshToken: refreshToken},
+            false
+        );
+
+        saveTokens(data.accessToken, data.refreshToken);
+
+        console.log("Token refreshed");
+        setStatus("Token refreshed");
+    }
+
+    function setStatus(msg) {
         document.getElementById("status").textContent = msg;
     }
 
+    // --------------------------
+    // AUTH
+    // --------------------------
     async function login() {
         try {
-            const username = login_user.value;
-            const password = login_pass.value;
-            const data = await api("/auth/login", "POST", {username, password});
-            setStatus("Logged in as: " + data.username + " ("+data.id+")");
+            const body = {
+                username: login_user.value,
+                password: login_pass.value
+            };
+
+            const data = await api("/auth/login", "POST", body, false);
+
+            saveTokens(data.accessToken, data.refreshToken);
+
+            setStatus("Logged in as: " + data.benutzerDTO.username);
         } catch (e) { alert(e); }
     }
 
@@ -128,51 +185,58 @@
                 username: signup_user.value,
                 email: signup_mail.value,
                 password: signup_pass.value,
-                captchaToken: "ABC die Katze tanzt im Schnee"
+                captchaToken: "dummy-test"
             };
-            const res = await api("/auth/signup", "POST", body);
-            alert("Created: " + json(res));
+
+            let res = await api("/auth/signup", "POST", body);
+            alert("Created: " + JSON.stringify(res, null, 2));
         } catch (e) { alert(e); }
     }
 
     async function logout() {
         try {
-            await api("/auth/logout", "POST");
-            setStatus("Logged out.");
-        } catch (e) { alert(e); }
+            await api("/auth/invalidate-tokens", "POST");
+        } catch (_) {}
+
+        clearTokens();
+        setStatus("Logged out");
     }
 
     async function validateSession() {
         try {
-            await api("/auth/validate-session");
+            await api("/auth/validate", "GET");
             setStatus("Session VALID");
         } catch (e) {
             setStatus("Session INVALID");
         }
     }
 
+    // --------------------------
+    // USER
+    // --------------------------
     async function getMe() {
         try {
             const data = await api("/user/me");
-            document.getElementById("me").textContent = json(data);
-            setStatus("Logged in as: " + data.username + " ("+data.id+")");
+            document.getElementById("me").textContent = JSON.stringify(data, null, 2);
+            setStatus("Logged in as: " + data.username);
         } catch (e) { alert(e); }
     }
 
+    // --------------------------
+    // EVENTS
+    // --------------------------
     async function createEventVS() {
         try {
-            console.log("Creating Event");
             const body = {
                 title: event_title.value,
                 description: event_desc.value,
-                termin: event_date.value || null
+                termin: event_date.value || null,
+                location: null
             };
-            console.log("Created Body");
+
             const res = await api("/events/create", "POST", body);
-            console.log("Called API");
             alert("Event created!");
             await listEvents();
-            console.log("Listed Events");
         } catch (e) { alert(e); }
     }
 
@@ -189,16 +253,17 @@
             const page = await api("/events");
             const out = document.getElementById("events");
             out.innerHTML = "";
+
             page.content.forEach(ev => {
                 const div = document.createElement("div");
                 div.className = "event";
                 div.innerHTML = `
-                <b>${ev.title}</b> (ID ${ev.id})<br>
-                By: ${ev.besitzer?.username}<br>
-                <small>${ev.termin || "no date"}</small><br>
-                ${ev.description || ""}<br>
-                <button onclick="deleteEvent(${ev.id})">Delete</button>
-            `;
+                    <b>${ev.title}</b> (ID ${ev.id})<br>
+                    By: ${ev.besitzer?.username}<br>
+                    <small>${ev.termin || "no date"}</small><br>
+                    ${ev.description || ""}<br>
+                    <button onclick="deleteEvent(${ev.id})">Delete</button>
+                `;
                 out.appendChild(div);
             });
         } catch (e) { alert(e); }
