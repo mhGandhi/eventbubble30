@@ -92,9 +92,16 @@ public class BenutzerController {
     }
 
     //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer", resourceIdParam = "id")
-    @GetMapping("/{id}")
-    public Benutzer.DTO findUserById(@PathVariable long id) {
-        return service.getById(id).toDTO();
+    @GetMapping("/{idOrMe}")
+    public Object findUserByIdOrMe(@PathVariable String idOrMe) {
+        Benutzer ret = service.getByIdOrMe(idOrMe);
+
+        Benutzer current = service.getCurrentUserOrNull();
+        if(current != null && current.hasRole(Benutzer.Role.ADMIN)) {
+            return ret.toAdminDTO();
+        }else{
+            return ret.toDTO();
+        }
     }
 
 
@@ -105,13 +112,6 @@ public class BenutzerController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return service.list(page, size).map(Benutzer::toDTO);
-    }
-
-    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer", resourceIdParam = "currentUser")
-    @GetMapping("/me")
-    public Benutzer.DTO me() {
-        Benutzer benutzer = service.getCurrentUser();
-        return benutzer.toDTO();
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "currentUser")

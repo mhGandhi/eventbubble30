@@ -124,6 +124,15 @@ public class BenutzerService {
     }
 
     @PreAuthorize("isAuthenticated()")
+    public Benutzer getByIdOrMe(String idMe){
+        if(idMe.equalsIgnoreCase("me")){
+            return getCurrentUser();
+        }else{
+            return getById(Long.parseLong(idMe));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated()")
     public Benutzer getById(long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -146,6 +155,14 @@ public class BenutzerService {
         return repository.findAll(
                 org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
         );
+    }
+
+    public Benutzer getCurrentUserOrNull(){
+        try{
+            return getCurrentUser();
+        }catch(ResponseStatusException ignored){
+            return null;
+        }
     }
 
     public Benutzer getCurrentUser() {

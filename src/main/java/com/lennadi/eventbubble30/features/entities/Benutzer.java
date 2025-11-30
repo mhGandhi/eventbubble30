@@ -61,9 +61,29 @@ public class Benutzer extends BaseEntity{
         return new DTO(this.getId(), this.getUsername());
     }
 
-    public static record DTO(
+    public record DTO(
             Long id,
             String username
+    ) { }
+
+    public AdminDTO toAdminDTO() {
+        return new AdminDTO(
+                this.getId(), this.getUsername(),
+                this.getEmail(), this.getRoles(),
+                this.getLastLoginDate(), this.getLastSeen(), this.getPasswordChangedAt(), this.getTokensInvalidatedAt(),
+                this.isEmailVerified());
+    }
+
+    public record AdminDTO(
+            Long id,
+            String username,
+            String email,
+            Set<Role> roles,
+            Instant lastLoginDate,
+            Instant lastSeen,
+            Instant passwordChangedAt,
+            Instant tokensInvalidatedAt,
+            boolean emailVerified
     ) { }
 
     public enum Role{
