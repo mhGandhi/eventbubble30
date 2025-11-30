@@ -17,17 +17,19 @@ public class Benutzer extends BaseEntity{
 
     @Column(unique = true, nullable = false, length = 20)
     private String username;
-    //todo erweitertes Profil (separate Tabelle? - Bio, Name, Avatar etc.)
 
     @Column(nullable = false)
     private String passwordHash;
 
     @Column(unique = true, nullable = false)
     private String email;
-    //todo email verification (+removal job nach nh woche ohne)
 
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
+
+    @OneToOne(mappedBy = "benutzer", cascade = CascadeType.ALL)
+    @JoinColumn(nullable = true, updatable = true, unique = true)
+    private Profil profil;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
