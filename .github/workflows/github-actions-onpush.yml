@@ -1,8 +1,50 @@
 name: Bauch-Beine-Po
-run-name: ${{github.actor}} Änderungen auf den Server pushen
-on: [push]
-jobs:
-  Explore-Github-Actions:
+run-name: ${{github.actor}} hat Änderungen gepusht.
+  
+
+on:
+  push:
+    branches: ["main"]
+jobs: 
+  build:
     runs-on: ubuntu-latest
+    
     steps:
-      - run: echo "bock and calls"
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Build JAR
+      run: |
+        chmod +x gradlew
+        ./gradlew build -x test
+        ls build/libs
+
+    - name: Upload JAR to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        source: "build/libs/*.jar"
+        target: "/home/github-auto-backend/eventbubble/app.jar"
+
+    - name: Restart backend
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd /home/github-auto-backend
+          docker compose down
+          docker compose build
+          docker compose up -d
+          docker system prune -f
