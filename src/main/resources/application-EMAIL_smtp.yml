@@ -1,8 +1,9 @@
-spring.mail: #todo was für gmail amk
-  host: smtp.gmail.com
+spring.mail: #todo was für brevo amk
+  host: ${SMTP_HOST}
   port: 587
-  username: ${GMAIL_USERNAME}
-  password: ${GMAIL_PASSWORD}
+  username: ${SMTP_USERNAME}
+  password: ${SMTP_PASSWORD}
   properties.mail.smtp:
     auth: true
     starttls.enable: true
+    starttls.required: true
