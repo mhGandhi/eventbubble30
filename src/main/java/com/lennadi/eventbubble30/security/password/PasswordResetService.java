@@ -33,13 +33,15 @@ public class PasswordResetService {
 
         tokenRepo.save(prt);
 
-        // send email
-        String resetUrl = "https://"+ ServerConfig.DOMAIN +"/api/auth/reset-password?token=" + token;//todo different link? Frontend mäßig?
-
-        emailService.send(//todo translate (maybe offload to frontend?)
+        emailService.send(//todo translate etc. (frontend reset URL) (maybe offload to frontend?)
                 user.getEmail(),
-                "Password Reset",
-                "Click the following link to reset your password:\n\n" + resetUrl
+                "Password Zurücksetzen",
+                "\""+ServerConfig.DOMAIN+"/api/auth/reset-password\" Mit dem folgenden Http-Body aufrufen " +
+                        "um das Passwort zurückzusetzen\n\n" +
+                        "{\n" +
+                        "\t\"token\": \"" +token+"\"\n" +
+                        "\t\"newPassword\": \"[NEUES PASSWORT]\"\n" +
+                        "\n}"
         );
     }
 
