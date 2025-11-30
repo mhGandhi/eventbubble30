@@ -31,7 +31,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         source: "build/libs/*.jar"
-        target: "/home/github-auto-backend/eventbubble/"
+        target: "/home/${{ secrets.SSH_USER }}/eventbubble/"
         strip_components: 2
         overwrite: true
 
@@ -43,8 +43,10 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          cd /home/github-auto-backend
+          cd /home/${{ secrets.SSH_USER }}/eventbubble
+          JAR=$(ls *.jar)
+          mv "$JAR" app.jar
+          cd ..
           docker compose down
-          docker compose build
+          docker compose build --no-cache
           docker compose up -d
-          docker system prune -f
