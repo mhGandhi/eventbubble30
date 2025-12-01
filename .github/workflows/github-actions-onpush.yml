@@ -23,6 +23,16 @@ jobs:
         ./gradlew build -x test
         ls build/libs
 
+    - name: Alte Jar löschen. 🙏
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          rm -r /home/${{ secrets.SSH_USER }}/eventbubble/app.jar
+
     - name: JAR hochladen und rausgehen.
       uses: appleboy/scp-action@v0.1.7
       with:
