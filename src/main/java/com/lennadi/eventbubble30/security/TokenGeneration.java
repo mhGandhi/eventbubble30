@@ -16,6 +16,6 @@ public class TokenGeneration {
         byte[] bytes = new byte[lenBytes];
         SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(bytes);
-        return Base64.getEncoder().withoutPadding().encodeToString(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
