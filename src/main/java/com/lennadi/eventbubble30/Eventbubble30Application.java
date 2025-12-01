@@ -17,6 +17,8 @@ public class Eventbubble30Application {
     Inspo:
         @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/
 
+        CORS
+
         JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt
 
         Profile: Entity getrennt von Benutzer, verbunden mit 1zu1 Beziehung, separate Endpunkte aber dennoch über
