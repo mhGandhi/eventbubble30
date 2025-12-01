@@ -61,3 +61,8 @@ tasks.withType(Test).configureEach {
     systemProperty "org.springframework.restdocs.outputDir", file("build/generated-snippets")
 }
 
+tasks.withType(Jar).configureEach {
+    if (archiveClassifier.get() == "plain") {
+        enabled = false
+    }
+}
