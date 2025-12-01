@@ -17,7 +17,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: JAR bauen und mit Parfüm einsprühen.
+    - name: JAR bauen und mit Parfüm einsprühen (Gabel in Steckdose stecken).
       run: |
         chmod +x gradlew
         ./gradlew build -x test
