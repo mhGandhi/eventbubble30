@@ -206,7 +206,7 @@ public class BenutzerService {
         repository.save(b);
     }
 
-    @PreAuthorize("@authz.isSelf(#id)")
+    //@PreAuthorize("@authz.isSelf(#id)") redundant
     public void seen(Long id) {//todo insert more efficiently
         Benutzer b = getById(id);
         b.setLastSeen(Instant.now());

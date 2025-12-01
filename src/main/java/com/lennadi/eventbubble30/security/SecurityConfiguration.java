@@ -72,9 +72,10 @@ public class SecurityConfiguration {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
+
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(lastSeenFilter, JwtAuthFilter.class)
+                .addFilterAfter(lastSeenFilter, JwtAuthFilter.class);
                 ;
 
         return http.build();
