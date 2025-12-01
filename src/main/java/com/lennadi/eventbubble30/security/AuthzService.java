@@ -14,13 +14,14 @@ public class AuthzService {
     private final BenutzerService benutzerService;
 
     public boolean isEventOwner(Long eventId){
-        Benutzer current = benutzerService.getCurrentUser();
+        Benutzer current = benutzerService.getCurrentUserOrNull();
+        if(current==null)return false;
         Veranstaltung v = veranstaltungService.getVeranstaltungById(eventId);
         return v != null && v.getBesitzer().equals(current);
     }
 
     public boolean isSelf(Long userId) {
-        var current = benutzerService.getCurrentUser();
+        var current = benutzerService.getCurrentUserOrNull();
         return current != null && current.getId().equals(userId);
     }
 }
