@@ -50,4 +50,4 @@ jobs:
           docker compose down
           docker compose build --no-cache
           docker compose up -d
-          chafa --animate=once larry-larry-baby.gif
+          chafa larry-larry-baby.gif
