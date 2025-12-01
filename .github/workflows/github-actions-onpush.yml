@@ -32,6 +32,8 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           cd /home/${{ secrets.SSH_USER }}/eventbubble
+          docker container stop evenbubble-backend
+          docker container rm eventbubble-backend
           rm app.jar
 
     - name: JAR hochladen und rausgehen.
