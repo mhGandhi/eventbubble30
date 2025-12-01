@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/user")
 @RestController
 @RequiredArgsConstructor

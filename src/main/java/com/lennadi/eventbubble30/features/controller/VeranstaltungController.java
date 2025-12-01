@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.time.Instant;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
