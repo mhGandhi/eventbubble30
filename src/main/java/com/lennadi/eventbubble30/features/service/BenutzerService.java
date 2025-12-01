@@ -206,14 +206,12 @@ public class BenutzerService {
         repository.save(b);
     }
 
-    //@PreAuthorize("@authz.isSelf(#id)") redundant
     public void seen(Long id) {//todo insert more efficiently
         Benutzer b = getById(id);
         b.setLastSeen(Instant.now());
         repository.save(b);
     }
 
-    @PreAuthorize("@authz.isSelf(#id)")
     public void lastLoginDate(Long id) {
         Benutzer b = getById(id);
         b.setLastLoginDate(Instant.now());
