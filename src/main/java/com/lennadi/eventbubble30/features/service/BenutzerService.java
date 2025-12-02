@@ -154,7 +154,7 @@ public class BenutzerService {
                 ));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.hasRole('ADMIN')")
     public org.springframework.data.domain.Page<Benutzer> list(int page, int size) {
         return repository.findAll(
                 org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
