@@ -47,6 +47,7 @@ public class SecurityConfiguration {
 
     private final BenutzerDetailsService benutzerDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
@@ -133,7 +134,7 @@ public class SecurityConfiguration {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        new ObjectMapper().writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), body);
     }
 
     @Bean
