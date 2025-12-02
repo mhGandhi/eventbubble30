@@ -1,9 +1,7 @@
 package com.lennadi.eventbubble30.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +29,7 @@ public class GlobalExceptionHandler {
         });
 
         ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
                 "Validation failed",
@@ -48,7 +46,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 ex.getStatusCode().value(),
                 ex.getStatusCode().toString(),
                 ex.getReason(),
@@ -66,7 +64,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
                 "Method Not Allowed",
                 ex.getMessage(),
@@ -80,7 +78,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNoResource(NoResourceFoundException ex, HttpServletRequest request){
         ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 HttpStatus.NOT_FOUND.value(),
                 "Not Found",
                 ex.getMessage(),
@@ -88,37 +86,5 @@ public class GlobalExceptionHandler {
                 null
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ApiErrorResponse> handleUnauthorized(
-            UnauthorizedException ex, HttpServletRequest request) {
-
-        ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                ex.getMessage(),
-                request.getRequestURI(),
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiErrorResponse> handleForbidden(
-            ForbiddenException ex, HttpServletRequest request) {
-
-        ApiErrorResponse response = new ApiErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                ex.getMessage(),
-                request.getRequestURI(),
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 }

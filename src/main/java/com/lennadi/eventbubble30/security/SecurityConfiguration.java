@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lennadi.eventbubble30.exceptions.ApiErrorResponse;
 import com.lennadi.eventbubble30.exceptions.ForbiddenException;
 import com.lennadi.eventbubble30.exceptions.UnauthorizedException;
 import com.lennadi.eventbubble30.filter.JwtAuthFilter;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -21,6 +24,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -33,6 +37,8 @@ import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Configuration
@@ -71,16 +77,8 @@ public class SecurityConfiguration {
                         .anyRequest().denyAll()
                 )
                 .exceptionHandling(ex -> ex
-
-                        // If NOT authenticated → throw exception
-                        .authenticationEntryPoint((req, res, e) -> {
-                            throw new UnauthorizedException(e.getMessage());
-                        })
-
-                        // If authenticated but forbidden
-                        .accessDeniedHandler((req, res, e) -> {
-                            throw new ForbiddenException(e.getMessage());
-                        })
+                        .authenticationEntryPoint(this::handleAuthError)
+                        .accessDeniedHandler(this::handleAccessDenied)
                 )
 
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -93,6 +91,49 @@ public class SecurityConfiguration {
                 ;
 
         return http.build();
+    }
+
+    private void handleAuthError(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 AuthenticationException ex) throws IOException {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                Instant.now(),
+                401,
+                "Unauthorized",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        writeJson(response, 401, body);
+    }
+
+    private void handleAccessDenied(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    AccessDeniedException ex) throws IOException {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                Instant.now(),
+                403,
+                "Forbidden",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        writeJson(response, 403, body);
+    }
+
+    private void writeJson(HttpServletResponse response,
+                           int status,
+                           ApiErrorResponse body) throws IOException {
+
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        new ObjectMapper().writeValue(response.getWriter(), body);
     }
 
     @Bean
