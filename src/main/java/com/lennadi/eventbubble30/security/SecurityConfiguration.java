@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.security;
 
+import com.lennadi.eventbubble30.exceptions.ForbiddenException;
+import com.lennadi.eventbubble30.exceptions.UnauthorizedException;
 import com.lennadi.eventbubble30.filter.JwtAuthFilter;
 import com.lennadi.eventbubble30.filter.LastSeenFilter;
 import jakarta.servlet.Filter;
@@ -67,6 +69,18 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/events/**").authenticated()
 
                         .anyRequest().denyAll()
+                )
+                .exceptionHandling(ex -> ex
+
+                        // If NOT authenticated → throw exception
+                        .authenticationEntryPoint((req, res, e) -> {
+                            throw new UnauthorizedException(e.getMessage());
+                        })
+
+                        // If authenticated but forbidden
+                        .accessDeniedHandler((req, res, e) -> {
+                            throw new ForbiddenException(e.getMessage());
+                        })
                 )
 
                 .formLogin(AbstractHttpConfigurer::disable)
