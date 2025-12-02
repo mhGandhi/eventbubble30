@@ -126,7 +126,7 @@ public class BenutzerController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect old password");
         }
 
-        service.setPasswordById(current.getId(), req.newPassword);
+        service.patchBenutzerById(current.getId(), null, null, req.newPassword());
 
         return ResponseEntity.noContent().build();
     }

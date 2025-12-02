@@ -134,6 +134,10 @@ public class BenutzerService {
 
     @PreAuthorize("isAuthenticated()")
     public Benutzer getById(long id) {
+        return FORCEgetById(id);
+    }
+
+    public Benutzer FORCEgetById(long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -194,26 +198,21 @@ public class BenutzerService {
         return passwordEncoder.matches(password, b.getPasswordHash());
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
-    public void setPasswordById(Long id, String password) {
-        FORCEsetPasswordById(id, password);
-    }
-
     public void FORCEsetPasswordById(Long id, String newPassword) {
-        Benutzer b = getById(id);
+        Benutzer b = FORCEgetById(id);
         b.setPasswordHash(passwordEncoder.encode(newPassword));
         b.setPasswordChangedAt(Instant.now());
         repository.save(b);
     }
 
     public void seen(Long id) {//todo insert more efficiently
-        Benutzer b = getById(id);
+        Benutzer b = FORCEgetById(id);
         b.setLastSeen(Instant.now());
         repository.save(b);
     }
 
     public void lastLoginDate(Long id) {
-        Benutzer b = getById(id);
+        Benutzer b = FORCEgetById(id);
         b.setLastLoginDate(Instant.now());
         repository.save(b);
     }
