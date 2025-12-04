@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.filter;
 
+import com.lennadi.eventbubble30.CronJobs;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import jakarta.servlet.FilterChain;
@@ -7,7 +8,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointProperties;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,9 +20,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class LastSeenFilter extends OncePerRequestFilter {
 
-    @Autowired
     BenutzerService benutzerService;
 
     @Override
@@ -34,14 +38,8 @@ public class LastSeenFilter extends OncePerRequestFilter {
 
             try {
                 benutzerService.seen(userId);
-            } catch (ResponseStatusException ex) {
-                if (ex.getStatusCode().value() == 404) {
-
-                    HttpSession session = request.getSession(false);
-                    if (session != null) session.invalidate();
-
-                    SecurityContextHolder.clearContext();
-                }
+            } catch (Exception ex) {
+                System.out.println("Error while updating seen for user "+userId+": "+ ex.getMessage());
             }
         }
 

@@ -46,7 +46,6 @@ public class BenutzerService {
         user.setEmail(email);
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setPasswordChangedAt(Instant.now());
         user.setEmailVerified(false);
 
         if(repository.count() == 0) {//todo stop doing that mby
@@ -117,7 +116,6 @@ public class BenutzerService {
         }
         if(password!=null && !password.isEmpty() && !passwordEncoder.matches(password, b.getPasswordHash())) {
             b.setPasswordHash(passwordEncoder.encode(password));
-            b.setPasswordChangedAt(Instant.now());
         }
 
         return repository.save(b);
@@ -201,7 +199,6 @@ public class BenutzerService {
     public void FORCEsetPasswordById(Long id, String newPassword) {
         Benutzer b = FORCEgetById(id);
         b.setPasswordHash(passwordEncoder.encode(newPassword));
-        b.setPasswordChangedAt(Instant.now());
         repository.save(b);
     }
 

@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -44,6 +45,7 @@ public class Benutzer extends BaseEntity{
     private Instant lastSeen;
 
     @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant passwordChangedAt = Instant.EPOCH;
 
     @Column(nullable = false)
@@ -57,6 +59,11 @@ public class Benutzer extends BaseEntity{
 
     public boolean hasRole(Role role) {
         return roles.contains(role);
+    }
+
+    public void setPasswordHash(String pwHash){
+        this.passwordHash = pwHash;
+        passwordChangedAt = Instant.now();
     }
 
     public DTO toDTO() {

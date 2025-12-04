@@ -68,6 +68,16 @@ public class AuthzService {
         return true;
     }
 
+    public boolean isAuthenticated(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || auth.getAuthorities() == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        return true;
+    }
+
     public boolean hasAuthority(String authority) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
