@@ -27,7 +27,7 @@ public class BenutzerService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.hasRole('ADMIN')")
     public Benutzer createBenutzer(String email, String username, String password) {
         return FORCEcreateBenutzer(email, username, password);
     }
@@ -103,7 +103,7 @@ public class BenutzerService {
         repository.deleteAll(toDelete);
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     public Benutzer patchBenutzerById(Long id, String email, String username, String password) {
         Benutzer b = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Benutzer nicht gefunden"));
@@ -121,7 +121,7 @@ public class BenutzerService {
         return repository.save(b);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public Benutzer getByIdOrMe(String idMe){
         if(idMe.equalsIgnoreCase("me")){
             return getCurrentUser();
@@ -130,7 +130,7 @@ public class BenutzerService {
         }
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public Benutzer getById(long id) {
         return FORCEgetById(id);
     }
@@ -143,7 +143,7 @@ public class BenutzerService {
                 ));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public Benutzer getByUsername(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -185,12 +185,12 @@ public class BenutzerService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     public void deleteUserById(long id) {
         repository.delete(getById(id));
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     public boolean isPasswordValidForId(Long id, String password){
         Benutzer b = getById(id);
         return passwordEncoder.matches(password, b.getPasswordHash());
@@ -214,14 +214,14 @@ public class BenutzerService {
         repository.save(b);
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or hasRole('ADMIN')")
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     public void invalidateTokens(Long id) {
         Benutzer b = getById(id);
         b.setTokensInvalidatedAt(Instant.now());
         repository.save(b);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.hasRole('ADMIN')")
     public int getUserCount() {
         return repository.findAll().size();
     }
