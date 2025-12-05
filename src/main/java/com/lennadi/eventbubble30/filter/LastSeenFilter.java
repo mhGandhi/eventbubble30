@@ -23,7 +23,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class LastSeenFilter extends OncePerRequestFilter {
 
-    BenutzerService benutzerService;
+    private final BenutzerService benutzerService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
