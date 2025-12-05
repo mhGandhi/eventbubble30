@@ -6,10 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Getter
@@ -62,8 +59,10 @@ public class Benutzer extends BaseEntity{
     }
 
     public void setPasswordHash(String pwHash){
-        this.passwordHash = pwHash;
-        passwordChangedAt = Instant.now();
+        if(!Objects.equals(pwHash, this.passwordHash)){
+            this.passwordHash = pwHash;
+            passwordChangedAt = Instant.now();
+        }
     }
 
     public DTO toDTO() {
