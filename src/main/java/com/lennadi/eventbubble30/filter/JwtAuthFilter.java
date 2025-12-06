@@ -38,6 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        log.warn("Authorization header = '{}'", authHeader);
 
         //if no token
         String authPrefix = "Bearer ";
@@ -46,7 +47,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        log.debug("Authorization header = '{}'", authHeader);
+
         String token = authHeader.substring(authPrefix.length());
 
         //if undefined token
