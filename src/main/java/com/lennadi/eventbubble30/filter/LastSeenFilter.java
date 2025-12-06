@@ -28,21 +28,23 @@ public class LastSeenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        try{
+            var auth = SecurityContextHolder.getContext().getAuthentication();
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()
+                    && auth.getPrincipal() instanceof BenutzerDetails details) {
 
-        if (auth != null && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof BenutzerDetails details) {
+                Long userId = details.getId();
 
-            Long userId = details.getId();
-
-            try {
-                benutzerService.seen(userId);
-            } catch (Exception ex) {
-                System.out.println("Error while updating seen for user "+userId+": "+ ex.getMessage());
+                try {
+                    benutzerService.seen(userId);
+                } catch (RuntimeException ex) {
+                    System.out.println("Error while updating seen for user "+userId+": "+ ex.getMessage());
+                }
             }
+        }catch (Exception ex){
+            System.out.println("Unexpected error in LastSeenFilter: "+ex.getMessage());
         }
-
         filterChain.doFilter(request, response);
     }
 }
