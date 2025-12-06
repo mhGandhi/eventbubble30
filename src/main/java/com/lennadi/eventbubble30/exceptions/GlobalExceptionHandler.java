@@ -109,4 +109,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleAnyException(Exception e, HttpServletRequest request) {
+        ApiErrorResponse body = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "SERVER_ERROR",
+                e.getMessage(),
+                request.getRequestURI(),
+                null,
+                getAuthState(request)
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
 }
