@@ -71,10 +71,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         try {
-            Long userId = jwtService.extractUserId(token);
-            BenutzerDetails user = (BenutzerDetails) benutzerDetailsService.loadUserById(userId);
 
-            jwtService.validateAccessToken(token, user);
+            BenutzerDetails user = jwtService.validateAccessToken(token);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
@@ -84,6 +82,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             request.setAttribute("jwt_state", AuthState.AUTHENTICATED);
+
         }catch(UsernameNotFoundException ue){
             log.warn(ue.getMessage());
             request.setAttribute("jwt_state", AuthState.USER_NOT_FOUND);

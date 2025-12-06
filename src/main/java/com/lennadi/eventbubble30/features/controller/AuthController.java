@@ -10,6 +10,7 @@ import com.lennadi.eventbubble30.security.password.PasswordResetService;
 import com.lennadi.eventbubble30.security.token.JwtService;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.mail.EmailService;
+import com.lennadi.eventbubble30.security.token.exceptions.TokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -151,20 +152,20 @@ public class AuthController {
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
         String refreshToken = req.refreshToken();
 
-        Long userId = jwtService.extractUserId(refreshToken);
+        try{
+            BenutzerDetails details = jwtService.validateRefreshToken(refreshToken);
 
-        Benutzer benutzer = benutzerService.getById(userId);
+            String newAccess = jwtService.generateAccessToken(details);
+            //todo mby System zum refresh Token rotieren?
 
-        BenutzerDetails details = new  BenutzerDetails(benutzer);
+            Benutzer benutzer = benutzerService.getById(details.getId());
+            return ResponseEntity.ok(
+                    new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
+            );
+        } catch (TokenException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        }
 
-        jwtService.validateRefreshToken(refreshToken, details);
-
-        String newAccess = jwtService.generateAccessToken(details);
-        //todo mby System zum refresh Token rotieren?
-
-        return ResponseEntity.ok(
-                new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
-        );
     }
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")

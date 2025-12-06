@@ -13,21 +13,21 @@ public class BenutzerDetailsService implements UserDetailsService {
     private final BenutzerRepository repo;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public BenutzerDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var benutzer = repo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return loadUser(benutzer);
     }
 
-    public Object loadUserById(Long userId) {
+    public BenutzerDetails loadUserById(Long userId) {
         var benutzer = repo.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
 
         return loadUser(benutzer);
     }
 
-    public UserDetails loadUser(Benutzer benutzer) {
+    public BenutzerDetails loadUser(Benutzer benutzer) {
         return new BenutzerDetails(benutzer);
     }
 }
