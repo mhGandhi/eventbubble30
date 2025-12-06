@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointProperties;
@@ -23,6 +24,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class LastSeenFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(LastSeenFilter.class);
     private final BenutzerService benutzerService;
 
     @Override
@@ -39,11 +41,11 @@ public class LastSeenFilter extends OncePerRequestFilter {
                 try {
                     benutzerService.seen(userId);
                 } catch (RuntimeException ex) {
-                    System.out.println("Error while updating seen for user "+userId+": "+ ex.getMessage());
+                    log.warn("Error while updating seen for user {}: {}", userId, ex.getMessage());
                 }
             }
         }catch (Exception ex){
-            System.out.println("Unexpected error in LastSeenFilter: "+ex.getMessage());
+            log.error("Unexpected error in LastSeenFilter: {}", ex.getMessage());
         }
         filterChain.doFilter(request, response);
     }
