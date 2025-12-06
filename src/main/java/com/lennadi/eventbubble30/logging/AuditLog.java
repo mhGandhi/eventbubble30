@@ -60,7 +60,7 @@ public class AuditLog {
     //ON WHAT
     @Column(nullable = false, updatable = false, length = 30)
     private String resourceType;
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = true, updatable = false)
     private Long resourceId;
 
     public AuditLog(
