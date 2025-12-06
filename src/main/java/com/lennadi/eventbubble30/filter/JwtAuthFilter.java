@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.filter;
 
 import com.lennadi.eventbubble30.exceptions.ApiErrorResponse;
+import com.lennadi.eventbubble30.security.AuthState;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.BenutzerDetailsService;
 import com.lennadi.eventbubble30.security.token.JwtService;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -42,6 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         //if no token
         if (authHeader == null) {
+            request.setAttribute("jwt_state", AuthState.NO_TOKEN);
             filterChain.doFilter(request,response);
             return;
         }
@@ -50,6 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String authPrefix = "Bearer ";
         if(!authHeader.startsWith(authPrefix)){
             log.warn("Wrong AuthHeader Format \"{}\", expecting \"Bearer <token>\"", authHeader);
+            request.setAttribute("jwt_state", AuthState.WRONG_AUTH_FORMAT);
             filterChain.doFilter(request,response);
             return;
         }
@@ -61,11 +65,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 token.equalsIgnoreCase("null") ||
                 token.equalsIgnoreCase("undefined")) {
             log.warn("Empty JWT");
+            request.setAttribute("jwt_state", AuthState.EMPTY_TOKEN);
             filterChain.doFilter(request, response);
             return;
         }
 
-        try{
+        try {
             Long userId = jwtService.extractUserId(token);
             BenutzerDetails user = (BenutzerDetails) benutzerDetailsService.loadUserById(userId);
 
@@ -73,14 +78,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                        user, null, user.getAuthorities()
+                            user, null, user.getAuthorities()
                     );
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        }catch (TokenException e){//nix machen; als wäre da kein Token :)
+            request.setAttribute("jwt_state", AuthState.AUTHENTICATED);
+        }catch(UsernameNotFoundException ue){
+            log.warn(ue.getMessage());
+            request.setAttribute("jwt_state", AuthState.USER_NOT_FOUND);
+            SecurityContextHolder.clearContext();
+        }catch (TokenException e){
             log.warn("Invalid JWT: {}", e.getMessage());
+            request.setAttribute("jwt_state", e.authState);
             SecurityContextHolder.clearContext();
             //throw new BadCredentialsException(e.getMessage(), e);
         } catch (Exception e) {
