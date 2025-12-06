@@ -14,19 +14,23 @@
             padding: 6px;
             margin: 4px 0;
             width: 100%;
-            max-width: 300px;
+            max-width: 350px;
         }
+        textarea { height: 70px; }
         button { cursor: pointer; }
         .box {
             border: 1px solid #ccc;
             padding: 15px;
             margin: 15px 0;
             border-radius: 5px;
+            background: #fafafa;
         }
         .event {
             padding: 10px;
             border: 1px solid #ddd;
             margin-top: 5px;
+            border-radius: 5px;
+            background: #fff;
         }
         pre {
             background: #eee;
@@ -39,6 +43,7 @@
 
 <h1>EventBubble Minimal Frontend</h1>
 
+<!-- STATUS -->
 <div id="statusBox" class="box">
     <b>Session Status:</b>
     <pre id="status">Unknown</pre>
@@ -76,7 +81,7 @@
 <div class="box">
     <h3>Create Event</h3>
     <input id="event_title" placeholder="Title">
-    <input id="event_date" placeholder="ISO Date (optional)">
+    <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
     <textarea id="event_desc" placeholder="Description"></textarea>
     <button onclick="createEventVS()">Create Event</button>
 </div>
@@ -87,8 +92,8 @@
     <div id="events"></div>
 </div>
 
-<script>
 
+<script>
     const API = "http://eventbubble.lennadi.com:8080/api";
 
     // ----------------------
@@ -100,7 +105,7 @@
     function saveTokens(access, refresh) {
         accessToken = access;
         refreshToken = refresh;
-        localStorage.setItem("refreshToken", refreshToken);
+        if (refresh) localStorage.setItem("refreshToken", refresh);
     }
 
     function clearTokens() {
@@ -108,6 +113,18 @@
         refreshToken = null;
         localStorage.removeItem("refreshToken");
     }
+
+    // ----------------------
+    // AUTO SESSION CHECK
+    // ----------------------
+    window.addEventListener("load", () => {
+        if (refreshToken) {
+            setStatus("Refresh token found — attempting auto-login...");
+            refreshAccessToken().catch(() => setStatus("Not logged in"));
+        } else {
+            setStatus("Not logged in");
+        }
+    });
 
     // --------------------------
     // F E T C H   W R A P P E R
@@ -134,8 +151,7 @@
         }
 
         const text = await res.text();
-        if (!res.ok) throw new Error("HTTP " + res.status + ": " + text);
-
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
         try { return JSON.parse(text); }
         catch { return text; }
     }
@@ -146,15 +162,10 @@
     async function refreshAccessToken() {
         if (!refreshToken) throw new Error("No refresh token");
 
-        const data = await api("/auth/refresh", "POST",
-            {refreshToken: refreshToken},
-            false
-        );
+        const data = await api("/auth/refresh", "POST", { refreshToken }, false);
 
         saveTokens(data.accessToken, data.refreshToken);
-
-        console.log("Token refreshed");
-        setStatus("Token refreshed");
+        setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
     }
 
     function setStatus(msg) {
@@ -166,16 +177,14 @@
     // --------------------------
     async function login() {
         try {
-            const body = {
+            const data = await api("/auth/login", "POST", {
                 username: login_user.value,
                 password: login_pass.value
-            };
-
-            const data = await api("/auth/login", "POST", body, false);
+            }, false);
 
             saveTokens(data.accessToken, data.refreshToken);
-
             setStatus("Logged in as: " + data.benutzerDTO.username);
+
         } catch (e) { alert(e); }
     }
 
@@ -188,25 +197,22 @@
                 captchaToken: "dummy-test"
             };
 
-            let res = await api("/auth/signup", "POST", body);
+            const res = await api("/auth/signup", "POST", body);
             alert("Created: " + JSON.stringify(res, null, 2));
         } catch (e) { alert(e); }
     }
 
     async function logout() {
-        try {
-            await api("/auth/invalidate-tokens", "POST");
-        } catch (_) {}
-
+        try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
         setStatus("Logged out");
     }
 
     async function validateSession() {
         try {
-            await api("/auth/validate", "GET");
+            await api("/auth/validate");
             setStatus("Session VALID");
-        } catch (e) {
+        } catch (_) {
             setStatus("Session INVALID");
         }
     }
@@ -228,13 +234,13 @@
     async function createEventVS() {
         try {
             const body = {
-                title: event_title.value,
-                description: event_desc.value,
-                termin: event_date.value || null,
+                title: event_title.value.trim(),
+                description: event_desc.value.trim(),
+                termin: event_date.value ? new Date(event_date.value).toISOString() : null,
                 location: null
             };
 
-            const res = await api("/events/create", "POST", body);
+            await api("/events/create", "POST", body);
             alert("Event created!");
             await listEvents();
         } catch (e) { alert(e); }
