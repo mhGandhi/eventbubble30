@@ -46,6 +46,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        log.debug("Authorization header = '{}'", authHeader);
         String token = authHeader.substring(authPrefix.length());
 
         //if undefined token
