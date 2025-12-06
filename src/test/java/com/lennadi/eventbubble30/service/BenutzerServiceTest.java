@@ -3,6 +3,7 @@ package com.lennadi.eventbubble30.service;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.mail.EmailService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ class BenutzerServiceTest {
 
     private final BenutzerRepository repo = mock(BenutzerRepository.class);
     private final PasswordEncoder encoder = mock(PasswordEncoder.class);
+    private final EmailService emailService = mock(EmailService.class);
 
     private BenutzerService service;
 
@@ -32,7 +34,7 @@ class BenutzerServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new BenutzerService(repo, encoder);
+        service = new BenutzerService(repo, encoder, emailService);
         securityMock = mockStatic(SecurityContextHolder.class);
     }
 
