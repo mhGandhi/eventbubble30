@@ -1,10 +1,10 @@
 package com.lennadi.eventbubble30.service;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
-import com.lennadi.eventbubble30.features.repository.VeranstaltungsRepository;
+import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;

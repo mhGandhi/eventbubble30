@@ -1,6 +1,6 @@
-package com.lennadi.eventbubble30.features.entities;
+package com.lennadi.eventbubble30.features.db.entities;
 
-import com.lennadi.eventbubble30.features.Location;
+import com.lennadi.eventbubble30.features.db.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

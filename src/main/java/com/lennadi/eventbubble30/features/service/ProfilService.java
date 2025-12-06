@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.features.service;
 
-import com.lennadi.eventbubble30.features.repository.ProfilRepository;
+import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

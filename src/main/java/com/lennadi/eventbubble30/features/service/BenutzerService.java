@@ -1,14 +1,13 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.mail.EmailService;
 import com.lennadi.eventbubble30.security.TokenGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

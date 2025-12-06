@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.security;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

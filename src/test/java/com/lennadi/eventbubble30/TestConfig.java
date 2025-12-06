@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30;
 
-import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;

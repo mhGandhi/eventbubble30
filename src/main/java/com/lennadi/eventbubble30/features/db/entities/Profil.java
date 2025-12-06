@@ -1,4 +1,4 @@
-package com.lennadi.eventbubble30.features.entities;
+package com.lennadi.eventbubble30.features.db.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

@@ -1,8 +1,8 @@
 package com.lennadi.eventbubble30.service;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
-import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

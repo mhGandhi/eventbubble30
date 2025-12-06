@@ -1,10 +1,10 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
-import com.lennadi.eventbubble30.features.Location;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.entities.Veranstaltung;
-import com.lennadi.eventbubble30.features.repository.VeranstaltungsRepository;
+import com.lennadi.eventbubble30.features.db.Location;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;

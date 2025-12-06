@@ -1,4 +1,4 @@
-package com.lennadi.eventbubble30.features;
+package com.lennadi.eventbubble30.features.db;
 
 import jakarta.persistence.Embeddable;
 import lombok.Getter;

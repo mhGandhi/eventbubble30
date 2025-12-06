@@ -3,7 +3,7 @@ package com.lennadi.eventbubble30.logging;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

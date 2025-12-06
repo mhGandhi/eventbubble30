@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
