@@ -38,7 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-
+        request.setAttribute("jwt_state", AuthState.UNKNOWN);
         String authHeader = request.getHeader("Authorization");
         //log.warn("Authorization header = '{}'", authHeader);
 
