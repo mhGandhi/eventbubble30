@@ -1,3 +1,6 @@
+logging:
+  level:
+    org.springframework.security: trace
 server:
   domain: "eventbubble.lennadi.com"
   error:
