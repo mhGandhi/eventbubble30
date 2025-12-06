@@ -9,6 +9,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -113,7 +114,11 @@ public class JwtService {
         Claims claims;
         try{
             claims = parseAllClaims(token);
-        } catch (JwtException e){
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new TokenExpiredException();
+        } catch(SignatureException se){
+            throw new TokenBadSignatureException();
+        } catch (JwtException e) {
             throw new MalformedOrMissingTokenException();
         }
 
@@ -145,10 +150,13 @@ public class JwtService {
             throw new WrongTokenTypeException(expectedType, type);
         }
 
+        /*
+        wird bereits beim Claims parsen gehandhabt
         /// Ablaufdatum Check
-        if(isTokenExpired(claims)){//todo
+        if(isTokenExpired(claims)){
             throw new TokenExpiredException();
         }
+        */
 
         /// issuedAt existiert
         if(issuedAtDate == null)
