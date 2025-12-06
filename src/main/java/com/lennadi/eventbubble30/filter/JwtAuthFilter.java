@@ -41,12 +41,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         //log.warn("Authorization header = '{}'", authHeader);
 
         //if no token
-        String authPrefix = "Bearer ";
-        if (authHeader == null || !authHeader.startsWith(authPrefix)) {
+        if (authHeader == null) {
             filterChain.doFilter(request,response);
             return;
         }
 
+        //if wrong format
+        String authPrefix = "Bearer ";
+        if(!authHeader.startsWith(authPrefix)){
+            log.warn("Wrong AuthHeader Format \"{}\", expecting \"Bearer <token>\"", authHeader);
+            filterChain.doFilter(request,response);
+            return;
+        }
 
         String token = authHeader.substring(authPrefix.length());
 
@@ -54,6 +60,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (token.isEmpty() ||
                 token.equalsIgnoreCase("null") ||
                 token.equalsIgnoreCase("undefined")) {
+            log.warn("Empty JWT");
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,11 +79,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        }catch (TokenException e){//todo nix machen; als wäre da kein Token :)
+        }catch (TokenException e){//nix machen; als wäre da kein Token :)
+            log.warn("Invalid JWT: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            throw new BadCredentialsException(e.getMessage(), e);
+            //throw new BadCredentialsException(e.getMessage(), e);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Unexpected Error while resolving JWT: {}",e.getMessage());
             SecurityContextHolder.clearContext();
         }
 
