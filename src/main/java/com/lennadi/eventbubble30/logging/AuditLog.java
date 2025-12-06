@@ -23,10 +23,13 @@ public class AuditLog {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "benutzer_id", nullable = true, updatable = false)
     private Benutzer benutzer;
-    @Column(nullable = false, updatable = false, length = 45)
-    private String ipAddress;
+
     @Column(nullable = true, updatable = false)
     private String usernameSnapshot;
+
+    @Column(nullable = false, updatable = false, length = 45)
+    private String ipAddress;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "auditlog_role_snapshots",
@@ -40,10 +43,13 @@ public class AuditLog {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false, length = 30)
     private Action action;
+
     @Column(nullable = false, updatable = false, length = 8000)
     private String payload;
+
     @Column(nullable = false, updatable = false)
     private boolean success;
+
     @Column(nullable = false, updatable = false, length = 255)
     private String endpoint;
 
