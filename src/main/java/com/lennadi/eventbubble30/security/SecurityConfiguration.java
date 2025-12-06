@@ -146,7 +146,7 @@ public class SecurityConfiguration {
         config.setAllowedMethods(List.of("GET", "POST", "PUT",
                 "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);                      // zum Testen einfacher
+        config.setAllowCredentials(true);                      // zum Testen einfacher
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
