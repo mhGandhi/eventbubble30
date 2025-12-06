@@ -126,6 +126,10 @@ public class SecurityConfiguration {
     private void handleAccessDenied(HttpServletRequest request,
                                     HttpServletResponse response,
                                     AccessDeniedException ex) throws IOException {
+        AuthState state = (AuthState) request.getAttribute("jwt_state");
+        if (state == null) {
+            state = AuthState.UNKNOWN;
+        }
 
         ApiErrorResponse body = new ApiErrorResponse(
                 Instant.now(),
@@ -134,7 +138,7 @@ public class SecurityConfiguration {
                 ex.getMessage(),
                 request.getRequestURI(),
                 null,
-                AuthState.AUTHENTICATED
+                state
         );
 
         writeJson(response, 403, body);
