@@ -24,7 +24,7 @@ import java.util.Set;
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class AuditAspect {//todo einmal chatty code abchecken
+public class AuditAspect {
 
     private final AuditLogRepository repo;
     private final BenutzerService benutzerService;
@@ -40,39 +40,59 @@ public class AuditAspect {//todo einmal chatty code abchecken
     @Around("@annotation(audit)")
     public Object auditAction(ProceedingJoinPoint pjp, Audit audit) throws Throwable {
 
-        boolean success = false;
         Object result = null;
         Exception thrown = null;
-        Long resourceId = null;
 
         try {
             result = pjp.proceed();
-            success = true;
             return result;
-
         } catch (Exception e) {
-            success = false;
             thrown = e;
-            throw e;
-
+            throw e; // DO NOT swallow business exceptions
         } finally {
+            try {
+                boolean success = (thrown == null);
 
-            // 1) priority: explicit parameter callback
-            resourceId = extractResourceIdParam(pjp, audit.resourceIdParam());
+                Long resourceId = null;
 
-            // 2) fallback: try extract from returned object (DTO, Benutzer, ResponseEntity)
-            if (resourceId == null) resourceId = extractFromResult(result);
+                // 1) priority: explicit callback param
+                resourceId = extractResourceIdParam(pjp, audit.resourceIdParam());
 
-            // 3) fallback: try extract from thrown exception
-            if (resourceId == null) resourceId = extractFromException(thrown);
+                // 2) fallback: extract from result
+                if (resourceId == null) resourceId = extractFromResult(result);
 
-            // 4) fallback: if action logically modifies the current Benutzer (login/refresh/email verify)
-            if (resourceId == null && modifiesCurrentUser(audit.action())) {
-                Benutzer current = safeGetUser();
-                resourceId = current != null ? current.getId() : null;
+                // 3) fallback: extract from exception object
+                if (resourceId == null) resourceId = extractFromException(thrown);
+
+                // 4) fallback: actions that modify current user
+                if (resourceId == null && modifiesCurrentUser(audit.action())) {
+                    Benutzer current = safeGetUser();
+                    resourceId = current != null ? current.getId() : null;
+                }
+
+                writeAuditLogSafe(pjp, audit, success, resourceId);
+
+            } catch (Exception e) {
+                // FULLY swallow audit failures
+                log.error("Audit logging failed (swallowed): {}", e.getMessage(), e);
             }
+        }
+    }
 
+    // ====================================================================
+    //           SAFE WRAPPER FOR THE ACTUAL PERSIST OPERATION
+    // ====================================================================
+
+    private void writeAuditLogSafe(
+            ProceedingJoinPoint pjp,
+            Audit audit,
+            boolean success,
+            Long resourceId
+    ) {
+        try {
             writeAuditLog(pjp, audit, success, resourceId);
+        } catch (Exception e) {
+            log.error("Audit log DB insert failed (swallowed): {}", e.getMessage(), e);
         }
     }
 
@@ -133,7 +153,6 @@ public class AuditAspect {//todo einmal chatty code abchecken
     private Long extractFromResult(Object result) {
         if (result == null) return null;
 
-        // ResponseEntity<?> wrapper
         if (result instanceof ResponseEntity<?> r) {
             return extractIdFromObject(r.getBody());
         }
@@ -157,13 +176,9 @@ public class AuditAspect {//todo einmal chatty code abchecken
     private Long extractIdFromObject(Object obj) {
         if (obj == null) return null;
 
-        // direct Benutzer
         if (obj instanceof Benutzer b) return b.getId();
-
-        // direct DTO
         if (obj instanceof Benutzer.DTO dto) return dto.id();
 
-        // try POJO "id" field via reflection
         try {
             Field f = obj.getClass().getDeclaredField("id");
             f.setAccessible(true);
@@ -182,7 +197,7 @@ public class AuditAspect {//todo einmal chatty code abchecken
         return action == AuditLog.Action.LOGIN
                 || action == AuditLog.Action.REFRESH
                 || action == AuditLog.Action.INVALIDATE_TOKENS
-                || action == AuditLog.Action.UPDATE; // for reset-password & email verify
+                || action == AuditLog.Action.UPDATE;
     }
 
     // ====================================================================
@@ -192,12 +207,9 @@ public class AuditAspect {//todo einmal chatty code abchecken
     private String serializeArgs(Object[] args) {
         try {
             String json = mapper.writeValueAsString(args);
-
             JsonNode root = mapper.readTree(json);
             maskSensitiveFields(root);
-
             return mapper.writeValueAsString(root);
-
         } catch (Exception e) {
             return Arrays.toString(args);
         }
@@ -206,17 +218,14 @@ public class AuditAspect {//todo einmal chatty code abchecken
     private void maskSensitiveFields(JsonNode node) {
         if (node.isObject()) {
             ObjectNode obj = (ObjectNode) node;
-
             obj.fieldNames().forEachRemaining(field -> {
                 JsonNode child = obj.get(field);
-
                 if (isSensitiveKey(field)) {
                     obj.put(field, MASK);
                 } else {
                     maskSensitiveFields(child);
                 }
             });
-
         } else if (node.isArray()) {
             for (JsonNode child : node) {
                 maskSensitiveFields(child);
