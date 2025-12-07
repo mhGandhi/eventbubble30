@@ -79,7 +79,7 @@ public class AuthController {
     @Audit(
             action = AuditLog.Action.CREATE,
             resourceType = "Benutzer",
-            resourceIdExpression = "#result.benutzerDTO.id"
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest req) {
@@ -108,6 +108,9 @@ public class AuthController {
                 req.password()
         );
 
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", neu.getId(), RequestAttributes.SCOPE_REQUEST);
+
         // 5. 201 Created zurück
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getId()))
@@ -117,7 +120,7 @@ public class AuthController {
     @Audit(
             action = AuditLog.Action.LOGIN,
             resourceType = "Benutzer",
-            resourceIdExpression = "#result.benutzerDTO.id"
+            resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
@@ -159,7 +162,7 @@ public class AuthController {
     @Audit(
             action = AuditLog.Action.REFRESH,
             resourceType = "Benutzer",
-            resourceIdExpression = "#result.benutzerDTO.id"
+            resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
