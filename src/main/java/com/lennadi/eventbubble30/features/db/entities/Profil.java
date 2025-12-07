@@ -41,7 +41,7 @@ public class Profil {
     private String bio;
 
     public DTO toDTO(){
-        return new DTO(getBenutzer().toDTO(), getName(), getBio());
+        return new DTO(id, getName(), getBio());
     }
-    public record DTO(Benutzer.DTO benutzer, String name, String bio) {}
+    public record DTO(long id, String name, String bio) {}
 }
