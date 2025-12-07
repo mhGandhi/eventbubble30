@@ -27,6 +27,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -74,7 +76,11 @@ public class AuthController {
             Benutzer.DTO benutzerDTO
     ) {}
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.CREATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#result.benutzerDTO.id"
+    )
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest req) {
 
@@ -108,7 +114,11 @@ public class AuthController {
                 .body(neu.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.LOGIN,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#result.benutzerDTO.id"
+    )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
@@ -146,7 +156,11 @@ public class AuthController {
     }
 
 
-    @Audit(action = AuditLog.Action.REFRESH, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.REFRESH,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#result.benutzerDTO.id"
+    )
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
         String refreshToken = req.refreshToken();
@@ -167,7 +181,11 @@ public class AuthController {
 
     }
 
-    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.INVALIDATE_TOKENS,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#currentUser.id"
+    )
     @PostMapping("invalidate-tokens")
     @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> invalidateOwnTokens() {
@@ -183,47 +201,80 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    //PW reset etc
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/request-password-reset")
-    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestParam String email) {
-        var userOpt = benutzerRepository.findByEmail(email);
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestParam String email) {
 
+        var userOpt = benutzerRepository.findByEmail(email);
         userOpt.ifPresent(passwordResetService::requestReset);
+        userOpt.ifPresent(user->{
+            RequestContextHolder.currentRequestAttributes()
+                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+        });
 
         return ResponseEntity.ok().build(); // always 200
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest req) {
+
         try {
             Benutzer user = passwordResetService.validateTokenAndConsume(req.token());
             benutzerService.FORCEsetPasswordById(user.getId(), req.newPassword());
+
+            RequestContextHolder.currentRequestAttributes()
+                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/request-email-verification")
     public ResponseEntity<Void> requestEmailVerification(@RequestParam @Email String email) {
 
         benutzerRepository.findByEmail(email).ifPresent(user -> {
             if (!user.isEmailVerified()) {
                 benutzerService.sendVerificationEmail(user);
+
+                RequestContextHolder.currentRequestAttributes()
+                        .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
             }
         });
 
         return ResponseEntity.ok().build(); // always 200 for security
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
-        benutzerService.verifyEmail(token);
+        Benutzer b = benutzerService.verifyEmail(token);
+
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", b.getId(), RequestAttributes.SCOPE_REQUEST);
+
         return ResponseEntity.ok("Email successfully verified.");
     }
-
-
 }

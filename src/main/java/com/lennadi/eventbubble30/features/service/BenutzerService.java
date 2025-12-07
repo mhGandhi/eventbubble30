@@ -74,7 +74,7 @@ public class BenutzerService {
         );
     }
 
-    public void verifyEmail(String token) {
+    public Benutzer verifyEmail(String token) {
         Benutzer b = repository.findByVerificationToken(token)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token"));
 
@@ -88,6 +88,8 @@ public class BenutzerService {
         b.setVerificationTokenExpiresAt(null);
 
         repository.save(b);
+
+        return b;
     }
 
     public void cleanupUnverifiedAccounts() {

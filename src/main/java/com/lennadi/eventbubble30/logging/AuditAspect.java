@@ -12,6 +12,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +33,6 @@ public class AuditAspect {
     private final BenutzerService benutzerService;
     private final HttpServletRequest request;
     private final ObjectMapper mapper = new ObjectMapper();
-
     private static final String MASK = "***REDACTED***";
 
     // ====================================================================
@@ -46,85 +48,87 @@ public class AuditAspect {
         try {
             result = pjp.proceed();
             return result;
+
         } catch (Exception e) {
             thrown = e;
-            throw e; // DO NOT swallow business exceptions
+            throw e;
+
         } finally {
             try {
                 boolean success = (thrown == null);
 
                 Long resourceId = null;
 
-                // 1) priority: explicit callback param
-                resourceId = extractResourceIdParam(pjp, audit.resourceIdParam());
+                // 0) NEW: resourceIdExpression (SpEL) – top priority
+                resourceId = evalResourceIdExpression(audit, pjp, result, thrown);
 
-                // 2) fallback: extract from result
-                if (resourceId == null) resourceId = extractFromResult(result);
+                // 1) explicit param name
+                if (resourceId == null)
+                    resourceId = extractResourceIdParam(pjp, audit.resourceIdParam());
 
-                // 3) fallback: extract from exception object
-                if (resourceId == null) resourceId = extractFromException(thrown);
+                // 2) extract from returned object
+                if (resourceId == null)
+                    resourceId = extractFromResult(result);
 
-                // 4) fallback: actions that modify current user
+                // 3) extract from thrown exception
+                if (resourceId == null)
+                    resourceId = extractFromException(thrown);
+
+                // 4) fallback: actions affecting current user
                 if (resourceId == null && modifiesCurrentUser(audit.action())) {
                     Benutzer current = safeGetUser();
-                    resourceId = current != null ? current.getId() : null;
+                    resourceId = (current != null ? current.getId() : null);
                 }
 
                 writeAuditLogSafe(pjp, audit, success, resourceId);
 
             } catch (Exception e) {
-                // FULLY swallow audit failures
                 log.error("Audit logging failed (swallowed): {}", e.getMessage(), e);
             }
         }
     }
 
     // ====================================================================
-    //           SAFE WRAPPER FOR THE ACTUAL PERSIST OPERATION
+    //                  RESOURCE ID VIA EXPRESSION (SPEL)
     // ====================================================================
 
-    private void writeAuditLogSafe(
-            ProceedingJoinPoint pjp,
+    private Long evalResourceIdExpression(
             Audit audit,
-            boolean success,
-            Long resourceId
+            ProceedingJoinPoint pjp,
+            Object result,
+            Exception thrown
     ) {
+        String expr = audit.resourceIdExpression();
+        if (expr == null || expr.isBlank()) return null;
+
         try {
-            writeAuditLog(pjp, audit, success, resourceId);
+            StandardEvaluationContext ctx = new StandardEvaluationContext();
+
+            // Add method parameters as variables
+            MethodSignature sig = (MethodSignature) pjp.getSignature();
+            String[] paramNames = sig.getParameterNames();
+            Object[] args = pjp.getArgs();
+
+            for (int i = 0; i < paramNames.length; i++) {
+                ctx.setVariable(paramNames[i], args[i]);
+            }
+
+            // Add extra context variables
+            ctx.setVariable("result", result);
+            ctx.setVariable("exception", thrown);
+            ctx.setVariable("currentUser", safeGetUser());
+            ctx.setVariable("request", request);
+
+            ExpressionParser parser = new SpelExpressionParser();
+            Object val = parser.parseExpression(expr).getValue(ctx);
+
+            if (val instanceof Number n) return n.longValue();
+            return null;
+
         } catch (Exception e) {
-            log.error("Audit log DB insert failed (swallowed): {}", e.getMessage(), e);
+            log.error("Failed to evaluate resourceIdExpression '{}': {}", expr, e.getMessage());
+            return null;
         }
-    }
-
-    // ====================================================================
-    //                         LOG CREATION
-    // ====================================================================
-
-    private void writeAuditLog(
-            ProceedingJoinPoint pjp,
-            Audit audit,
-            boolean success,
-            Long resourceId
-    ) {
-
-        Benutzer user = safeGetUser();
-        String payload = serializeArgs(pjp.getArgs());
-
-        AuditLog log = new AuditLog(
-                user,
-                getClientIp(),
-                user != null ? user.getUsername() : null,
-                user != null ? Set.copyOf(user.getRoles()) : Set.of(),
-                audit.action(),
-                payload,
-                success,
-                request.getRequestURI(),
-                Instant.now(),
-                audit.resourceType(),
-                resourceId
-        );
-
-        repo.save(log);
     }
 
     // ====================================================================
@@ -153,9 +157,8 @@ public class AuditAspect {
     private Long extractFromResult(Object result) {
         if (result == null) return null;
 
-        if (result instanceof ResponseEntity<?> r) {
+        if (result instanceof ResponseEntity<?> r)
             return extractIdFromObject(r.getBody());
-        }
 
         return extractIdFromObject(result);
     }
@@ -198,6 +201,53 @@ public class AuditAspect {
                 || action == AuditLog.Action.REFRESH
                 || action == AuditLog.Action.INVALIDATE_TOKENS
                 || action == AuditLog.Action.UPDATE;
+    }
+
+    // ====================================================================
+    //           SAFE WRAPPER FOR THE ACTUAL PERSIST OPERATION
+    // ====================================================================
+
+    private void writeAuditLogSafe(
+            ProceedingJoinPoint pjp,
+            Audit audit,
+            boolean success,
+            Long resourceId
+    ) {
+        try {
+            writeAuditLog(pjp, audit, success, resourceId);
+        } catch (Exception e) {
+            log.error("Audit log DB insert failed (swallowed): {}", e.getMessage(), e);
+        }
+    }
+
+    // ====================================================================
+    //                         LOG CREATION
+    // ====================================================================
+
+    private void writeAuditLog(
+            ProceedingJoinPoint pjp,
+            Audit audit,
+            boolean success,
+            Long resourceId
+    ) {
+        Benutzer user = safeGetUser();
+        String payload = serializeArgs(pjp.getArgs());
+
+        AuditLog log = new AuditLog(
+                user,
+                getClientIp(),
+                user != null ? user.getUsername() : null,
+                user != null ? Set.copyOf(user.getRoles()) : Set.of(),
+                audit.action(),
+                payload,
+                success,
+                request.getRequestURI(),
+                Instant.now(),
+                audit.resourceType(),
+                resourceId
+        );
+
+        repo.save(log);
     }
 
     // ====================================================================

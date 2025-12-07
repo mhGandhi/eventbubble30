@@ -15,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
+import static com.lennadi.eventbubble30.logging.AuditLog.Action.UPDATE;
+
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/user")
 @RestController
@@ -67,7 +69,7 @@ public class BenutzerController {
                 .body(neu.toDTO());                                     // Response Body
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "id")
+    @Audit(action = UPDATE, resourceType = "Benutzer", resourceIdParam = "id")
     @PatchMapping("/{id}")
     public ResponseEntity<Benutzer.DTO> patchUser(
             @PathVariable Long id,
@@ -115,7 +117,11 @@ public class BenutzerController {
         return service.list(page, size).map(Benutzer::toDTO);
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "currentUser")
+    @Audit(
+            action = UPDATE,
+            resourceType = "Benutzer",
+            resourceIdExpression = "#currentUser.id"
+    )
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody UpdateOwnPasswordRequest req
