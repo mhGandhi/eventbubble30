@@ -169,7 +169,7 @@ public class AuthController {
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")
     @PostMapping("invalidate-tokens")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> invalidateOwnTokens() {
         Benutzer benutzer = benutzerService.getCurrentUser();
         benutzerService.invalidateTokens(benutzer.getId());
@@ -178,7 +178,7 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> validateSession() {
         return ResponseEntity.ok().build();
     }
