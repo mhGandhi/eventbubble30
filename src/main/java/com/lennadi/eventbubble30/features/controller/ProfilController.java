@@ -62,7 +62,7 @@ public class ProfilController {
         Profil created = profilService.createProfil(id, request);
 
         return ResponseEntity
-                .created(URI.create("/api/profil/" + id))
+                .created(URI.create("/api/profiles/" + id))
                 .body(created.toDTO());
     }
 
