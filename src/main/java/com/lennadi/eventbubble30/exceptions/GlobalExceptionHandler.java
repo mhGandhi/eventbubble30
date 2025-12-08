@@ -52,10 +52,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> handleMissingBody(HttpMessageNotReadableException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Request body is required (o.Ä.)"));
+    public ResponseEntity<?> handleMissingBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "HttpMessage nicht lesbar (fehlender Body?)",
+                request.getRequestURI(),
+                null,
+                getAuthState(request)
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // --- ResponseStatusException --------------------------------------------
