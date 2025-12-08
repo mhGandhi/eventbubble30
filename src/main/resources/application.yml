@@ -9,7 +9,7 @@ server:
     include-message: always
 spring:
   profiles:
-    active: keinCaptcha, EMAIL_dummy
+    active: keinCaptcha, EMAIL_dummy, memoryStorage
   application:
     name: "eventbubble30"
 app:

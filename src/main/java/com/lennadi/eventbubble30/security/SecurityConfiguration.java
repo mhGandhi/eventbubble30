@@ -70,6 +70,9 @@ public class SecurityConfiguration {
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        //media
+                        .requestMatchers("/media/**").permitAll()
+
                         //user
                         .requestMatchers("/api/user/**").authenticated()
 
