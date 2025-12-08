@@ -1,5 +1,5 @@
 name: Bauch-Beine-Po
-run-name: ${{github.actor}} hat Änderungen gepusht.
+run-name: "${{github.actor}}: ${{ github.event.head_commit.message }}."
 on:
   push:
     branches: ["master"]
