@@ -4,6 +4,7 @@ import com.lennadi.eventbubble30.security.AuthState;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +49,13 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleMissingBody(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Request body is required (o.Ä.)"));
     }
 
     // --- ResponseStatusException --------------------------------------------
@@ -115,8 +123,8 @@ public class GlobalExceptionHandler {
         ApiErrorResponse body = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "SERVER_ERROR",
-                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                e.getMessage(),//todo dass später weg um keine internals zu leaken, vlt mit profile entscheiden?
                 request.getRequestURI(),
                 null,
                 getAuthState(request)
