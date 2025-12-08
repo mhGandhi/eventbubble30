@@ -47,6 +47,7 @@ public class MemoryFSService implements FileStorageService{
 
     @Override
     public URL getFileURL(String key) {
+        if(!files.containsKey(key)) return null;
         try {
             return new URL(baseUrl + key);
         } catch (MalformedURLException e) {
