@@ -73,6 +73,10 @@ public class SecurityConfiguration {
                         //user
                         .requestMatchers("/api/user/**").authenticated()
 
+                        //profile
+                        .requestMatchers(HttpMethod.GET, "/api/profiles/**").permitAll()
+                        .requestMatchers("/api/profiles/**").authenticated()
+
                         //events
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                         .requestMatchers("/api/events/**").authenticated()

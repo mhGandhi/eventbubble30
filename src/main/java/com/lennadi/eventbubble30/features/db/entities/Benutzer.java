@@ -25,9 +25,6 @@ public class Benutzer extends BaseEntity{
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
 
-    @OneToOne(mappedBy = "benutzer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Profil profil;
-
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(
@@ -65,12 +62,11 @@ public class Benutzer extends BaseEntity{
     }
 
     public DTO toDTO() {
-        return new DTO(this.getId(), this.getUsername());
+        return new DTO(this.getId());
     }
 
     public record DTO(
-            Long id,
-            String username
+            Long id
     ) { }
 
     public AdminDTO toAdminDTO() {
