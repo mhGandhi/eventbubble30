@@ -32,6 +32,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.time.Instant;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -72,7 +73,9 @@ public class AuthController {
 
     public record AuthResponse(
             String accessToken,
+            Instant accessTokenExpiry,
             String refreshToken,
+            Instant refreshTokenExpiry,
             Benutzer.DTO benutzerDTO
     ) {}
 
@@ -154,7 +157,7 @@ public class AuthController {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         return ResponseEntity.ok(
-                new AuthResponse(accessToken, refreshToken, b.toDTO())
+                new AuthResponse(accessToken, null, refreshToken, null, b.toDTO())//todo
         );
     }
 
@@ -176,7 +179,7 @@ public class AuthController {
 
             Benutzer benutzer = benutzerService.getBenutzer(details.getId());
             return ResponseEntity.ok(
-                    new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
+                    new AuthResponse(newAccess, null, refreshToken, null, benutzer.toDTO())//todo
             );
         } catch (TokenException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
