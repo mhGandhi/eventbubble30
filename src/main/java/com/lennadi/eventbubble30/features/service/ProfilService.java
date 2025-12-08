@@ -1,17 +1,14 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.features.controller.ProfilController;
-import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +19,7 @@ public class ProfilService {
     /// //////////////////////////////////////////////////////////////
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    @Transactional
     public Profil createProfil(long id , ProfilController.CreateProfilRequest request) {
         Profil neu = new Profil(id, request.name());
         neu.setName(request.name());
@@ -44,10 +42,12 @@ public class ProfilService {
     }
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    @Transactional
     public void deleteProfil(long id){
         profilRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public Profil getProfil(long id) {
         return profilRepository.getProfilById(id)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"/api/profil/"+id));
