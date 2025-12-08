@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
+                HttpStatus.BAD_REQUEST.toString(),
                 "Validation failed",
                 request.getRequestURI(),
                 errors,
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
+                HttpStatus.BAD_REQUEST.toString(),
                 "HttpMessage nicht lesbar (fehlender Body?)",
                 request.getRequestURI(),
                 null,
@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.METHOD_NOT_ALLOWED.value(),
-                "Method Not Allowed",
+                HttpStatus.METHOD_NOT_ALLOWED.toString(),
                 ex.getMessage(),
                 request.getRequestURI(),
                 null,
@@ -117,7 +117,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.NOT_FOUND.value(),
-                "Not Found",
+                HttpStatus.NOT_FOUND.toString(),
                 ex.getMessage(),
                 request.getRequestURI(),
                 null,
