@@ -102,7 +102,7 @@ public class AuthController {
         }
 
         // 4. Benutzer erstellen
-        Benutzer neu = benutzerService.FORCEcreateBenutzer(
+        Benutzer neu = benutzerService.createUser(
                 req.email(),
                 req.username(),
                 req.password()
@@ -174,7 +174,7 @@ public class AuthController {
             String newAccess = jwtService.generateAccessToken(details);
             //todo mby System zum refresh Token rotieren?
 
-            Benutzer benutzer = benutzerService.getById(details.getId());
+            Benutzer benutzer = benutzerService.getBenutzer(details.getId());
             return ResponseEntity.ok(
                     new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
             );
@@ -235,7 +235,7 @@ public class AuthController {
 
         try {
             Benutzer user = passwordResetService.validateTokenAndConsume(req.token());
-            benutzerService.FORCEsetPasswordById(user.getId(), req.newPassword());
+            benutzerService.resetPassword(user.getId(), req.newPassword());
 
             RequestContextHolder.currentRequestAttributes()
                     .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);

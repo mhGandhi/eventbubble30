@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.service;
 
+import com.lennadi.eventbubble30.features.controller.BenutzerController;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
@@ -61,7 +62,8 @@ class BenutzerServiceTest {
 
         when(repo.save(any())).thenReturn(saved);
 
-        var result = service.createBenutzer("mail@test.com", "testuser", "secret");
+        var req = new BenutzerController.CreateBenutzerRequest("mail@test.com", "testuser", "secret");
+        var result = service.createBenutzer(req);
 
         assertEquals(1L, result.getId());
         assertEquals("mail@test.com", result.getEmail());
@@ -74,7 +76,7 @@ class BenutzerServiceTest {
 
         var ex = assertThrows(
                 ResponseStatusException.class,
-                () -> service.createBenutzer("mail@test.com", "testuser", "secret")
+                () -> service.createBenutzer(new BenutzerController.CreateBenutzerRequest("mail@test.com", "testuser", "secret"))
         );
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -87,7 +89,7 @@ class BenutzerServiceTest {
 
         var ex = assertThrows(
                 ResponseStatusException.class,
-                () -> service.createBenutzer("mail@test.com", "testuser", "secret")
+                () -> service.createBenutzer(new BenutzerController.CreateBenutzerRequest("mail@test.com", "testuser", "secret"))
         );
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -98,52 +100,26 @@ class BenutzerServiceTest {
     // ---------------------------------------------------------
 
     @Test
-    void getById_notFound() {
+    void getBenutzer_notFound() {
         when(repo.findById(5L)).thenReturn(Optional.empty());
 
         var ex = assertThrows(
                 ResponseStatusException.class,
-                () -> service.getById(5)
+                () -> service.getBenutzer(5)
         );
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
     @Test
-    void getById_success() {
+    void getBenutzer_success() {
         Benutzer b = new Benutzer();
         b.setId(5L);
 
         when(repo.findById(5L)).thenReturn(Optional.of(b));
 
-        var r = service.getById(5L);
+        var r = service.getBenutzer(5L);
         assertEquals(5L, r.getId());
-    }
-
-    // ---------------------------------------------------------
-    // getByUsername
-    // ---------------------------------------------------------
-
-    @Test
-    void getByUsername_notFound() {
-        when(repo.findByUsername("abc")).thenReturn(Optional.empty());
-
-        var ex = assertThrows(
-                ResponseStatusException.class,
-                () -> service.getByUsername("abc")
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
-    }
-
-    @Test
-    void getByUsername_success() {
-        Benutzer b = new Benutzer();
-        b.setUsername("abc");
-
-        when(repo.findByUsername("abc")).thenReturn(Optional.of(b));
-
-        assertEquals("abc", service.getByUsername("abc").getUsername());
     }
 
     // ---------------------------------------------------------
@@ -198,7 +174,7 @@ class BenutzerServiceTest {
     // ---------------------------------------------------------
 
     @Test
-    void patchBenutzerById_forbiddenIfDifferentUser() {
+    void updateBenutzer_forbiddenIfDifferentUser() {
         Benutzer b = new Benutzer();
         b.setId(5L);
         b.setUsername("user1");
@@ -217,11 +193,11 @@ class BenutzerServiceTest {
         when(repo.findByUsername("user2")).thenReturn(Optional.of(b2));
 
         assertThrows(ResponseStatusException.class,
-                () -> service.patchBenutzerById(5L, "a", "b", "c"));
+                () -> service.updateBenutzer(5L, new BenutzerController.PatchBenutzerRequest("a","b")));
     }
 
     @Test
-    void patchBenutzerById_success() {
+    void updateBenutzer_success() {
         Benutzer existing = new Benutzer();
         existing.setId(5L);
         existing.setUsername("old");
@@ -240,7 +216,7 @@ class BenutzerServiceTest {
         when(encoder.encode("newPw")).thenReturn("ENC(newPw)");
         when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Benutzer result = service.patchBenutzerById(5L, "new@mail.com", "newuser", "newPw");
+        Benutzer result = service.updateBenutzer(5L, new BenutzerController.PatchBenutzerRequest("a","b"));
 
         assertEquals("new@mail.com", result.getEmail());
         assertEquals("newuser", result.getUsername());

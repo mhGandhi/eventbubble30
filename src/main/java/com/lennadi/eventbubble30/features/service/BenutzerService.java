@@ -1,10 +1,12 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
+import com.lennadi.eventbubble30.features.controller.BenutzerController;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.mail.EmailService;
 import com.lennadi.eventbubble30.security.TokenGeneration;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,15 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-@Transactional // All write operations benefit; read-only handled on methods below
+@Transactional
 public class BenutzerService {
 
     private final BenutzerRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    // ========================================================================
-    // Helpers
-    // ========================================================================
+    /// //////////////////////////////////INTERNAL
 
-    // Simple helper to reduce repetition
     private Benutzer requireUser(long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -49,11 +48,12 @@ public class BenutzerService {
                 ));
     }
 
-    // ========================================================================
-    // Forced / system creation
-    // ========================================================================
+    public void resetPassword(Long id, String newPassword) {
+        Benutzer b = requireUser(id);
+        b.setPasswordHash(passwordEncoder.encode(newPassword));
+    }
 
-    public Benutzer FORCEcreateBenutzer(String email, String username, String password) {
+    public Benutzer createUser(String email, String username, String password) {
 
         if (repository.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username existiert bereits");
@@ -77,33 +77,140 @@ public class BenutzerService {
         return repository.save(user);
     }
 
-    // ========================================================================
-    // Internal system operations
-    // ========================================================================
 
-    public Benutzer sysGetBenutzer(long id) {
+    /// ////////////////////cleanup //todo mby direkt im repo?
+
+    public void cleanupUnverifiedAccounts() {
+        Instant cutoff = Instant.now().minus(Duration.ofDays(7));
+
+        var toDelete = repository.findAll().stream()
+                .filter(u -> !u.isEmailVerified())
+                .filter(u -> u.getVerificationTokenExpiresAt() != null)
+                .filter(u -> u.getVerificationTokenExpiresAt().isBefore(cutoff))
+                .toList();
+
+        repository.deleteAll(toDelete);
+
+        // todo create repository-level cleanup query (much faster)
+    }
+
+    ////////////////////////////////////////////////////////////Self
+
+    @PreAuthorize("@authz.isAuthenticated()")
+    @Transactional(readOnly = true)
+    public Benutzer getCurrentUserOrNull() {
+        try {
+            return getCurrentUser();
+        } catch (ResponseStatusException ignored) {
+            return null;
+        }
+    }
+
+    @PreAuthorize("@authz.isAuthenticated()")
+    @Transactional(readOnly = true)
+    public Benutzer getCurrentUser() {
+        var context = SecurityContextHolder.getContext();
+        Authentication auth = (context != null ? context.getAuthentication() : null);
+
+        System.out.println(auth);
+
+        if (auth == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
+        }
+
+        String username = auth.getName();
+
+        return requireUser(username);
+    }
+
+    /// ////////////////////////////////ADMIN
+
+    @PreAuthorize("@authz.hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Benutzer> list(int page, int size) {//todo mehr pageable
+        return repository.findAll(
+                org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
+        );
+    }
+
+    @PreAuthorize("@authz.hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    public int getUserCount() {
+        return (int) repository.count();
+    }
+
+    // todo find activeCount(time)
+
+    /// //////////////////////////////////KLeine updates
+
+    public void seen(Long id) { // todo insert more efficiently
+        requireUser(id).setLastSeen(Instant.now());
+        // save not needed
+    }
+
+    public void lastLoginDate(Long id) { // todo insert more efficiently
+        requireUser(id).setLastLoginDate(Instant.now());
+        // save not needed
+    }
+
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    public void invalidateTokens(Long id) { // todo direct
+        requireUser(id).setTokensInvalidatedAt(Instant.now());
+        // save not needed
+    }
+
+    ////////////////////////////////CRUD
+
+    @PreAuthorize("@authz.hasRole('ADMIN')")
+    public Benutzer createBenutzer(BenutzerController.CreateBenutzerRequest req) { // todo dto?
+        return createUser(req.email(), req.username(), req.password());
+    }
+
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    public Benutzer getBenutzer(long id) {
         return requireUser(id);
     }
 
-    public void sysSetPassword(Long id, String newPassword) { // todo direct
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    public Benutzer updateBenutzer(Long id, BenutzerController.PatchBenutzerRequest req) {//todo dto
         Benutzer b = requireUser(id);
-        b.setPasswordHash(passwordEncoder.encode(newPassword));
-        // save() not required; entity is managed in @Transactional
-        // todo consider unifying password change logic
+        String email = b.getEmail();
+        String username = b.getUsername();
+
+        if (email != null && !email.isEmpty()) {
+            b.setEmail(email);
+        }
+        if (username != null && !username.isEmpty()) {
+            b.setUsername(username);
+        }
+
+        return b;
     }
 
-    // ========================================================================
-    // Admin creation
-    // ========================================================================
+    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    public void deleteUserById(long id) {
+        repository.delete(requireUser(id));
+    }
+
+    /// //////////////////////////////PW
+
+    @PreAuthorize("@authz.isSelf(#id)")
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        Benutzer b = requireUser(id);
+        if(passwordEncoder.matches(oldPassword, b.getPasswordHash())) {
+            resetPassword(id, newPassword);
+        }else{
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect old password");
+        }
+    }
 
     @PreAuthorize("@authz.hasRole('ADMIN')")
-    public Benutzer createBenutzer(String email, String username, String password) { // todo dto?
-        return FORCEcreateBenutzer(email, username, password);
+    public void setPassword(Long id, String newPassword) {
+        resetPassword(id, newPassword);
     }
 
-    // ========================================================================
-    // Email verification
-    // ========================================================================
+    //////////////////////////////////////////////////////////MAIL
 
     public void sendVerificationEmail(Benutzer user) {
         if (user.isEmailVerified()) return;
@@ -141,152 +248,4 @@ public class BenutzerService {
         return b;
     }
 
-    // ========================================================================
-    // Cleanup
-    // ========================================================================
-
-    public void cleanupUnverifiedAccounts() {
-        Instant cutoff = Instant.now().minus(Duration.ofDays(7));
-
-        var toDelete = repository.findAll().stream()
-                .filter(u -> !u.isEmailVerified())
-                .filter(u -> u.getVerificationTokenExpiresAt() != null)
-                .filter(u -> u.getVerificationTokenExpiresAt().isBefore(cutoff))
-                .toList();
-
-        repository.deleteAll(toDelete);
-
-        // todo create repository-level cleanup query (much faster)
-    }
-
-    // ========================================================================
-    // Patch / update
-    // ========================================================================
-
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public Benutzer patchBenutzerById(Long id, String email, String username, String password) {
-        Benutzer b = requireUser(id);
-
-        if (email != null && !email.isEmpty()) {
-            b.setEmail(email);
-        }
-        if (username != null && !username.isEmpty()) {
-            b.setUsername(username);
-        }
-        if (password != null && !password.isEmpty() &&
-                !passwordEncoder.matches(password, b.getPasswordHash())) {
-            b.setPasswordHash(passwordEncoder.encode(password));
-        }
-
-        // save not required
-        return b;
-    }
-
-    // ========================================================================
-    // Current / self user helpers
-    // ========================================================================
-
-    @PreAuthorize("@authz.isAuthenticated()")
-    @Transactional(readOnly = true)
-    public Benutzer getByIdOrMe(String idMe) {
-        if (idMe.equalsIgnoreCase("me")) {
-            return getCurrentUser();
-        }
-        return getById(Long.parseLong(idMe));
-    }
-
-    @PreAuthorize("@authz.isAuthenticated()")
-    @Transactional(readOnly = true)
-    public Benutzer getById(long id) {
-        return requireUser(id);
-    }
-
-    @PreAuthorize("@authz.isAuthenticated()")
-    @Transactional(readOnly = true)
-    public Benutzer getByUsername(String username) {
-        return requireUser(username);
-    }
-
-    @Transactional(readOnly = true)
-    public Benutzer getCurrentUserOrNull() {
-        try {
-            return getCurrentUser();
-        } catch (ResponseStatusException ignored) {
-            return null;
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public Benutzer getCurrentUser() {
-        var context = SecurityContextHolder.getContext();
-        Authentication auth = (context != null ? context.getAuthentication() : null);
-
-        System.out.println(auth);
-
-        if (auth == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
-        }
-
-        String username = auth.getName();
-
-        return requireUser(username);
-    }
-
-    // ========================================================================
-    // Admin read
-    // ========================================================================
-
-    @PreAuthorize("@authz.hasRole('ADMIN')")
-    @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Benutzer> list(int page, int size) {
-        return repository.findAll(
-                org.springframework.data.domain.PageRequest.of(page, size, Sort.by("id").ascending())
-        );
-    }
-
-    @PreAuthorize("@authz.hasRole('ADMIN')")
-    @Transactional(readOnly = true)
-    public int getUserCount() {
-        return (int) repository.count();
-        // todo consider separate count query per role?
-    }
-
-    // ========================================================================
-    // Deletion
-    // ========================================================================
-
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public void deleteUserById(long id) {
-        repository.delete(requireUser(id));
-    }
-
-    // ========================================================================
-    // Validations / minor updates
-    // ========================================================================
-
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    @Transactional(readOnly = true)
-    public boolean isPasswordValidForId(Long id, String password) {
-        Benutzer b = requireUser(id);
-        return passwordEncoder.matches(password, b.getPasswordHash());
-    }
-
-    public void seen(Long id) { // todo insert more efficiently
-        requireUser(id).setLastSeen(Instant.now());
-        // save not needed
-    }
-
-    public void lastLoginDate(Long id) { // todo insert more efficiently
-        requireUser(id).setLastLoginDate(Instant.now());
-        // save not needed
-    }
-
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public void invalidateTokens(Long id) { // todo direct
-        requireUser(id).setTokensInvalidatedAt(Instant.now());
-        // save not needed
-    }
-
-    // todo change pw separat
-    // todo find activeCount(time)
 }
