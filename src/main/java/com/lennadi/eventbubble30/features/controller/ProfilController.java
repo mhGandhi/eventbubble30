@@ -57,7 +57,7 @@ public class ProfilController {
     // Endpoints (same methods for /me and /{id})
     // ----------------------------------------------------------
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Profil", resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
     @PostMapping("/{segment}")
     public ResponseEntity<Profil.DTO> createProfil(
             @PathVariable String segment,
@@ -78,7 +78,7 @@ public class ProfilController {
         return ResponseEntity.ok(profil.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Profil", resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
     public ResponseEntity<Profil.DTO> updateProfil(
             @PathVariable String segment,
@@ -89,7 +89,7 @@ public class ProfilController {
         return ResponseEntity.ok(updated.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = "Profil", resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteProfil(@PathVariable String segment) {
         long id = resolveId(segment);
 

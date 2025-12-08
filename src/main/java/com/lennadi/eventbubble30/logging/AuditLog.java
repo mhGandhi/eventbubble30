@@ -58,8 +58,9 @@ public class AuditLog {
     private Instant timestamp;
 
     //ON WHAT
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false, length = 30)
-    private String resourceType;
+    private RType resourceType;
     @Column(nullable = true, updatable = false)
     private Long resourceId;
 
@@ -73,7 +74,7 @@ public class AuditLog {
             boolean success,
             String endpoint,
             Instant timestamp,
-            String resourceType,
+            RType resourceType,
             Long resourceId
     ) {
         this.benutzer = benutzer;
@@ -103,6 +104,14 @@ public class AuditLog {
         public static final Set<Action> CRUD = new HashSet<>(List.of(CREATE, READ, UPDATE, DELETE));
         public static final Set<Action> AUTH = new HashSet<>(List.of(LOGIN, REFRESH, INVALIDATE_TOKENS));
     }
+
+    public enum RType {
+        PROFILE,
+        USER,
+        EVENT,
+        SERVER_CONFIG
+    }
+
     public DTO toDTO(){
         return new DTO(
                 this.id, this.benutzer!=null?this.benutzer.toDTO():null, this.ipAddress, this.usernameSnapshot, this.roleSnapshot,
@@ -115,6 +124,6 @@ public class AuditLog {
         Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
         Action action, String payload, boolean success, String endpoint,
         Instant timestamp,
-        String resourceType, Long resourceId
+        RType resourceType, Long resourceId
     ) { }
 }

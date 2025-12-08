@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Audit {
     AuditLog.Action action();
-    String resourceType();
+    AuditLog.RType resourceType();
 
     String resourceIdParam() default ""; // nach Parameter
     String resourceIdExpression() default ""; // Ausdruck

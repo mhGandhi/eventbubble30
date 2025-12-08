@@ -66,7 +66,7 @@ public class BenutzerController {
 
     // ===== Endpoints =====
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer", resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#result.body.id")
     @PostMapping("/create")
     public ResponseEntity<Benutzer.DTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
@@ -77,7 +77,7 @@ public class BenutzerController {
                 .body(neu.toDTO());                                     // Response Body
     }
 
-    @Audit(action = UPDATE, resourceType = "Benutzer", resourceIdExpression = "#result.body.id")
+    @Audit(action = UPDATE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
     public ResponseEntity<Benutzer.DTO> patchUser(
             @PathVariable String segment,
@@ -92,7 +92,7 @@ public class BenutzerController {
                 .body(b.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = "Benutzer", resourceIdExpression = "#request.getAttribute('auditResourceId')")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteUserById(@PathVariable String segment) {
         long id = resolveId(segment);
@@ -122,7 +122,7 @@ public class BenutzerController {
 
     @Audit(
             action = UPDATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#currentUser.id"
     )
     @PostMapping("/me/change-password")

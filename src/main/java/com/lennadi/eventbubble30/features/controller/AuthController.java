@@ -78,7 +78,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.CREATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/signup")
@@ -119,7 +119,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.LOGIN,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
@@ -161,7 +161,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.REFRESH,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/refresh")
@@ -186,7 +186,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.INVALIDATE_TOKENS,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#currentUser.id"
     )
     @PostMapping("invalidate-tokens")
@@ -206,7 +206,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/request-password-reset")
@@ -226,7 +226,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/reset-password")
@@ -248,7 +248,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/request-email-verification")
@@ -268,7 +268,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = "Benutzer",
+            resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @GetMapping("/verify-email")

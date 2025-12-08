@@ -45,14 +45,14 @@ public class VeranstaltungController {
         return veranstaltungService.getVeranstaltungById(id).toDTO();
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = "Veranstaltung", resourceIdParam = "id")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.EVENT, resourceIdParam = "id")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVeranstaltung(@PathVariable Long id) {
         veranstaltungService.deleteVeranstaltungById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Veranstaltung")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.EVENT)
     @PostMapping("/create")
     public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
             @Valid @RequestBody CreateVeranstaltungRequest req
@@ -70,7 +70,7 @@ public class VeranstaltungController {
                 .body(vs.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Veranstaltung", resourceIdParam = "id")
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.EVENT, resourceIdParam = "id")
     @PatchMapping("/{id}")
     public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
             @PathVariable Long id,
