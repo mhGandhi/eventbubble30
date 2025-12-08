@@ -6,8 +6,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
@@ -44,8 +46,7 @@ public class ProfilController {
         try {
             return Long.parseLong(segment);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid identifier: " + segment);
-        }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid identifier: " + segment);        }
     }
 
     // ----------------------------------------------------------
