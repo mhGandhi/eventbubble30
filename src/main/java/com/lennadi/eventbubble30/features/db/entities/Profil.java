@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.net.URL;
 import java.time.Instant;
 
 @Entity
@@ -44,18 +45,13 @@ public class Profil {
     private String name;
     private String bio;
 
+    private String avatarKey;
+
     public Profil(long id, String pName){
         this.id = id;
         this.name = pName;
     }
 
-    public DTO toDTO(){
-        return new DTO(id, getName(), getBio());
-    }
-    public record DTO(long id, String name, String bio) {}
-
-    public SmallDTO toSmallDTO(){
-        return new SmallDTO(id, getName());
-    }
-    public record SmallDTO(long id, String name) {}
+    public record DTO(long id, String name, URL avatarURL, String bio) {}
+    public record SmallDTO(long id, String name, URL avatarUrl) {}
 }

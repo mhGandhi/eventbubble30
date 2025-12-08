@@ -13,8 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.net.URI;
 
 @RestController
@@ -68,14 +70,14 @@ public class ProfilController {
 
         return ResponseEntity
                 .created(URI.create("/api/profiles/" + id))
-                .body(created.toDTO());
+                .body(profilService.toDTO(created));
     }
 
     @GetMapping("/{segment}")
     public ResponseEntity<Profil.DTO> getProfil(@PathVariable String segment) {
         long id = resolveId(segment);
         Profil profil = profilService.getProfil(id);
-        return ResponseEntity.ok(profil.toDTO());
+        return ResponseEntity.ok(profilService.toDTO(profil));
     }
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
@@ -86,7 +88,7 @@ public class ProfilController {
     ) {
         long id = resolveId(segment);
         Profil updated = profilService.updateProfil(id, request);
-        return ResponseEntity.ok(updated.toDTO());
+        return ResponseEntity.ok(profilService.toDTO(updated));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
@@ -99,4 +101,24 @@ public class ProfilController {
         profilService.deleteProfil(id);
         return ResponseEntity.noContent().build();
     }
+
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @PutMapping("/{segment}/avatar")
+    public Profil.DTO uploadAvatar(
+            @PathVariable String segment,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        long id = resolveId(segment);
+
+        return profilService.toDTO(profilService.updateAvatar(id, file));
+    }
+
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @DeleteMapping("/{segment}/avatar")
+    public Profil.DTO deleteAvatar(@PathVariable String segment) {
+        long id = resolveId(segment);
+
+        return profilService.toDTO(profilService.deleteAvatar(id));
+    }
+
 }
