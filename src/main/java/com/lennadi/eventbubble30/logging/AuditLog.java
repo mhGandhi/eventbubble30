@@ -99,7 +99,7 @@ public class AuditLog {
         CREATE, READ, UPDATE, DELETE,
         //User
         LOGIN, REFRESH, INVALIDATE_TOKENS,
-        OTHER;
+        OTHER, CLEANUP_UNVERIFIED_ACCOUNTS;
 
         public static final Set<Action> CRUD = new HashSet<>(List.of(CREATE, READ, UPDATE, DELETE));
         public static final Set<Action> AUTH = new HashSet<>(List.of(LOGIN, REFRESH, INVALIDATE_TOKENS));

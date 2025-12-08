@@ -4,10 +4,12 @@ import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.controller.BenutzerController;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.logging.AuditLog;
+import com.lennadi.eventbubble30.logging.AuditService;
 import com.lennadi.eventbubble30.mail.EmailService;
 import com.lennadi.eventbubble30.security.TokenGeneration;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +31,10 @@ public class BenutzerService {
     private final BenutzerRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AuditService auditService;
+
+    @Value("${cleanup.BenutzerEmailVer-d:7}")
+    private int verificationDeadline;
 
     /// //////////////////////////////////INTERNAL
 
@@ -78,21 +84,22 @@ public class BenutzerService {
     }
 
 
-    /// ////////////////////cleanup //todo mby direkt im repo?
+    /// ////////////////////cleanup
 
     public void cleanupUnverifiedAccounts() {
-        Instant cutoff = Instant.now().minus(Duration.ofDays(7));
+        Instant cutoff = Instant.now().minus(Duration.ofDays(verificationDeadline));
+        int deleted = repository.cleanupUnverified(cutoff);
 
-        var toDelete = repository.findAll().stream()
-                .filter(u -> !u.isEmailVerified())
-                .filter(u -> u.getVerificationTokenExpiresAt() != null)
-                .filter(u -> u.getVerificationTokenExpiresAt().isBefore(cutoff))
-                .toList();
-
-        repository.deleteAll(toDelete);
-
-        // todo create repository-level cleanup query (much faster)
+        auditService.logSystemAction(
+                AuditLog.Action.CLEANUP_UNVERIFIED_ACCOUNTS,
+                "Deleted " + deleted + " unverified accounts older than "+verificationDeadline+" days.",
+                true,
+                "",
+                AuditLog.RType.USER,
+                null
+        );
     }
+
 
     ////////////////////////////////////////////////////////////Self
 
@@ -143,26 +150,23 @@ public class BenutzerService {
 
     /// //////////////////////////////////KLeine updates
 
-    public void seen(Long id) { // todo insert more efficiently
-        requireUser(id).setLastSeen(Instant.now());
-        // save not needed
+    public void seen(Long id) {
+        repository.updateLastSeen(id, Instant.now());
     }
 
-    public void lastLoginDate(Long id) { // todo insert more efficiently
+    public void lastLoginDate(Long id) {
         requireUser(id).setLastLoginDate(Instant.now());
-        // save not needed
     }
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public void invalidateTokens(Long id) { // todo direct
+    public void invalidateTokens(Long id) {
         requireUser(id).setTokensInvalidatedAt(Instant.now());
-        // save not needed
     }
 
     ////////////////////////////////CRUD
 
     @PreAuthorize("@authz.hasRole('ADMIN')")
-    public Benutzer createBenutzer(BenutzerController.CreateBenutzerRequest req) { // todo dto?
+    public Benutzer createBenutzer(BenutzerController.CreateBenutzerRequest req) {
         return createUser(req.email(), req.username(), req.password());
     }
 
@@ -173,7 +177,7 @@ public class BenutzerService {
     }
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public Benutzer updateBenutzer(Long id, BenutzerController.PatchBenutzerRequest req) {//todo dto
+    public Benutzer updateBenutzer(Long id, BenutzerController.PatchBenutzerRequest req) {
         Benutzer b = requireUser(id);
         String email = b.getEmail();
         String username = b.getUsername();
