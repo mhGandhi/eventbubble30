@@ -62,22 +62,24 @@ public class Benutzer extends BaseEntity{
     }
 
     public DTO toDTO() {
-        return new DTO(this.getId());
+        return new DTO(this.getId(), this.username, this.roles);
     }
 
     public record DTO(
-            Long id
+            Long id,
+            String username,
+            Set<Role> roles
     ) { }
 
-    public AdminDTO toAdminDTO() {
-        return new AdminDTO(
+    public largeDTO toLargeDTO() {
+        return new largeDTO(
                 this.getId(), this.getUsername(),
                 this.getEmail(), this.getRoles(),
                 this.getLastLoginDate(), this.getLastSeen(), this.getPasswordChangedAt(), this.getTokensInvalidatedAt(),
                 this.isEmailVerified());
     }
 
-    public record AdminDTO(
+    public record largeDTO(
             Long id,
             String username,
             String email,
