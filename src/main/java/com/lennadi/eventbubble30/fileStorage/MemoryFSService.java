@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.fileStorage;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Profile("memoryStorage")
 public class MemoryFSService implements FileStorageService{
 
     private static class MemoryFile {
