@@ -26,6 +26,10 @@ public class ProfilService {
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
     public Profil createProfil(long id , ProfilController.CreateProfilRequest request) {
+        if(profilRepo.existsById(id)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Profil besteht bereits");
+        }
+
         Profil neu = new Profil(id, request.name());
         neu.setName(request.name());
         neu.setBio(request.bio());
