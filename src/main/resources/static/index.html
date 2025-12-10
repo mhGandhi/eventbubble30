@@ -66,6 +66,13 @@
     <button onclick="signup()">Signup</button>
 </div>
 
+<div class="box">
+    <input id="emailToVerify" placeholder="Email to Verify">
+    <button onclick="signup()">Request Token</button>
+    <input id="emailToken" placeholder="Verification Token">
+    <button onclick="signup()">Verify Token</button>
+</div>
+
 <!-- SESSION -->
 <h2>Session</h2>
 <div class="box">
@@ -186,6 +193,25 @@
             setStatus("Logged in as: " + data.benutzerDTO.username);
 
         } catch (e) { alert(e); }
+    }
+
+    async function verifyEmail() {
+        try{
+            const data = await api("/auth/verify-email", "POST", {
+                token: emailToken.value
+            }, false);
+        }catch (e) { alert(e); }
+    }
+
+    async function requestEmailVerification() {
+        let data;
+        try{
+            data = await api("/auth/request-email-verification", "POST", {
+                email: emailToVerify.value
+            }, false);
+        }catch (e) { alert(e); }
+
+        alert(data);
     }
 
     async function signup() {
