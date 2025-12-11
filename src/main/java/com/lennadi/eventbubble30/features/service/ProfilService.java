@@ -106,7 +106,7 @@ public class ProfilService {
     }
 
     public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getId(), p.getName(), null, p.getBio());//todo
+        return new Profil.DTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey()), p.getBio());
     }
 
     public Profil.SmallDTO toSmallDTO(Profil p){

@@ -79,6 +79,7 @@ public class LocalFSService implements FileStorageService {
 
     @Override
     public URL getFileURL(String key) {
+        if(key==null) return null;
         Path filePath = resolveFilePath(key);
         if (!Files.exists(filePath)) {
             return null;
