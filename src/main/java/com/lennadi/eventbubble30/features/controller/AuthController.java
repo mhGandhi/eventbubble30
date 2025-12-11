@@ -281,6 +281,6 @@ public class AuthController {
         RequestContextHolder.currentRequestAttributes()
                 .setAttribute("auditResourceId", b.getId(), RequestAttributes.SCOPE_REQUEST);
 
-        return ResponseEntity.ok("Email successfully verified.");
+        return ResponseEntity.ok("Email successfully verified.");//todo 200 forcen
     }
 }
