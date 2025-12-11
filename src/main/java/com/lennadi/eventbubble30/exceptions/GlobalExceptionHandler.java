@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse body = new ApiErrorResponse(
                 Instant.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                e.getClass().getSimpleName(),
                 e.getMessage(),//todo dass später weg um keine internals zu leaken, vlt mit profile entscheiden?
                 request.getRequestURI(),
                 null,
