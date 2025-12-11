@@ -224,12 +224,10 @@ public class BenutzerService {
         user.setVerificationToken(TokenGeneration.generateVerificationToken());
         user.setVerificationTokenExpiresAt(expiry);
 
-        String link = "https://" + ServerConfig.DOMAIN + "/api/auth/verify-email?token=" + user.getVerificationToken();
-
         emailService.send( // todo übersetzen etc
                 user.getEmail(),
                 "Email Verifizieren",
-                "Link aufrufen zum verifizieren (gültig bis " + expiry + "):\n\n" + link
+                "Verifizierungs-Token(gültig bis " + expiry + "):\n\n" + user.getVerificationToken()
         );
 
         // todo send async after commit?
