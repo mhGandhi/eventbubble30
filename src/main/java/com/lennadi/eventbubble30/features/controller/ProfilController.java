@@ -31,7 +31,7 @@ public class ProfilController {
     // ----------------------------------------------------------
 
     public record CreateProfilRequest(
-            @NotEmpty String name,
+            @NotEmpty @NotBlank String name,
             String bio
     ) {}
 
@@ -75,9 +75,14 @@ public class ProfilController {
 
     @GetMapping("/{segment}")
     public ResponseEntity<Profil.DTO> getProfil(@PathVariable String segment) {
+        System.out.println("#######-endpoint");
         long id = resolveId(segment);
+        System.out.println("#######-id aufgelöst");
         Profil profil = profilService.getProfil(id);
-        return ResponseEntity.ok(profilService.toDTO(profil));
+        System.out.println("#######-profil ermittelt");
+        Profil.DTO ret = profilService.toDTO(profil);
+        System.out.println("#######-zu dto konvertiert");
+        return ResponseEntity.ok(ret);
     }
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
