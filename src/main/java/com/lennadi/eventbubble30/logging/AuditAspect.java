@@ -126,7 +126,7 @@ public class AuditAspect {
             return null;
 
         } catch (Exception e) {
-            log.error("Failed to evaluate resourceIdExpression '{}': {}", expr, e.getMessage());
+            log.warn("Failed to evaluate resourceIdExpression '{}': {}", expr, e.getMessage());
             return null;
         }
     }
