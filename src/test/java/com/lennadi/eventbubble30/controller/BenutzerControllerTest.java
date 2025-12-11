@@ -2,7 +2,7 @@ package com.lennadi.eventbubble30.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.features.controller.BenutzerController;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ class BenutzerControllerTest {
         b.setEmail("mail@test.com");
         b.setUsername("max");
 
-        when(service.createBenutzer(any(), any(), any()))
+        when(service.createBenutzer(any()))
                 .thenReturn(b);
 
         var json = """
@@ -102,7 +102,7 @@ class BenutzerControllerTest {
         b.setEmail("new@test.com");
         b.setUsername("neo");
 
-        when(service.patchBenutzerById(eq(5L), any(), any(), any()))
+        when(service.updateBenutzer(eq(5L), any()))
                 .thenReturn(b);
 
         var json = """
@@ -161,7 +161,7 @@ class BenutzerControllerTest {
         b.setEmail("a@b.com");
         b.setUsername("alpha");
 
-        when(service.getById(3L)).thenReturn(b);
+        when(service.getBenutzer(3L)).thenReturn(b);
 
         mockMvc.perform(get("/api/user/3"))
                 .andExpect(status().isOk())
@@ -181,7 +181,7 @@ class BenutzerControllerTest {
         b.setEmail("x@y.com");
         b.setUsername("neo");
 
-        when(service.getByUsername("neo")).thenReturn(b);
+        //when(service.getByUsername("neo")).thenReturn(b);
 
         mockMvc.perform(get("/api/user/name/neo"))
                 .andExpect(status().isOk())

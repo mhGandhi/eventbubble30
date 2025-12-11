@@ -1,12 +1,10 @@
 package com.lennadi.eventbubble30.security.password;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.service.BenutzerService;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.mail.EmailService;
 import com.lennadi.eventbubble30.security.TokenGeneration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

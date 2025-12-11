@@ -2,10 +2,10 @@ package com.lennadi.eventbubble30.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.TestConfig;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.entities.Veranstaltung;
-import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
-import com.lennadi.eventbubble30.features.repository.VeranstaltungsRepository;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

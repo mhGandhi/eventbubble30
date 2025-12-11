@@ -1,14 +1,12 @@
-package com.lennadi.eventbubble30.features.entities;
+package com.lennadi.eventbubble30.features.db.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Getter
@@ -27,10 +25,6 @@ public class Benutzer extends BaseEntity{
     @OneToMany(mappedBy = "besitzer")
     private Collection<Veranstaltung> veranstaltungen;
 
-    @OneToOne(mappedBy = "benutzer", cascade = CascadeType.ALL)
-    @JoinColumn(nullable = true, updatable = true, unique = true)
-    private Profil profil;
-
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(
@@ -44,6 +38,7 @@ public class Benutzer extends BaseEntity{
     private Instant lastSeen;
 
     @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant passwordChangedAt = Instant.EPOCH;
 
     @Column(nullable = false)
@@ -59,24 +54,32 @@ public class Benutzer extends BaseEntity{
         return roles.contains(role);
     }
 
+    public void setPasswordHash(String pwHash){
+        if(!Objects.equals(pwHash, this.passwordHash)){
+            this.passwordHash = pwHash;
+            passwordChangedAt = Instant.now();
+        }
+    }
+
     public DTO toDTO() {
-        return new DTO(this.getId(), this.getUsername());
+        return new DTO(this.getId(), this.username, this.roles);
     }
 
     public record DTO(
             Long id,
-            String username
+            String username,
+            Set<Role> roles
     ) { }
 
-    public AdminDTO toAdminDTO() {
-        return new AdminDTO(
+    public largeDTO toLargeDTO() {
+        return new largeDTO(
                 this.getId(), this.getUsername(),
                 this.getEmail(), this.getRoles(),
                 this.getLastLoginDate(), this.getLastSeen(), this.getPasswordChangedAt(), this.getTokensInvalidatedAt(),
                 this.isEmailVerified());
     }
 
-    public record AdminDTO(
+    public record largeDTO(
             Long id,
             String username,
             String email,

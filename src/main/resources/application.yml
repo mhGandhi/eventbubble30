@@ -1,3 +1,6 @@
+logging:
+  level:
+    org.springframework.security: info
 server:
   domain: "eventbubble.lennadi.com"
   error:
@@ -6,7 +9,7 @@ server:
     include-message: always
 spring:
   profiles:
-    active: keinCaptcha, EMAIL_dummy
+    active: keinCaptcha, EMAIL_dummy, memoryStorage
   application:
     name: "eventbubble30"
 app:
@@ -14,3 +17,5 @@ app:
     secret: ${JWT_SECRET}
     access-token-validity-ms: 900000 #15m
     refresh-token-validity-ms: 2592000000 #30d
+cleanup:
+  BenutzerEmailVer-d: 7

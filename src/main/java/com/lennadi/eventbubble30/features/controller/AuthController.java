@@ -1,22 +1,23 @@
 package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
-import com.lennadi.eventbubble30.features.repository.BenutzerRepository;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.captcha.CaptchaService;
 import com.lennadi.eventbubble30.security.password.PasswordResetService;
 import com.lennadi.eventbubble30.security.token.JwtService;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.mail.EmailService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.lennadi.eventbubble30.security.token.exceptions.TokenException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,10 +28,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.time.Instant;
+import java.util.Optional;
 
+@Slf4j
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
@@ -70,11 +76,17 @@ public class AuthController {
 
     public record AuthResponse(
             String accessToken,
+            Instant accessTokenExpiry,
             String refreshToken,
+            Instant refreshTokenExpiry,
             Benutzer.DTO benutzerDTO
     ) {}
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.CREATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest req) {
 
@@ -96,11 +108,14 @@ public class AuthController {
         }
 
         // 4. Benutzer erstellen
-        Benutzer neu = benutzerService.FORCEcreateBenutzer(
+        Benutzer neu = benutzerService.createUser(
                 req.email(),
                 req.username(),
                 req.password()
         );
+
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", neu.getId(), RequestAttributes.SCOPE_REQUEST);
 
         // 5. 201 Created zurück
         return ResponseEntity
@@ -108,7 +123,11 @@ public class AuthController {
                 .body(neu.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.LOGIN, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.LOGIN,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#result.body.benutzerDTO.id"
+    )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
@@ -141,35 +160,43 @@ public class AuthController {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         return ResponseEntity.ok(
-                new AuthResponse(accessToken, refreshToken, b.toDTO())
+                new AuthResponse(accessToken, null, refreshToken, null, b.toDTO())//todo
         );
     }
 
 
-    @Audit(action = AuditLog.Action.REFRESH, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.REFRESH,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#result.body.benutzerDTO.id"
+    )
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
         String refreshToken = req.refreshToken();
 
-        Long userId = jwtService.extractUserId(refreshToken);
+        try{
+            BenutzerDetails details = jwtService.validateRefreshToken(refreshToken);
 
-        Benutzer benutzer = benutzerService.getById(userId);
+            String newAccess = jwtService.generateAccessToken(details);
+            //todo mby System zum refresh Token rotieren?
 
-        BenutzerDetails details = new  BenutzerDetails(benutzer);
+            Benutzer benutzer = benutzerService.getBenutzer(details.getId());
+            return ResponseEntity.ok(
+                    new AuthResponse(newAccess, null, refreshToken, null, benutzer.toDTO())//todo
+            );
+        } catch (TokenException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        }
 
-        jwtService.validateRefreshToken(refreshToken, details);
-
-        String newAccess = jwtService.generateAccessToken(details);
-        //todo mby System zum refresh Token rotieren?
-
-        return ResponseEntity.ok(
-                new AuthResponse(newAccess, refreshToken, benutzer.toDTO())
-        );
     }
 
-    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.INVALIDATE_TOKENS,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#currentUser.id"
+    )
     @PostMapping("invalidate-tokens")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> invalidateOwnTokens() {
         Benutzer benutzer = benutzerService.getCurrentUser();
         benutzerService.invalidateTokens(benutzer.getId());
@@ -178,52 +205,90 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> validateSession() {
         return ResponseEntity.ok().build();
     }
 
-    //PW reset etc
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/request-password-reset")
-    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestParam String email) {
-        var userOpt = benutzerRepository.findByEmail(email);
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestParam String email) {
 
+        var userOpt = benutzerRepository.findByEmail(email);
         userOpt.ifPresent(passwordResetService::requestReset);
+        userOpt.ifPresent(user->{
+            RequestContextHolder.currentRequestAttributes()
+                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+        });
 
         return ResponseEntity.ok().build(); // always 200
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
+
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest req) {
+
         try {
             Benutzer user = passwordResetService.validateTokenAndConsume(req.token());
-            benutzerService.FORCEsetPasswordById(user.getId(), req.newPassword());
+            benutzerService.resetPassword(user.getId(), req.newPassword());
+
+            RequestContextHolder.currentRequestAttributes()
+                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
     @PostMapping("/request-email-verification")
     public ResponseEntity<Void> requestEmailVerification(@RequestParam @Email String email) {
-
-        benutzerRepository.findByEmail(email).ifPresent(user -> {
+        Optional<Benutzer> b = benutzerRepository.findByEmail(email);
+        if(b.isPresent()){
+            Benutzer user = b.get();
             if (!user.isEmailVerified()) {
-                benutzerService.sendVerificationEmail(user);
-            }
-        });
+                //try{
+                    benutzerService.sendVerificationEmail(user);
+                //}catch(Exception e){
+                //    log.warn(e.getMessage());
+                //}
+                //todo put there
 
+                RequestContextHolder.currentRequestAttributes()
+                        .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+            }
+        }
         return ResponseEntity.ok().build(); // always 200 for security
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
-    @PostMapping("/verify-email")
+    @Audit(
+            action = AuditLog.Action.UPDATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
+    )
+    @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
-        benutzerService.verifyEmail(token);
+        Benutzer b = benutzerService.verifyEmail(token);
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", b.getId(), RequestAttributes.SCOPE_REQUEST);
+
+
         return ResponseEntity.ok("Email successfully verified.");
     }
-
-
 }

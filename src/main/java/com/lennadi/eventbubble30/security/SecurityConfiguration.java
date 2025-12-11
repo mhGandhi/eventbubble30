@@ -70,8 +70,15 @@ public class SecurityConfiguration {
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        //media
+                        .requestMatchers("/media/**").permitAll()
+
                         //user
                         .requestMatchers("/api/user/**").authenticated()
+
+                        //profile
+                        .requestMatchers(HttpMethod.GET, "/api/profiles/**").permitAll()
+                        .requestMatchers("/api/profiles/**").authenticated()
 
                         //events
                         .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
@@ -100,21 +107,36 @@ public class SecurityConfiguration {
                                  HttpServletResponse response,
                                  AuthenticationException ex) throws IOException {
 
+        AuthState state = (AuthState) request.getAttribute("jwt_state");
+        if (state == null) {
+            state = AuthState.UNKNOWN;
+        }
+
+        // 419 for expired tokens or timed-out sessions
+        int status = (state == AuthState.EXPIRED)
+                ? 419
+                : 401;
+
         ApiErrorResponse body = new ApiErrorResponse(
                 Instant.now(),
-                401,
-                "Unauthorized",
+                status,
+                status == 419 ? "Authentication Timeout" : "Unauthorized",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
+                null,
+                state
         );
 
-        writeJson(response, 401, body);
+        writeJson(response, status, body);
     }
 
     private void handleAccessDenied(HttpServletRequest request,
                                     HttpServletResponse response,
                                     AccessDeniedException ex) throws IOException {
+        AuthState state = (AuthState) request.getAttribute("jwt_state");
+        if (state == null) {
+            state = AuthState.UNKNOWN;
+        }
 
         ApiErrorResponse body = new ApiErrorResponse(
                 Instant.now(),
@@ -122,7 +144,8 @@ public class SecurityConfiguration {
                 "Forbidden",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
+                null,
+                state
         );
 
         writeJson(response, 403, body);
@@ -146,7 +169,7 @@ public class SecurityConfiguration {
         config.setAllowedMethods(List.of("GET", "POST", "PUT",
                 "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);                      // zum Testen einfacher
+        config.setAllowCredentials(true);                      // zum Testen einfacher
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

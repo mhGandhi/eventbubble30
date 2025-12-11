@@ -6,45 +6,67 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class LastSeenFilter extends OncePerRequestFilter {
 
-    @Autowired
-    BenutzerService benutzerService;
+    private static final Logger log = LoggerFactory.getLogger(LastSeenFilter.class);
+    private final BenutzerService benutzerService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String ip = getClientIp(request);
+        try {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth != null && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof BenutzerDetails details) {
+            if (auth != null && auth.isAuthenticated()
+                    && auth.getPrincipal() instanceof BenutzerDetails details) {
 
-            Long userId = details.getId();
+                Long userId = details.getId();
+                log.info("[Anfrage] {}@{}: {}", benutzerService.requireUser(userId).getUsername(), ip, request.getRequestURI());
 
-            try {
-                benutzerService.seen(userId);
-            } catch (ResponseStatusException ex) {
-                if (ex.getStatusCode().value() == 404) {
-
-                    HttpSession session = request.getSession(false);
-                    if (session != null) session.invalidate();
-
-                    SecurityContextHolder.clearContext();
+                try {
+                    benutzerService.seen(userId);
+                } catch (RuntimeException ex) {
+                    log.warn("Error while updating seen for user {}: {}", userId, ex.getMessage());
                 }
-            }
-        }
 
+            } else {
+                log.info("[Anfrage] ?@{}: {}", ip, request.getRequestURI());
+            }
+
+        } catch (Exception ex) {
+            log.error("Unexpected error in LastSeenFilter: {}", ex.getMessage());
+        }
         filterChain.doFilter(request, response);
     }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.split(",")[0].trim();
+        }
+
+        ip = request.getHeader("X-Real-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.trim();
+        }
+
+        return request.getRemoteAddr();
+    }
+
 }

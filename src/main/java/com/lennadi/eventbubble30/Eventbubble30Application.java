@@ -19,6 +19,8 @@ public class Eventbubble30Application {
 
         CORS
 
+        change req logging
+
         JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt
 
         Profile: Entity getrennt von Benutzer, verbunden mit 1zu1 Beziehung, separate Endpunkte aber dennoch über

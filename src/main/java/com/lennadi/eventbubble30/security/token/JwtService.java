@@ -1,6 +1,8 @@
 package com.lennadi.eventbubble30.security.token;
 
+import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
+import com.lennadi.eventbubble30.security.BenutzerDetailsService;
 import com.lennadi.eventbubble30.security.token.exceptions.*;
 import com.lennadi.eventbubble30.config.ServerConfigService;
 import io.jsonwebtoken.Claims;
@@ -9,6 +11,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +38,7 @@ public class JwtService {
     private long refreshTokenValidityMs;
 
     private final ServerConfigService serverConfigService;
+    private final BenutzerDetailsService benutzerDetailsService;
 
     @PostConstruct
     public void init() {
@@ -52,21 +56,12 @@ public class JwtService {
         return buildToken(user, refreshTokenValidityMs, TokenType.REFRESH);
     }
     /// /////////////////////////////////////////////////
-    public Long extractUserId(String token){
-        try{
-            String sub = parseAllClaims(token).getSubject();
-            return Long.valueOf(sub);
-        } catch (Exception e){
-            throw new MalformedOrMissingTokenException();
-        }
+    public BenutzerDetails validateAccessToken(String token){
+        return validateTokenInternal(token, TokenType.ACCESS);
     }
 
-    public void validateAccessToken(String token, BenutzerDetails user){
-        validateTokenInternal(token, user, TokenType.ACCESS);
-    }
-
-    public void validateRefreshToken(String token, BenutzerDetails user){
-        validateTokenInternal(token, user, TokenType.REFRESH);
+    public BenutzerDetails validateRefreshToken(String token){
+        return validateTokenInternal(token, TokenType.REFRESH);
     }
     /// /////////////////////////////////////////////////
 
@@ -105,15 +100,16 @@ public class JwtService {
                 .getBody();
     }
 
-    private boolean isTokenExpired(Claims claims){
-        return claims.getExpiration().before(new Date());
-    }
 
-    private void validateTokenInternal(String token, BenutzerDetails user, TokenType expectedType) {
+    private BenutzerDetails validateTokenInternal(String token, TokenType expectedType) {
         Claims claims;
         try{
             claims = parseAllClaims(token);
-        } catch (JwtException e){
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new TokenExpiredException();
+        } catch(SignatureException se){
+            throw new TokenBadSignatureException();
+        } catch (JwtException e) {
             throw new MalformedOrMissingTokenException();
         }
 
@@ -129,15 +125,18 @@ public class JwtService {
         }
 
         /// User Id check
-        Long tokenUserId;
+        long tokenUserId;
         try{
-            tokenUserId = Long.valueOf(claims.getSubject());
+            tokenUserId = Long.parseLong(claims.getSubject());
         }catch (Exception e){
             throw new MalformedOrMissingTokenException();
         }
 
-        if(!tokenUserId.equals(user.getId())){
-            throw new MalformedOrMissingTokenException();
+        BenutzerDetails user;
+        try{
+            user = benutzerDetailsService.loadUserById(tokenUserId);
+        }catch (Exception e){
+            throw new TokenUserDoesNotExistException(tokenUserId);
         }
 
         /// Typ Check
@@ -145,10 +144,13 @@ public class JwtService {
             throw new WrongTokenTypeException(expectedType, type);
         }
 
+        /*
+        wird bereits beim Claims parsen gehandhabt
         /// Ablaufdatum Check
-        if(isTokenExpired(claims)){//todo
+        if(isTokenExpired(claims)){
             throw new TokenExpiredException();
         }
+        */
 
         /// issuedAt existiert
         if(issuedAtDate == null)
@@ -179,5 +181,7 @@ public class JwtService {
                 throw new PasswordChangedTokenRevokedException(pwUAt);
             }
         }
+
+        return user;
     }
 }

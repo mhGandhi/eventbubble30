@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.filter;
 
+import com.lennadi.eventbubble30.exceptions.ApiErrorResponse;
+import com.lennadi.eventbubble30.security.AuthState;
 import com.lennadi.eventbubble30.security.BenutzerDetails;
 import com.lennadi.eventbubble30.security.BenutzerDetailsService;
 import com.lennadi.eventbubble30.security.token.JwtService;
@@ -8,66 +10,91 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
     private final JwtService jwtService;
     private final BenutzerDetailsService benutzerDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+        request.setAttribute("jwt_state", AuthState.UNKNOWN);
         String authHeader = request.getHeader("Authorization");
+        //log.warn("Authorization header = '{}'", authHeader);
 
         //if no token
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null) {
+            request.setAttribute("jwt_state", AuthState.NO_TOKEN);
             filterChain.doFilter(request,response);
             return;
         }
 
-        String token = authHeader.substring(7);
+        //if wrong format
+        String authPrefix = "Bearer ";
+        if(!authHeader.startsWith(authPrefix)){
+            log.warn("Wrong AuthHeader Format \"{}\", expecting \"Bearer <token>\"", authHeader);
+            request.setAttribute("jwt_state", AuthState.WRONG_AUTH_FORMAT);
+            filterChain.doFilter(request,response);
+            return;
+        }
+
+        String token = authHeader.substring(authPrefix.length());
 
         //if undefined token
         if (token.isEmpty() ||
                 token.equalsIgnoreCase("null") ||
                 token.equalsIgnoreCase("undefined")) {
+            log.warn("Empty JWT");
+            request.setAttribute("jwt_state", AuthState.EMPTY_TOKEN);
             filterChain.doFilter(request, response);
             return;
         }
 
-        try{
-            Long userId = jwtService.extractUserId(token);
-            BenutzerDetails user = (BenutzerDetails) benutzerDetailsService.loadUserById(userId);
+        try {
 
-            jwtService.validateAccessToken(token, user);
+            BenutzerDetails user = jwtService.validateAccessToken(token);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                        user, null, user.getAuthorities()
+                            user, null, user.getAuthorities()
                     );
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            request.setAttribute("jwt_state", AuthState.AUTHENTICATED);
 
-        }catch (TokenException e){//nix machen; als wäre da kein Token :)
-            //401 mit err JSON
-            //response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            //response.setContentType("application/json;charset=UTF-8");
-            //response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
-            //return;
+        }catch(UsernameNotFoundException ue){
+            log.warn(ue.getMessage());
+            request.setAttribute("jwt_state", AuthState.USER_NOT_FOUND);
+            SecurityContextHolder.clearContext();
+        }catch (TokenException e){
+            log.warn("Invalid JWT: {}", e.getMessage());
+            request.setAttribute("jwt_state", e.authState);
+            SecurityContextHolder.clearContext();
+            //throw new BadCredentialsException(e.getMessage(), e);
         } catch (Exception e) {
-            //response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            //response.setContentType("application/json");
-            //response.getWriter().write("{\"error\": \"Invalid or expired token\"}");
-            //return;
+            log.error("Unexpected Error while resolving JWT: {}",e.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

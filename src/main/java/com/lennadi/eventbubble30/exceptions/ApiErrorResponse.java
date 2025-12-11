@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.exceptions;
 
+import com.lennadi.eventbubble30.security.AuthState;
+
 import java.time.Instant;
 import java.util.Map;
 
@@ -9,5 +11,6 @@ public record ApiErrorResponse(
         String error,
         String message,
         String path,
-        Map<String, String> validationErrors
+        Map<String, String> validationErrors,
+        AuthState authState
 ) {}

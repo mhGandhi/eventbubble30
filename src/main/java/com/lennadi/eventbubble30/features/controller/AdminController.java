@@ -82,7 +82,7 @@ public class AdminController {
 
     }
 
-    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = "ServerConfig")
+    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = AuditLog.RType.SERVER_CONFIG)
     @PostMapping("invalidate-tokens")
     public ResponseEntity<Void> invalidateTokens() {
         try{

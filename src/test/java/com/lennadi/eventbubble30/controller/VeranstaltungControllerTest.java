@@ -2,8 +2,8 @@ package com.lennadi.eventbubble30.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.features.controller.VeranstaltungController;
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import org.junit.jupiter.api.BeforeEach;

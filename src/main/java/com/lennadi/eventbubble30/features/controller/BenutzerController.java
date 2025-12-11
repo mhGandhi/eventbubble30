@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
@@ -11,9 +11,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+
+import static com.lennadi.eventbubble30.logging.AuditLog.Action.UPDATE;
 
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/user")
@@ -22,6 +26,18 @@ import java.net.URI;
 public class BenutzerController {
 
     private final BenutzerService service;
+
+    private long resolveId(String segment) {
+        if ("me".equalsIgnoreCase(segment)) {
+            return service.getCurrentUser().getId();
+        }
+
+        try {
+            return Long.parseLong(segment);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid identifier: " + segment);
+        }
+    }
 
     // ===== DTOs =====
 
@@ -38,9 +54,7 @@ public class BenutzerController {
             @Email @NotBlank String email,
             @NotBlank @Size(min = 3, max = 20)
             @Pattern(regexp = "^[a-zA-Z0-9_]+$")
-            String username,
-            @NotBlank @Size(min = 8, max = 20)
-            String password
+            String username
     ) {}
 
     public record UpdateOwnPasswordRequest(
@@ -52,81 +66,71 @@ public class BenutzerController {
 
     // ===== Endpoints =====
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = "Benutzer")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#result.body.id")
     @PostMapping("/create")
     public ResponseEntity<Benutzer.DTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
-        Benutzer neu = service.createBenutzer(
-                req.email(),
-                req.username(),
-                req.password()
-        );
+        Benutzer neu = service.createBenutzer(req);
 
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getId())) // Location Header
                 .body(neu.toDTO());                                     // Response Body
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "id")
-    @PatchMapping("/{id}")
+    @Audit(action = UPDATE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#result.body.id")
+    @PatchMapping("/{segment}")
     public ResponseEntity<Benutzer.DTO> patchUser(
-            @PathVariable Long id,
+            @PathVariable String segment,
             @Valid @RequestBody PatchBenutzerRequest req
     ) {
-        Benutzer b = service.patchBenutzerById(
-                id,
-                req.email,
-                req.username,
-                req.password
-        );
+        long id = resolveId(segment);
+
+        Benutzer b = service.updateBenutzer(id, req);
 
         return ResponseEntity
                 .ok()
                 .body(b.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = "Benutzer", resourceIdParam = "id")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.USER, resourceIdExpression = "#request.getAttribute('auditResourceId')")
+    @DeleteMapping("/{segment}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable String segment) {
+        long id = resolveId(segment);
+
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", id, RequestAttributes.SCOPE_REQUEST);
+
         service.deleteUserById(id);
         return ResponseEntity.noContent().build();
     }
 
-    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer", resourceIdParam = "id")
-    @GetMapping("/{idOrMe}")
-    public Object findUserByIdOrMe(@PathVariable String idOrMe) {
-        Benutzer ret = service.getByIdOrMe(idOrMe);
+    @GetMapping("/{segment}")
+    public Benutzer.DTO findUser(@PathVariable String segment) {
+        long id = resolveId(segment);
+        Benutzer ret = service.getBenutzer(id);
 
-        Benutzer current = service.getCurrentUserOrNull();
-        if(current != null && current.hasRole(Benutzer.Role.ADMIN)) {
-            return ret.toAdminDTO();
-        }else{
-            return ret.toDTO();
-        }
+        return ret.toDTO();
     }
 
-
-    //@Audit(action = AuditLog.Action.READ, resourceType = "Benutzer")
     @GetMapping({"", "/"})
-    public Page<Benutzer.DTO> listUsers(
+    public Page<Benutzer.DTO> listUsers(//todo pages
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         return service.list(page, size).map(Benutzer::toDTO);
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer", resourceIdParam = "currentUser")
+    @Audit(
+            action = UPDATE,
+            resourceType = AuditLog.RType.USER,
+            resourceIdExpression = "#currentUser.id"
+    )
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody UpdateOwnPasswordRequest req
     ) {
-        Benutzer current = service.getCurrentUser();
-
-        if(!service.isPasswordValidForId(current.getId(), req.oldPassword)){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect old password");
-        }
-
-        service.patchBenutzerById(current.getId(), null, null, req.newPassword());
+        Benutzer benutzer = service.getCurrentUser();
+        service.changePassword(benutzer.getId(), req.oldPassword, req.newPassword);
 
         return ResponseEntity.noContent().build();
     }

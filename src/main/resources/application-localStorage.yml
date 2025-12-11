@@ -1,0 +1,4 @@
+storage:
+  local:
+    base-path: ${STORAGE_LOCAL_BASE_PATH}
+    base-url: ${STORAGE_LOCAL_BASE_URL}

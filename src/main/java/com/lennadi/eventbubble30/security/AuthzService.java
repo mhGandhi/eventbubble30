@@ -1,7 +1,7 @@
 package com.lennadi.eventbubble30.security;
 
-import com.lennadi.eventbubble30.features.entities.Benutzer;
-import com.lennadi.eventbubble30.features.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +63,16 @@ public class AuthzService {
             throw new AccessDeniedException(
                     "User lacks required role: ROLE_" + role
             );
+        }
+
+        return true;
+    }
+
+    public boolean isAuthenticated(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || auth.getAuthorities() == null) {
+            throw new AccessDeniedException("Not authenticated");
         }
 
         return true;
