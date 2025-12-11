@@ -56,6 +56,15 @@
     <input id="login_pass" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
 </div>
+<div class="box">
+    <input id="emailToResetPassword" placeholder="Email for pw reset">
+    <button onclick="requestPasswordReset()">Request Password Reset</button>
+</div>
+<div class="box">
+    <input id="passwordToken" placeholder="Password Reset Token">
+    <input id="newPassword" type="password" placeholder="New Password">
+    <button onclick="resetPassword()">Reset Password</button>
+</div>
 
 <!-- SIGNUP -->
 <h2>Signup</h2>
@@ -195,16 +204,33 @@
         } catch (e) { alert(e); }
     }
 
-    async function verifyEmail() {
-        try{
-            const data = await api("/auth/verify-email?token="+emailToken.value, "POST", null, false);
-        }catch (e) { alert(e); }
-    }
-
     async function requestEmailVerification() {
         let data;
         try{
             data = await api("/auth/request-email-verification?email="+emailToVerify.value, "POST", null, false);
+        }catch (e) { alert(e); }
+    }
+
+    async function verifyEmail() {
+        try{
+            const data = await api("/auth/verify-email?token="+emailToken.value, "POST", null, false);
+        }catch (e) { alert(e); }
+
+        alert(data);
+    }
+
+    async function requestPasswordReset() {
+        let data;
+        try{
+            data = await api("/auth/request-password-reset?email="+emailToResetPassword.value, "POST", null, false);
+        }catch (e) { alert(e); }
+    }
+
+    async function resetPassword() {
+        try{
+            const body = {newPassword: newPassword.value, token: passwordToken.value};
+
+            const data = await api("/auth/resetPassword", "POST", body, false);
         }catch (e) { alert(e); }
 
         alert(data);
