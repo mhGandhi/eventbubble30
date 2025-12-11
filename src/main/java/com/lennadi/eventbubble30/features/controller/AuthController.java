@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +34,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Optional;
 
+@Slf4j
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
@@ -256,16 +259,21 @@ public class AuthController {
     )
     @PostMapping("/request-email-verification")
     public ResponseEntity<Void> requestEmailVerification(@RequestParam @Email String email) {
-
-        benutzerRepository.findByEmail(email).ifPresent(user -> {
+        Optional<Benutzer> b = benutzerRepository.findByEmail(email);
+        if(b.isPresent()){
+            Benutzer user = b.get();
             if (!user.isEmailVerified()) {
-                benutzerService.sendVerificationEmail(user);
+                //try{
+                    benutzerService.sendVerificationEmail(user);
+                //}catch(Exception e){
+                //    log.warn(e.getMessage());
+                //}
+                //todo put there
 
                 RequestContextHolder.currentRequestAttributes()
                         .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
             }
-        });
-
+        }
         return ResponseEntity.ok().build(); // always 200 for security
     }
 
@@ -277,10 +285,10 @@ public class AuthController {
     @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         Benutzer b = benutzerService.verifyEmail(token);
-
         RequestContextHolder.currentRequestAttributes()
                 .setAttribute("auditResourceId", b.getId(), RequestAttributes.SCOPE_REQUEST);
 
-        return ResponseEntity.ok("Email successfully verified.");//todo 200 forcen
+
+        return ResponseEntity.ok("Email successfully verified.");
     }
 }
