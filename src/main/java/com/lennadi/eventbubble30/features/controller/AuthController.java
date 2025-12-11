@@ -219,7 +219,7 @@ public class AuthController {
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = "Benutzer")
-    @GetMapping("/verify-email")
+    @PostMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         benutzerService.verifyEmail(token);
         return ResponseEntity.ok("Email successfully verified.");
