@@ -282,7 +282,7 @@ public class AuthController {
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
-    @GetMapping("/verify-email")
+    @PostMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         Benutzer b = benutzerService.verifyEmail(token);
         RequestContextHolder.currentRequestAttributes()
