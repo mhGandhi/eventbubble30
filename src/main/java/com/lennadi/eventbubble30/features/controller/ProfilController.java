@@ -75,13 +75,9 @@ public class ProfilController {
 
     @GetMapping("/{segment}")
     public ResponseEntity<Profil.DTO> getProfil(@PathVariable String segment) {
-        System.out.println("#######-endpoint");
         long id = resolveId(segment);
-        System.out.println("#######-id aufgelöst");
         Profil profil = profilService.getProfil(id);
-        System.out.println("#######-profil ermittelt");
         Profil.DTO ret = profilService.toDTO(profil);
-        System.out.println("#######-zu dto konvertiert");
         return ResponseEntity.ok(ret);
     }
 
