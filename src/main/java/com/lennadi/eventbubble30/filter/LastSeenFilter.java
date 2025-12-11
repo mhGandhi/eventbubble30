@@ -28,23 +28,45 @@ public class LastSeenFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-        try{
+
+        String ip = getClientIp(request);
+        try {
             var auth = SecurityContextHolder.getContext().getAuthentication();
 
             if (auth != null && auth.isAuthenticated()
                     && auth.getPrincipal() instanceof BenutzerDetails details) {
 
                 Long userId = details.getId();
+                log.info("[Anfrage] {}@{}: {}", benutzerService.requireUser(userId).getUsername(), ip, request.getRequestURI());
 
                 try {
                     benutzerService.seen(userId);
                 } catch (RuntimeException ex) {
                     log.warn("Error while updating seen for user {}: {}", userId, ex.getMessage());
                 }
+
+            } else {
+                log.info("[Anfrage] ?@{}: {}", ip, request.getRequestURI());
             }
-        }catch (Exception ex){
+
+        } catch (Exception ex) {
             log.error("Unexpected error in LastSeenFilter: {}", ex.getMessage());
         }
         filterChain.doFilter(request, response);
     }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.split(",")[0].trim();
+        }
+
+        ip = request.getHeader("X-Real-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.trim();
+        }
+
+        return request.getRemoteAddr();
+    }
+
 }

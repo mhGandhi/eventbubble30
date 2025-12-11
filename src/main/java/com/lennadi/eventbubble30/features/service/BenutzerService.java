@@ -38,7 +38,7 @@ public class BenutzerService {
 
     /// //////////////////////////////////INTERNAL
 
-    private Benutzer requireUser(long id) {
+    public Benutzer requireUser(long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
