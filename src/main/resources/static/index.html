@@ -450,7 +450,7 @@
     function startAuditStream() {
         if (auditEventSource) return;
 
-        auditEventSource = new EventSource(API + "/admin/audit-log/stream");
+        auditEventSource = new EventSource(API + "/admin/audit-log/stream?accessToken=" + encodeURIComponent(accessToken));
 
         auditEventSource.onmessage = (event) => {
             alert("AUDIT");
