@@ -13,7 +13,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
@@ -92,7 +91,7 @@ public class AdminController {
 
     }
 
-    @GetMapping("/audit-log/stream")
+    @GetMapping(value = "/audit-log/stream", produces = "text/event-stream")
     public SseEmitter streamAuditLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
@@ -103,6 +102,10 @@ public class AdminController {
         SseEmitter emitter = new SseEmitter(0L); // no timeout
 
         auditLogStreamerService.registerListener(emitter, userId, action, resourceType, resourceId, success);
+
+        try {
+            emitter.send(SseEmitter.event().comment("connected"));
+        } catch (Exception ignored) {}
 
         return emitter;
     }
