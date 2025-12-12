@@ -60,7 +60,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         source: "build-output/*.jar"
         target: "/home/${{ secrets.SSH_USER }}/eventbubble/"
-        strip_components: 2
+        strip_components: 1
         overwrite: true
 
     - name: Backend neustarten und Hunde in der Straßenbahn mit Schokolade füttern.
