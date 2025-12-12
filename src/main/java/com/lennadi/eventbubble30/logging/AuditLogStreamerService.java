@@ -4,17 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuditLogStreamerService {
+
     private final Sinks.Many<AuditLog> sink =
             Sinks.many().multicast().onBackpressureBuffer();
 
@@ -23,7 +25,6 @@ public class AuditLogStreamerService {
         if (result.isFailure()) {
             log.warn("SSE emit failed: {}", result);
         }
-
     }
 
     public void registerListener(
@@ -44,12 +45,10 @@ public class AuditLogStreamerService {
                     !action.contains(log.getAction()))
                 return false;
 
-            if (resourceType != null &&
-                    !resourceType.equals(log.getResourceType()))
+            if (resourceType != null && !resourceType.equals(log.getResourceType()))
                 return false;
 
-            if (resourceId != null &&
-                    !resourceId.equals(log.getResourceId()))
+            if (resourceId != null && !resourceId.equals(log.getResourceId()))
                 return false;
 
             if (success != null && !success.equals(log.isSuccess()))
@@ -58,14 +57,36 @@ public class AuditLogStreamerService {
             return true;
         };
 
-        Listener listener = new Listener(emitter, filter);
-        listeners.add(listener);
+        AtomicReference<Disposable> subRef = new AtomicReference<>();
 
-        emitter.onCompletion(() -> listeners.remove(listener));
-        emitter.onTimeout(() -> listeners.remove(listener));
-        emitter.onError(e -> listeners.remove(listener));
+        Disposable subscription = sink.asFlux()
+                .filter(filter)
+                .subscribe(
+                        logEntry -> {
+                            try {
+                                emitter.send(SseEmitter.event().data(logEntry.toDTO()));
+                            } catch (Exception e) {
+                                subRef.get().dispose();
+                                emitter.completeWithError(e);
+                            }
+                        },
+                        error -> {
+                            subRef.get().dispose();
+                            emitter.completeWithError(error);
+                        },
+                        () -> {
+                            subRef.get().dispose();
+                            emitter.complete();
+                        }
+                );
+
+        // save into reference AFTER subscription created
+        subRef.set(subscription);
+
+        emitter.onCompletion(() -> subRef.get().dispose());
+        emitter.onTimeout(() -> subRef.get().dispose());
+        emitter.onError(e -> subRef.get().dispose());
     }
 
-    private record Listener(SseEmitter emitter, Predicate<AuditLog> filter) {}
-    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+
 }
