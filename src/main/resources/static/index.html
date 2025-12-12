@@ -234,7 +234,7 @@
         try{
             const body = {newPassword: newPassword.value, token: passwordToken.value};
 
-            data = await api("/auth/resetPassword", "POST", body, false);
+            data = await api("/auth/reset-Password", "POST", body, false);
         }catch (e) { alert(e); }
 
         alert(data);
