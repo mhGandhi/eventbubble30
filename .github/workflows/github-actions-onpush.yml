@@ -49,7 +49,7 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           cd /home/${{ secrets.SSH_USER }}/eventbubble
-          rm app.jar
+          rm -f app.jar
 
     - name: JAR hochladen und rausgehen.
       uses: appleboy/scp-action@v0.1.7
@@ -58,7 +58,7 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
-        source: "build/libs/*.jar"
+        source: "build-output/*.jar"
         target: "/home/${{ secrets.SSH_USER }}/eventbubble/"
         strip_components: 2
         overwrite: true
