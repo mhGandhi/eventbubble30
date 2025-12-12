@@ -1,18 +1,12 @@
 name: Bauch-Beine-Po
 run-name: "${{github.actor}}: ${{ github.event.head_commit.message }}."
-
 on:
   push:
     branches: ["master"]
-
-jobs:
-
-  # -------------------------
-  # 1) BUILD (unchanged logic)
-  # -------------------------
+jobs: 
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout und Aufstehen. Zehennägel schneiden.
       uses: actions/checkout@v3
@@ -29,17 +23,12 @@ jobs:
         ./gradlew build -x test
         ls build/libs
 
-    # Only required addition: save output so next job can use it
     - name: Save JAR for next job
       uses: actions/upload-artifact@v4
       with:
         name: eventbubble-jar
         path: build/libs/*.jar
 
-
-  # -------------------------
-  # 2) DEPLOY (same logic)
-  # -------------------------
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -69,20 +58,11 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
-        source: "build-output/*.jar"
+        source: "build/libs/*.jar"
         target: "/home/${{ secrets.SSH_USER }}/eventbubble/"
-        strip_components: 0
+        strip_components: 2
         overwrite: true
 
-
-  # -------------------------
-  # 3) RESTART (same logic)
-  # -------------------------
-  restart:
-    runs-on: ubuntu-latest
-    needs: deploy
-
-    steps:
     - name: Backend neustarten und Hunde in der Straßenbahn mit Schokolade füttern.
       uses: appleboy/ssh-action@v1.0.0
       with:
