@@ -108,6 +108,17 @@
     <div id="events"></div>
 </div>
 
+<!-- AUDIT LOG (ADMIN ONLY) -->
+<whatever id="auditlogwrapper" style="display:none;">
+    <h2>Audit Log</h2>
+    <div class="box">
+        <h3>Live Audit Log (latest 5)</h3>
+        <div id="auditLog"></div>
+    </div>
+</whatever>
+
+
+
 
 <script>
     const API = "http://eventbubble.lennadi.com:8080/api";
@@ -117,6 +128,8 @@
     // ----------------------
     let accessToken = null;
     let refreshToken = localStorage.getItem("refreshToken") || null;
+
+    let auditEventSource = null;
 
     function saveTokens(access, refresh) {
         accessToken = access;
@@ -142,6 +155,7 @@
         }
 
         listEvents();
+        initAuditLogIfAdmin();
     });
 
     // --------------------------
@@ -206,6 +220,7 @@
         } catch (e) { alert(e); }
 
         await listEvents();
+        await initAuditLogIfAdmin();
     }
 
     async function requestEmailVerification() {
@@ -262,6 +277,7 @@
         try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
         setStatus("Logged out");
+        await initAuditLogIfAdmin();
     }
 
     async function validateSession() {
@@ -388,6 +404,92 @@
         }[c]));
     }
 
+    // --------------------------
+    // AUDIT LOG (ADMIN ONLY)
+    // --------------------------
+
+    async function initAuditLogIfAdmin() {
+        const wrapper = document.getElementById("auditlogwrapper");
+        const me = await getMeSilent();
+
+        if (!me || !me.roles.includes("ADMIN")) {
+            wrapper.style.display = "none";
+
+            // Stop existing SSE connection
+            if (auditEventSource) {
+                auditEventSource.close();
+                auditEventSource = null;
+            }
+
+            return;
+        }
+
+        wrapper.style.display = "block";
+
+        await loadLatestAuditLogs();
+        if (!auditEventSource) {
+            startAuditStream();
+        }
+    }
+
+    async function loadLatestAuditLogs() {
+        try {
+            const resp = await api("/admin/audit-log?page=0&size=5");
+            const div = document.getElementById("auditLog");
+
+            div.innerHTML = "";
+            resp.content.forEach(entry => {
+                div.appendChild(renderAuditEntry(entry));
+            });
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function startAuditStream() {
+        if (auditEventSource) return;
+
+        auditEventSource = new EventSource(API + "/admin/audit-log/stream");
+
+        auditEventSource.onmessage = (event) => {
+            alert("AUDIT");
+            const entry = JSON.parse(event.data);
+            appendAuditEntry(entry);
+        };
+
+        auditEventSource.onerror = () => {
+            console.warn("Audit log stream disconnected. Browser will retry…");
+            // Browser auto-reconnects, so keep auditEventSource open
+        };
+    }
+
+    function renderAuditEntry(entry) {
+        const div = document.createElement("div");
+        div.style.borderBottom = "1px solid #ddd";
+        div.style.margin = "5px 0";
+        div.innerHTML = `
+        <b>${entry.action}</b>
+        <small>(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
+        User: ${entry.user?.username || "SYSTEM"}<br>
+        Endpoint: ${entry.endpoint}<br>
+        Success: ${entry.success}<br>
+        Resource: ${entry.resourceType} #${entry.resourceId || "-"}
+    `;
+        return div;
+    }
+
+    function appendAuditEntry(entry) {
+        const div = document.getElementById("auditLog");
+
+        // Insert at top
+        div.prepend(renderAuditEntry(entry));
+
+        // Keep only 5
+        while (div.children.length > 5) {
+            div.removeChild(div.lastChild);
+        }
+    }
 
 </script>
 </body>
