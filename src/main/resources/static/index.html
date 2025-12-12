@@ -140,6 +140,8 @@
         } else {
             setStatus("Not logged in");
         }
+
+        listEvents();
     });
 
     // --------------------------
@@ -202,6 +204,8 @@
             setStatus("Logged in as: " + data.benutzerDTO.username);
 
         } catch (e) { alert(e); }
+
+        await listEvents();
     }
 
     async function requestEmailVerification() {
