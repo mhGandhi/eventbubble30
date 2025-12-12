@@ -112,6 +112,47 @@
 <whatever id="auditlogwrapper" style="display:none;">
     <h2>Audit Log</h2>
     <div class="box">
+        <h3>Filters</h3>
+
+        <label>User ID:</label>
+        <input id="flt_userId" type="number" placeholder="User ID">
+
+        <label>Actions:</label>
+        <select id="flt_action" multiple size="6" style="width: 200px;">
+            <option value="CREATE">CREATE</option>
+            <option value="READ">READ</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="DELETE">DELETE</option>
+            <option value="LOGIN">LOGIN</option>
+            <option value="REFRESH">REFRESH</option>
+            <option value="INVALIDATE_TOKENS">INVALIDATE_TOKENS</option>
+            <option value="OTHER">OTHER</option>
+            <option value="CLEANUP_UNVERIFIED_ACCOUNTS">CLEANUP_UNVERIFIED_ACCOUNTS</option>
+        </select>
+
+
+        <label>Resource Type:</label>
+        <select id="flt_resourceType">
+            <option value="">Any</option>
+            <option>PROFILE</option>
+            <option>USER</option>
+            <option>EVENT</option>
+            <option>SERVER_CONFIG</option>
+        </select>
+
+        <label>Resource ID:</label>
+        <input id="flt_resourceId" type="number" placeholder="Resource ID">
+
+        <label>Success:</label>
+        <select id="flt_success">
+            <option value="">Any</option>
+            <option value="true">Success</option>
+            <option value="false">Failure</option>
+        </select>
+
+        <button onclick="applyAuditFilters()">Apply Filters</button>
+    </div>
+    <div class="box">
         <h3>Live Audit Log (latest 5)</h3>
         <div id="auditLog"></div>
     </div>
@@ -434,7 +475,10 @@
 
     async function loadLatestAuditLogs() {
         try {
-            const resp = await api("/admin/audit-log?page=0&size=5");
+            const q = buildAuditFilterQuery();
+            const url = "/admin/audit-log?page=0&size=5" + (q ? "&" + q : "");
+
+            const resp = await api(url);
             const div = document.getElementById("auditLog");
 
             div.innerHTML = "";
@@ -450,21 +494,29 @@
     function startAuditStream() {
         if (auditEventSource) return;
 
-        auditEventSource = new EventSource(API + "/admin/audit-log/stream?accessToken=" + encodeURIComponent(accessToken));
+        const q = buildAuditFilterQuery();
+        const url =
+            API +
+            "/admin/audit-log/stream?accessToken=" +
+            encodeURIComponent(accessToken) +
+            (q ? "&" + q : "");
+
+        auditEventSource = new EventSource(url);
 
         auditEventSource.onmessage = (event) => {
-            //alert("AUDIT");
             const entry = JSON.parse(event.data);
             appendAuditEntry(entry);
         };
 
         auditEventSource.onerror = () => {
             console.warn("Audit log stream disconnected. Browser will retry…");
-            // Browser auto-reconnects, so keep auditEventSource open
         };
     }
 
+
     function renderAuditEntry(entry) {
+        const safePayload = JSON.stringify(entry.payload);
+
         const div = document.createElement("div");
         div.style.borderBottom = "1px solid #ddd";
         div.style.margin = "5px 0";
@@ -474,7 +526,8 @@
         User: ${entry.user?.username || "SYSTEM"}<br>
         Endpoint: ${entry.endpoint}<br>
         Success: ${entry.success}<br>
-        Resource: ${entry.resourceType} #${entry.resourceId || "-"}
+        Resource: ${entry.resourceType} #${entry.resourceId || "-"}<br>
+        Payload: ${safePayload}
     `;
         return div;
     }
@@ -490,6 +543,41 @@
             div.removeChild(div.lastChild);
         }
     }
+
+    function buildAuditFilterQuery() {
+        const params = new URLSearchParams();
+
+        if (flt_userId.value)
+            params.append("userId", flt_userId.value);
+
+        // MULTI-SELECT ACTIONS
+        const selectedActions = Array.from(flt_action.selectedOptions).map(o => o.value);
+        selectedActions.forEach(a => params.append("action", a));
+
+        if (flt_resourceType.value)
+            params.append("resourceType", flt_resourceType.value);
+
+        if (flt_resourceId.value)
+            params.append("resourceId", flt_resourceId.value);
+
+        if (flt_success.value)
+            params.append("success", flt_success.value);
+
+        return params.toString();
+    }
+
+
+    function applyAuditFilters() {
+        // Close SSE if open
+        if (auditEventSource) {
+            auditEventSource.close();
+            auditEventSource = null;
+        }
+
+        loadLatestAuditLogs();
+        startAuditStream();
+    }
+
 
 </script>
 </body>
