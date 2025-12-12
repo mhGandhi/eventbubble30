@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import java.time.Instant;
@@ -91,18 +92,21 @@ public class AdminController {
 
     }
 
-    @GetMapping(value = "/audit-log/stream", produces = "text/event-stream")
-    public Flux<AuditLog.DTO> streamAuditLogs(
+    @GetMapping("/audit-log/stream")
+    public SseEmitter streamAuditLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
             @RequestParam(required = false) AuditLog.RType resourceType,
             @RequestParam(required = false) Long resourceId,
             @RequestParam(required = false) Boolean success
     ) {
-        return auditLogStreamerService.streamFiltered(
-                userId, action, resourceType, resourceId, success
-        ).map(AuditLog::toDTO);
+        SseEmitter emitter = new SseEmitter(0L); // no timeout
+
+        auditLogStreamerService.registerListener(emitter, userId, action, resourceType, resourceId, success);
+
+        return emitter;
     }
+
 
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = AuditLog.RType.SERVER_CONFIG)
