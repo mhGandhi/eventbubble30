@@ -218,13 +218,17 @@ public class AuthController {
     @PostMapping("/request-password-reset")
     public ResponseEntity<Void> requestPasswordReset(
             @Valid @RequestParam String email) {
-
         var userOpt = benutzerRepository.findByEmail(email);
-        userOpt.ifPresent(passwordResetService::requestReset);
         userOpt.ifPresent(user->{
             RequestContextHolder.currentRequestAttributes()
                     .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
         });
+
+        //try{ todo
+            userOpt.ifPresent(passwordResetService::requestReset);
+        //}catch(Exception e){
+        //    log.error(e.getMessage());
+        //}
 
         return ResponseEntity.ok().build(); // always 200
     }
