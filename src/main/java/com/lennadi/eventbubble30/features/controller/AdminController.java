@@ -4,6 +4,7 @@ import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.logging.AuditLogRepository;
 import com.lennadi.eventbubble30.config.ServerConfigService;
+import com.lennadi.eventbubble30.logging.AuditLogStreamerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.List;
 public class AdminController {
     private final AuditLogRepository auditLogRepository;
     private final ServerConfigService serverConfigService;
+    private final AuditLogStreamerService  auditLogStreamerService;
 
 
     @GetMapping("/audit-log")
@@ -31,7 +34,8 @@ public class AdminController {
 
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
-            @RequestParam(required = false) String resourceType,
+            @RequestParam(required = false) AuditLog.RType resourceType,
+            @RequestParam(required = false) Long resourceId,
             @RequestParam(required = false) Boolean success,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to
@@ -54,6 +58,11 @@ public class AdminController {
         if (resourceType != null) {
             filters.add((root, q, cb) ->
                     cb.equal(root.get("resourceType"), resourceType));
+        }
+
+        if (resourceId != null) {
+            filters.add((root, q, cb) ->
+                    cb.equal(root.get("resourceId"), resourceId));
         }
 
         if (success != null) {
@@ -81,6 +90,20 @@ public class AdminController {
                 .map(AuditLog::toDTO);
 
     }
+
+    @GetMapping(value = "/audit-log/stream", produces = "text/event-stream")
+    public Flux<AuditLog.DTO> streamAuditLogs(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) List<AuditLog.Action> action,
+            @RequestParam(required = false) AuditLog.RType resourceType,
+            @RequestParam(required = false) Long resourceId,
+            @RequestParam(required = false) Boolean success
+    ) {
+        return auditLogStreamerService.streamFiltered(
+                userId, action, resourceType, resourceId, success
+        ).map(AuditLog::toDTO);
+    }
+
 
     @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = AuditLog.RType.SERVER_CONFIG)
     @PostMapping("invalidate-tokens")
