@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.logging;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -8,6 +9,7 @@ import reactor.core.publisher.Sinks;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuditLogStreamerService {
@@ -15,7 +17,11 @@ public class AuditLogStreamerService {
             Sinks.many().multicast().onBackpressureBuffer();
 
     public void publish(AuditLog entry) {
-        sink.tryEmitNext(entry);
+        var result = sink.tryEmitNext(entry);
+        if (result.isFailure()) {
+            log.warn("SSE emit failed: {}", result);
+        }
+
     }
 
     public Flux<AuditLog> streamFiltered(
