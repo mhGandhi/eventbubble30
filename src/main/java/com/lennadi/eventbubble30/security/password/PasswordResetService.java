@@ -27,6 +27,7 @@ public class PasswordResetService {
                 .expiresAt(expires)
                 .build();
 
+        tokenRepo.findByUserId(user.getId()).ifPresent(tokenRepo::delete);
         tokenRepo.save(prt);
 
         emailService.send(//todo translate etc. (frontend reset URL) (maybe offload to frontend?)
