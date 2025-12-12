@@ -29,9 +29,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuditAspect {
 
-    private final AuditLogRepository repo;
     private final BenutzerService benutzerService;
     private final HttpServletRequest request;
+    private final AuditService auditService;
     private final ObjectMapper mapper = new ObjectMapper();
     private static final String MASK = "***REDACTED***";
 
@@ -233,7 +233,7 @@ public class AuditAspect {
         Benutzer user = safeGetUser();
         String payload = serializeArgs(pjp.getArgs());
 
-        AuditLog log = new AuditLog(
+        auditService.log(
                 user,
                 getClientIp(),
                 user != null ? user.getUsername() : null,
@@ -242,12 +242,9 @@ public class AuditAspect {
                 payload,
                 success,
                 request.getRequestURI(),
-                Instant.now(),
                 audit.resourceType(),
                 resourceId
         );
-
-        repo.save(log);
     }
 
     // ====================================================================
