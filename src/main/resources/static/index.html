@@ -453,7 +453,7 @@
         auditEventSource = new EventSource(API + "/admin/audit-log/stream?accessToken=" + encodeURIComponent(accessToken));
 
         auditEventSource.onmessage = (event) => {
-            alert("AUDIT");
+            //alert("AUDIT");
             const entry = JSON.parse(event.data);
             appendAuditEntry(entry);
         };
