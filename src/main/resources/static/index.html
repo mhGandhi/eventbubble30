@@ -53,6 +53,27 @@
             font-weight: bold;
         }
 
+        .audit-live-status {
+            font-weight: bold;
+        }
+
+        .audit-live-status.connected {
+            color: #2ecc71; /* green */
+        }
+
+        .audit-live-status.connecting {
+            color: #f1c40f; /* yellow */
+        }
+
+        .audit-live-status.error {
+            color: #e74c3c; /* red */
+        }
+
+        .audit-live-status.closed {
+            color: #95a5a6; /* gray */
+        }
+
+
     </style>
 </head>
 <body>
@@ -184,8 +205,8 @@
 
     <div class="box audit-live">
         <div class="audit-live-header">
-            <h3>Live Audit Log <span class="sub">(latest 5)</span></h3>
-            <div class="audit-live-status" id="auditStreamStatus">● ?</div>
+            <h3>Live Audit Log</h3>
+            <div class="audit-live-status connecting" id="auditStreamStatus">● connecting</div>
         </div>
         <div id="auditLog" class="audit-list"></div>
     </div>
@@ -509,7 +530,7 @@
     async function loadLatestAuditLogs() {
         try {
             const q = buildAuditFilterQuery();
-            const url = "/admin/audit-log?page=0&size=5" + (q ? "&" + q : "");
+            const url = "/admin/audit-log?page=0&size=15" + (q ? "&" + q : "");
 
             const resp = await api(url);
             const div = document.getElementById("auditLog");
@@ -551,8 +572,13 @@
             appendAuditEntry(entry);
         });
 
+        auditEventSource.onopen = () => {
+            setAuditStatus("connected", "live");
+        };
+
         auditEventSource.onerror = () => {
             console.warn("Audit log stream disconnected. Browser will retry…");
+            setAuditStatus("error", "disconnected");
         };
     }
 
@@ -581,7 +607,7 @@
         div.innerHTML = `
         <details>
             <summary><b>${entry.action} durch ${userStr}<small> von ${entry.ipAddress}</small></b></summary>
-            <small>(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
+            <small class="timestamp">(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
             Endpoint: ${entry.endpoint}<br>
             Resource: ${entry.resourceType} #${entry.resourceId || "-"}<br>
             Payload: ${safePayload}
@@ -597,7 +623,7 @@
         div.prepend(renderAuditEntry(entry));
 
         // Keep only 5
-        while (div.children.length > 5) {
+        while (div.children.length > 15) {
             div.removeChild(div.lastChild);
         }
     }
@@ -634,6 +660,12 @@
 
         loadLatestAuditLogs();
         startAuditStream();
+    }
+
+    const statusEl = document.getElementById("auditStreamStatus");
+    function setAuditStatus(state, text) {
+        statusEl.className = `audit-live-status ${state}`;
+        statusEl.textContent = `● ${text}`;
     }
 
 
