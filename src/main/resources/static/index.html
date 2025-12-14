@@ -293,16 +293,37 @@
     // --------------------------
     // REFRESH TOKEN
     // --------------------------
+    let refreshPromise = null;
     async function refreshAccessToken() {
         if (!refreshToken) throw new Error("No refresh token");
 
-        const data = await api("/auth/refresh", "POST", { refreshToken }, false);
+        // 🔒 Already refreshing? Wait for it
+        if (refreshPromise) {
+            return refreshPromise;
+        }
 
-        saveTokens(data.accessToken, data.refreshToken);
-        setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+        refreshPromise = (async () => {
+            try {
+                const data = await api(
+                    "/auth/refresh",
+                    "POST",
+                    { refreshToken },
+                    false
+                );
 
-        restartAuditStream();
+                saveTokens(data.accessToken, data.refreshToken);
+                setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+
+                restartAuditStream();
+                return data;
+            } finally {
+                refreshPromise = null;
+            }
+        })();
+
+        return refreshPromise;
     }
+
 
     function setStatus(msg) {
         document.getElementById("status").textContent = msg;
