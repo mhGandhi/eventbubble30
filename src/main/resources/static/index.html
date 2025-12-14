@@ -37,6 +37,22 @@
             padding: 10px;
             overflow-x: auto;
         }
+
+        .audit.success { border-left: 4px solid #4caf50; }
+        .audit.fail    { border-left: 4px solid #f44336; }
+        .audit:hover { background: #fafafa; }
+
+        .timestamp {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -109,56 +125,71 @@
 </div>
 
 <!-- AUDIT LOG (ADMIN ONLY) -->
-<whatever id="auditlogwrapper" style="display:none;">
+<section id="auditlogwrapper" class="audit-wrap" style="display:none;">
     <h2>Audit Log</h2>
-    <div class="box">
+
+    <div class="box audit-filters">
         <h3>Filters</h3>
 
-        <label>User ID:</label>
-        <input id="flt_userId" type="number" placeholder="User ID">
+        <div class="audit-grid">
+            <label>
+                <span>User ID</span>
+                <input id="flt_userId" type="number" placeholder="User ID">
+            </label>
 
-        <label>Actions:</label>
-        <select id="flt_action" multiple size="6" style="width: 200px;">
-            <option value="CREATE">CREATE</option>
-            <option value="READ">READ</option>
-            <option value="UPDATE">UPDATE</option>
-            <option value="DELETE">DELETE</option>
-            <option value="LOGIN">LOGIN</option>
-            <option value="REFRESH">REFRESH</option>
-            <option value="INVALIDATE_TOKENS">INVALIDATE_TOKENS</option>
-            <option value="OTHER">OTHER</option>
-            <option value="CLEANUP_UNVERIFIED_ACCOUNTS">CLEANUP_UNVERIFIED_ACCOUNTS</option>
-        </select>
+            <label>
+                <span>Success</span>
+                <select id="flt_success">
+                    <option value="">Any</option>
+                    <option value="true">Success</option>
+                    <option value="false">Failure</option>
+                </select>
+            </label>
 
+            <label class="span-2">
+                <span>Actions</span>
+                <select id="flt_action" multiple size="6">
+                    <option value="CREATE">CREATE</option>
+                    <option value="READ">READ</option>
+                    <option value="UPDATE">UPDATE</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="LOGIN">LOGIN</option>
+                    <option value="REFRESH">REFRESH</option>
+                    <option value="INVALIDATE_TOKENS">INVALIDATE_TOKENS</option>
+                    <option value="OTHER">OTHER</option>
+                    <option value="CLEANUP_UNVERIFIED_ACCOUNTS">CLEANUP_UNVERIFIED_ACCOUNTS</option>
+                </select>
+                <small class="hint">Tip: Ctrl/⌘+click to multi-select</small>
+            </label>
 
-        <label>Resource Type:</label>
-        <select id="flt_resourceType">
-            <option value="">Any</option>
-            <option>PROFILE</option>
-            <option>USER</option>
-            <option>EVENT</option>
-            <option>SERVER_CONFIG</option>
-        </select>
+            <label>
+                <span>Resource Type</span>
+                <select id="flt_resourceType">
+                    <option value="">Any</option>
+                    <option>PROFILE</option>
+                    <option>USER</option>
+                    <option>EVENT</option>
+                    <option>SERVER_CONFIG</option>
+                </select>
+            </label>
 
-        <label>Resource ID:</label>
-        <input id="flt_resourceId" type="number" placeholder="Resource ID">
+            <label>
+                <span>Resource ID</span>
+                <input id="flt_resourceId" type="number" placeholder="Resource ID">
+            </label>
+        </div>
 
-        <label>Success:</label>
-        <select id="flt_success">
-            <option value="">Any</option>
-            <option value="true">Success</option>
-            <option value="false">Failure</option>
-        </select>
-
-        <button onclick="applyAuditFilters()">Apply Filters</button>
+        <button class="btn primary" onclick="applyAuditFilters()">Apply Filters</button>
     </div>
-    <div class="box">
-        <h3>Live Audit Log (latest 5)</h3>
-        <div id="auditLog"></div>
+
+    <div class="box audit-live">
+        <div class="audit-live-header">
+            <h3>Live Audit Log <span class="sub">(latest 5)</span></h3>
+            <div class="audit-live-status" id="auditStreamStatus">● ?</div>
+        </div>
+        <div id="auditLog" class="audit-list"></div>
     </div>
-</whatever>
-
-
+</section>
 
 
 <script>
@@ -239,6 +270,8 @@
 
         saveTokens(data.accessToken, data.refreshToken);
         setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+
+        restartAuditStream();
     }
 
     function setStatus(msg) {
@@ -491,6 +524,16 @@
         }
     }
 
+    function restartAuditStream() {
+        if (auditEventSource) {
+            auditEventSource.close();
+            auditEventSource = null;
+        }
+
+        startAuditStream();
+    }
+
+
     function startAuditStream() {
         if (auditEventSource) return;
 
@@ -503,10 +546,10 @@
 
         auditEventSource = new EventSource(url);
 
-        auditEventSource.onmessage = (event) => {
+        auditEventSource.addEventListener("audit-log", event => {
             const entry = JSON.parse(event.data);
             appendAuditEntry(entry);
-        };
+        });
 
         auditEventSource.onerror = () => {
             console.warn("Audit log stream disconnected. Browser will retry…");
@@ -529,14 +572,20 @@
         const div = document.createElement("div");
         div.style.borderBottom = "1px solid #ddd";
         div.style.margin = "5px 0";
+        div.classList.add("audit");
+        if(entry.success){
+            div.classList.add("success");
+        }else{
+            div.classList.add("fail");
+        }
         div.innerHTML = `
-        <b>${entry.action}</b>
-        <small>(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
-        User: ${userStr}<small>@${entry.ipAddress}</small><br>
-        Endpoint: ${entry.endpoint}<br>
-        Success: ${entry.success}<br>
-        Resource: ${entry.resourceType} #${entry.resourceId || "-"}<br>
-        Payload: ${safePayload}
+        <details>
+            <summary><b>${entry.action} durch ${userStr}<small> von ${entry.ipAddress}</small></b></summary>
+            <small>(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
+            Endpoint: ${entry.endpoint}<br>
+            Resource: ${entry.resourceType} #${entry.resourceId || "-"}<br>
+            Payload: ${safePayload}
+        </details>
     `;
         return div;
     }
