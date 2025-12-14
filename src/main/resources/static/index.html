@@ -519,7 +519,7 @@
         let userStr = "?";
         if(entry.user){
             let userNameSnap = "";
-            if(entry.user?.username !== entry.usernameSnapshot){
+            if(entry.user?.username !== entry.usernameSnapshot && entry.usernameSnapshot !== null){
                 userNameSnap = " (damals "+entry.usernameSnapshot+")"
             }
             userStr = entry.user?.username + userNameSnap;
