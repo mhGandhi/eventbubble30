@@ -83,7 +83,7 @@ public class AuthController {
     ) {}
 
     @Audit(
-            action = AuditLog.Action.CREATE,
+            action = AuditLog.Action.SIGNUP,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
@@ -211,7 +211,7 @@ public class AuthController {
     }
 
     @Audit(
-            action = AuditLog.Action.UPDATE,
+            action = AuditLog.Action.MAIL_REQUEST,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
@@ -257,7 +257,7 @@ public class AuthController {
     }
 
     @Audit(
-            action = AuditLog.Action.UPDATE,
+            action = AuditLog.Action.MAIL_REQUEST,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
