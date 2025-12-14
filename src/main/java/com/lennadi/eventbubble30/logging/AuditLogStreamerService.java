@@ -98,6 +98,7 @@ public class AuditLogStreamerService {
                         }
                 );
 
+
         emitter.onCompletion(() -> subscriptionRef[0].dispose());
         emitter.onTimeout(() -> {
             subscriptionRef[0].dispose();
