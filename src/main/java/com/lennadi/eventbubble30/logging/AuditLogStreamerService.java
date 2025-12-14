@@ -5,11 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 @Service
@@ -17,76 +16,93 @@ import java.util.function.Predicate;
 @Slf4j
 public class AuditLogStreamerService {
 
+    /**
+     * Best-effort multicast:
+     * - no unbounded buffering
+     * - slow clients drop events instead of OOM
+     */
     private final Sinks.Many<AuditLog> sink =
-            Sinks.many().multicast().onBackpressureBuffer();
+            Sinks.many().multicast().directBestEffort();
 
     public void publish(AuditLog entry) {
-        var result = sink.tryEmitNext(entry);
-        if (result.isFailure()) {
-            log.warn("SSE emit failed: {}", result);
-        }
+        sink.emitNext(entry, (signalType, emitResult) -> {
+            if (emitResult.isFailure()) {
+                log.warn("SSE emit failed: {}", emitResult);
+            }
+            return false;
+        });
     }
 
     public void registerListener(
             SseEmitter emitter,
             Long userId,
-            List<AuditLog.Action> action,
+            List<AuditLog.Action> actions,
             AuditLog.RType resourceType,
             Long resourceId,
             Boolean success
     ) {
+
         Predicate<AuditLog> filter = log -> {
 
-            if (userId != null && (log.getBenutzer() == null ||
-                    !userId.equals(log.getBenutzer().getId())))
+            if (userId != null &&
+                    (log.getBenutzer() == null ||
+                            !userId.equals(log.getBenutzer().getId())))
                 return false;
 
-            if (action != null && !action.isEmpty() &&
-                    !action.contains(log.getAction()))
+            if (actions != null && !actions.isEmpty() &&
+                    !actions.contains(log.getAction()))
                 return false;
 
-            if (resourceType != null && !resourceType.equals(log.getResourceType()))
+            if (resourceType != null &&
+                    !resourceType.equals(log.getResourceType()))
                 return false;
 
-            if (resourceId != null && !resourceId.equals(log.getResourceId()))
+            if (resourceId != null &&
+                    !resourceId.equals(log.getResourceId()))
                 return false;
 
-            if (success != null && !success.equals(log.isSuccess()))
+            if (success != null &&
+                    !success.equals(log.isSuccess()))
                 return false;
 
             return true;
         };
 
-        AtomicReference<Disposable> subRef = new AtomicReference<>();
+        final Disposable[] subscriptionRef = new Disposable[1];
 
-        Disposable subscription = sink.asFlux()
+        subscriptionRef[0] = sink.asFlux()
                 .filter(filter)
+                .publishOn(Schedulers.single())
                 .subscribe(
                         logEntry -> {
                             try {
-                                emitter.send(SseEmitter.event().data(logEntry.toDTO()));
+                                emitter.send(
+                                        SseEmitter.event()
+                                                .name("audit-log")
+                                                .data(logEntry.toDTO())
+                                );
                             } catch (Exception e) {
-                                subRef.get().dispose();
+                                log.debug("SSE client disconnected", e);
+                                subscriptionRef[0].dispose();
                                 emitter.completeWithError(e);
                             }
                         },
                         error -> {
-                            subRef.get().dispose();
+                            log.warn("SSE stream error", error);
+                            subscriptionRef[0].dispose();
                             emitter.completeWithError(error);
                         },
                         () -> {
-                            subRef.get().dispose();
+                            subscriptionRef[0].dispose();
                             emitter.complete();
                         }
                 );
 
-        // save into reference AFTER subscription created
-        subRef.set(subscription);
-
-        emitter.onCompletion(() -> subRef.get().dispose());
-        emitter.onTimeout(() -> subRef.get().dispose());
-        emitter.onError(e -> subRef.get().dispose());
+        emitter.onCompletion(() -> subscriptionRef[0].dispose());
+        emitter.onTimeout(() -> {
+            subscriptionRef[0].dispose();
+            emitter.complete();
+        });
+        emitter.onError(e -> subscriptionRef[0].dispose());
     }
-
-
 }
