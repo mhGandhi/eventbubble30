@@ -516,6 +516,15 @@
 
     function renderAuditEntry(entry) {
         const safePayload = JSON.stringify(entry.payload);
+        let userStr = "?";
+        if(entry.user){
+            let userNameSnap = "";
+            if(entry.user?.username !== entry.usernameSnapshot){
+                userNameSnap = " (damals "+entry.usernameSnapshot+")"
+            }
+            userStr = entry.user?.username + userNameSnap;
+        }
+
 
         const div = document.createElement("div");
         div.style.borderBottom = "1px solid #ddd";
@@ -523,7 +532,7 @@
         div.innerHTML = `
         <b>${entry.action}</b>
         <small>(${entry.timestamp})</small> <small>[${entry.id}]</small><br>
-        User: ${entry.user?.username || "SYSTEM"}<br>
+        User: ${userStr}<small>@${entry.ipAddress}</small><br>
         Endpoint: ${entry.endpoint}<br>
         Success: ${entry.success}<br>
         Resource: ${entry.resourceType} #${entry.resourceId || "-"}<br>
