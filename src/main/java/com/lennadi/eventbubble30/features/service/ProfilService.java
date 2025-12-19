@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.net.URL;
 
 @Service
 @RequiredArgsConstructor
@@ -110,6 +111,12 @@ public class ProfilService {
         profil.setAvatarKey(null);
 
         return profil;
+    }
+
+    public URL getAvatarUrl(long profilId) {
+        Profil profil = getProfil(profilId);
+        if(profil==null || profil.getAvatarKey()==null) return null;
+        return storage.getFileURL(profil.getAvatarKey());
     }
 
     public long getCurrentUserId() {
