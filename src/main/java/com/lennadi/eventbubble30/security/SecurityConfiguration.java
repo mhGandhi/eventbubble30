@@ -72,7 +72,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         //media
-                        .requestMatchers("/media/**").permitAll()
+                        .requestMatchers("/file/**").permitAll()
 
                         //user
                         .requestMatchers("/api/user/**").authenticated()
