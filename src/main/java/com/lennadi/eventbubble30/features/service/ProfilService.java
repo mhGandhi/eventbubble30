@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -65,24 +67,33 @@ public class ProfilService {
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
     public Profil updateAvatar(long profilId, MultipartFile file) throws IOException {
-        if (!file.getContentType().startsWith("image/")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"wrong file type");
+        String ct = file.getContentType();
+        if (ct == null || !ct.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "wrong file type");
+        }
+
         if (file.getSize() > (5 * 1024 * 1024)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"file to large");
 
         Profil profil = getProfil(profilId);
 
-        // delete previous avatar
-        if (profil.getAvatarKey() != null) {
-            storage.delete(profil.getAvatarKey());
-        }
-
+        String oldKey = profil.getAvatarKey();
         // store new file
-        String key = storage.store(
+        String newKey = storage.store(
                 file.getInputStream(),
                 file.getOriginalFilename(),
                 file.getContentType()
         );
+        profil.setAvatarKey(newKey);
 
-        profil.setAvatarKey(key);
+        // delete previous avatar
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (oldKey != null) storage.delete(oldKey);
+                    }
+                }
+        );
 
         return profil;
     }
