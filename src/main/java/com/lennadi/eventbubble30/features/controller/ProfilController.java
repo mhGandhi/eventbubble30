@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -114,12 +115,28 @@ public class ProfilController {
         return profilService.toDTO(profilService.updateAvatar(id, file));
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}/avatar")
-    public Profil.DTO deleteAvatar(@PathVariable String segment) {
+    public ResponseEntity<?> deleteAvatar(@PathVariable String segment) {
+        long id = resolveId(segment);
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", id, RequestAttributes.SCOPE_REQUEST);
+
+        profilService.deleteAvatar(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("{segment}/avatar")
+    public ResponseEntity<URI> getAvatar(@PathVariable String segment) {
         long id = resolveId(segment);
 
-        return profilService.toDTO(profilService.deleteAvatar(id));//todo content removed response
+        URL url = profilService.getAvatarUrl(id);
+        if (url == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(URI.create(url.toString()));
     }
 
 }
