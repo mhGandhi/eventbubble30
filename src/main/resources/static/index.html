@@ -38,6 +38,31 @@
             overflow-x: auto;
         }
 
+        .user-snippet {
+            position: relative;
+            cursor: default;
+        }
+
+        .bio-tooltip {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 120%;
+            background: #333;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 10;
+            white-space: pre-wrap;
+        }
+
+        .user-snippet:hover .bio-tooltip {
+            display: block;
+        }
+
+
         .audit.success { border-left: 4px solid #4caf50; }
         .audit.fail    { border-left: 4px solid #f44336; }
         .audit:hover { background: #fafafa; }
@@ -80,8 +105,6 @@
         .audit-live-status.closed {
             color: #95a5a6; /* gray */
         }
-
-
     </style>
 </head>
 <body>
@@ -93,78 +116,97 @@
     <b>Session Status:</b>
     <pre id="status">Unknown</pre>
 </div>
-
-<!-- LOGIN -->
-<h2>Login</h2>
-<div class="box">
-    <input id="login_user" placeholder="Username">
-    <input id="login_pass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-</div>
-<div class="box">
-    <input id="emailToResetPassword" placeholder="Email for pw reset">
-    <button onclick="requestPasswordReset()">Request Password Reset</button>
-</div>
-<div class="box">
-    <input id="passwordToken" placeholder="Password Reset Token">
-    <input id="newPassword" type="password" placeholder="New Password">
-    <button onclick="resetPassword()">Reset Password</button>
-</div>
-
-<!-- SIGNUP -->
-<h2>Signup</h2>
-<div class="box">
-    <input id="signup_user" placeholder="Username">
-    <input id="signup_mail" placeholder="Email">
-    <input id="signup_pass" type="password" placeholder="Password">
-    <button onclick="signup()">Signup</button>
-</div>
-
-<div class="box">
-    <input id="emailToVerify" placeholder="Email to Verify">
-    <button onclick="requestEmailVerification()">Request Token</button>
-    <input id="emailToken" placeholder="Verification Token">
-    <button onclick="verifyEmail()">Verify Token</button>
-</div>
-
-<!-- SESSION -->
-<h2>Session</h2>
-<div class="box">
-    <button onclick="validateSession()">Validate Session</button>
-    <button onclick="getMe()">Load Current User</button>
-    <button onclick="logout()">Logout</button>
-</div>
-
-<pre id="me"></pre>
-
-<!-- PROFILE -->
-<h2>Profile</h2>
-<div class="box">
-    <div id="createProfile">
-        <h3>Create Profile</h3>
-        <input id="newProfileName" placeholder="Name">
-        <textarea id="newProfileBio" placeholder="Bio"></textarea>
-        <button onclick="createProfile()">Create Profile</button>
-        <small id="profileHint" style="display:block;color:#666;"></small>
+<section id="loginSection">
+    <!-- LOGIN -->
+    <h2>Login</h2>
+    <div class="box">
+        <input id="login_user" placeholder="Username">
+        <input id="login_pass" type="password" placeholder="Password">
+        <button onclick="login()">Login</button>
     </div>
-    <div id="updateProfile">
-        <div id="avatarBox">
-            <img id="avatarImg"
-                 src=""
-                 alt="avatar"
-                 style="max-width:150px; max-height:150px; display:none; border-radius:8px;">
+    <div class="box">
+        <input id="emailToResetPassword" placeholder="Email for pw reset">
+        <button onclick="requestPasswordReset()">Request Password Reset</button>
+    </div>
+    <div class="box">
+        <input id="passwordToken" placeholder="Password Reset Token">
+        <input id="newPassword" type="password" placeholder="New Password">
+        <button onclick="resetPassword()">Reset Password</button>
+    </div>
+</section>
+
+<section id="signupSection">
+    <!-- SIGNUP -->
+    <h2>Signup</h2>
+    <div class="box">
+        <input id="signup_user" placeholder="Username">
+        <input id="signup_mail" placeholder="Email">
+        <input id="signup_pass" type="password" placeholder="Password">
+        <button onclick="signup()">Signup</button>
+    </div>
+
+    <div class="box">
+        <input id="emailToVerify" placeholder="Email to Verify">
+        <button onclick="requestEmailVerification()">Request Token</button>
+        <input id="emailToken" placeholder="Verification Token">
+        <button onclick="verifyEmail()">Verify Token</button>
+    </div>
+</section>
+
+<section id="sessionSection">
+    <!-- SESSION -->
+    <h2>Session</h2>
+    <div class="box">
+        <button onclick="validateSession()">Validate Session</button>
+        <button onclick="getMe()">Load Current User</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</section>
+
+<section id="profileSection">
+    <!-- PROFILE -->
+    <h2>Me</h2>
+    <div class="box">
+        <h3>User</h3>
+        <div id="me"></div>
+    </div>
+    <div class="box">
+        <h3>Profile</h3>
+        <div id="createProfile">
+            <h3>Create Profile</h3>
+            <input id="newProfileName" placeholder="Name">
+            <textarea id="newProfileBio" placeholder="Bio"></textarea>
+            <button onclick="createProfile()">Create Profile</button>
+            <small id="profileHint" style="display:block;color:#666;"></small>
         </div>
+        <div id="updateProfile">
+            <div id="avatarBox">
+                <img id="avatarImg"
+                     src=""
+                     alt="avatar"
+                     style="max-width:150px; max-height:150px; display:none; border-radius:8px;">
+            </div>
 
-        <input type="file" id="avatarFile" accept="image/*">
-        <button onclick="uploadAvatar()">Upload Avatar</button>
-        <button onclick="deleteAvatar()">Delete Avatar</button>
+            <input type="file" id="avatarFile" accept="image/*">
+            <button onclick="uploadAvatar()">Upload Avatar</button>
+            <button onclick="deleteAvatar()">Delete Avatar</button>
 
-        <div>
-            <input type="text" id="profileName">
-            <button onclick="updateName()">Update</button>
+            <hr>
+            <div>
+                <input type="text" id="profileName">
+                <textarea id="profileBio" placeholder="Your bio"></textarea>
+                <button onclick="updateProfile()">Update</button>
+            </div>
+
+            <hr>
+            <button style="background:#e74c3c;color:white"
+                    onclick="deleteMyProfile()">
+                Delete Profile
+            </button>
+
         </div>
     </div>
-</div>
+</section>
 
 <!-- EVENTS -->
 <h2>Events</h2>
@@ -280,14 +322,21 @@
     window.addEventListener("load", () => {
         if (refreshToken) {
             setStatus("Refresh token found — attempting auto-login...");
-            refreshAccessToken().catch(() => setStatus("Not logged in"));
+            try {
+                const data = refreshAccessToken();
+                updateAuthUi(true, data.benutzerDTO?.username);
+            } catch {
+                updateAuthUi(false);
+                setStatus("Not logged in");
+            }
         } else {
+            updateAuthUi(false);
             setStatus("Not logged in");
         }
 
         listEvents();
         initAuditLogIfAdmin();
-        loadMyProfileIfExists();
+        getMe()
     });
 
     // --------------------------
@@ -311,6 +360,7 @@
                 return api(url, method, body, false);
             } catch (_) {
                 clearTokens();
+                updateAuthUi(false);
             }
         }
 
@@ -345,7 +395,7 @@
                 setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
 
                 restartAuditStream();
-                await loadMyProfileIfExists();
+                await getMe();
                 return data;
             } finally {
                 refreshPromise = null;
@@ -371,13 +421,13 @@
             }, false);
 
             saveTokens(data.accessToken, data.refreshToken);
-            setStatus("Logged in as: " + data.benutzerDTO.username);
+            updateAuthUi(true, data.benutzerDTO.username);
 
         } catch (e) { alert(e); }
 
         await listEvents();
         await initAuditLogIfAdmin();
-        await loadMyProfileIfExists();
+        await getMe();
     }
 
     async function requestEmailVerification() {
@@ -433,6 +483,7 @@
     async function logout() {
         try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
+        updateAuthUi(false);
         setStatus("Logged out");
         await initAuditLogIfAdmin();
     }
@@ -465,6 +516,18 @@
             return null;
         }
     }
+
+    function updateAuthUi(loggedIn, username = null) {
+        document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
+        document.getElementById("signupSection").style.display = loggedIn ? "none" : "block";
+        document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
+        document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
+
+        if (loggedIn && username) {
+            setStatus("Logged in as: " + username);
+        }
+    }
+
 
 
     // --------------------------
@@ -522,9 +585,11 @@
 
             const me = await getMeSilent();
 
-            page.content.forEach(ev => {
+            for (const ev of page.content) {
                 const div = document.createElement("div");
                 div.className = "event";
+
+                const ownerSnippet = await buildOwnerSnippet(ev.besitzer);
 
                 const canEdit =
                     me &&
@@ -533,7 +598,7 @@
                 if(canEdit) {
                     div.innerHTML = `
                         <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
-                        By: ${ev.besitzer?.username}<br>
+                        By: ${ownerSnippet}<br>
                         <label>Date:</label><input id="date_${ev.id}" type="datetime-local" value="${ev.termin ? ev.termin.substring(0,16) : ""}"><br>
                         <label>Description:</label><textarea id="desc_${ev.id}">${escapeHtml(ev.description || "")}</textarea><br>
                         <button onClick="deleteEvent(${ev.id})">Delete</button>
@@ -542,13 +607,13 @@
                 } else {
                     div.innerHTML = `
                         <b>${ev.title}</b> (ID ${ev.id})<br>
-                        By: ${ev.besitzer?.username}<br>
+                        By: ${ownerSnippet}<br>
                         <small>${ev.termin || "no date"}</small><br>
                         ${ev.description || ""}<br>
                     `;
                 }
                 out.appendChild(div);
-            });
+            }
         } catch (e) { alert(e); }
     }
 
@@ -562,6 +627,53 @@
             "'": "&#39;"
         }[c]));
     }
+
+    async function buildOwnerSnippet(besitzer) {
+        if (!besitzer) {
+            return "<i>unknown user</i>";
+        }
+
+        const username = escapeHtml(besitzer.username);
+
+        try {
+            const hasProfile = await api(`/profiles/${besitzer.id}/exists`);
+
+            if (!hasProfile) {
+                // 👤 No profile → username only (distinct style)
+                return `<span title="No profile">@${username}</span>`;
+            }
+
+            const profile = await api(`/profiles/${besitzer.id}`);
+
+            const bio = escapeHtml(profile.bio || "")
+                .replace(/\n+/g, " • ")
+                .trim();
+
+
+            const avatar = profile.avatarURL
+                ? `<img src="${profile.avatarURL}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
+                : `<img src="https://ui-avatars.com/api/?name=${profile.name}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`;
+
+            const name = escapeHtml(profile.name || "Unnamed");
+
+
+            return `
+                <span class="user-snippet">
+                    ${avatar}
+                    <b>${name}</b>
+                    <small style="color:#666">(@${username})</small>
+                    ${bio ? `<span class="bio-tooltip">${bio}</span>` : ""}
+                </span>
+            `;
+
+        } catch (e) {
+            console.warn("Failed to load profile for user", besitzer.id, e);
+            return `<span>@${username}</span>`;
+        }
+    }
+
 
     // --------------------------
     // AUDIT LOG (ADMIN ONLY)
@@ -852,6 +964,7 @@
 
             const p = await api("/profiles/me");
             document.getElementById("profileName").value = p.name || "";
+            document.getElementById("profileBio").value  = p.bio  || "";
             renderAvatar(p.avatarURL || p.avatarUrl); // handle either casing
             document.getElementById("profileHint").textContent = "";
             return p;
@@ -880,6 +993,46 @@
             alert(e);
         }
     }
+
+    async function updateProfile() {
+        const name = document.getElementById("profileName").value.trim();
+        const bio  = document.getElementById("profileBio").value.trim();
+
+        if (!name) {
+            alert("Name is required");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "PATCH", { name, bio });
+            alert("Bio updated!");
+            await loadMyProfileIfExists();
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+    async function deleteMyProfile() {
+        if (!confirm("This will permanently delete your profile and avatar. Continue?")) {
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "DELETE");
+            alert("Profile deleted");
+
+            setProfileUiState(false);
+            renderAvatar(null);
+
+            document.getElementById("profileName").value = "";
+            document.getElementById("profileBio").value = "";
+
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+
 
 
 </script>
