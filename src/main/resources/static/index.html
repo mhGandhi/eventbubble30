@@ -694,7 +694,7 @@
                     div.innerHTML = `
                         <b>${ev.title}</b> (ID ${ev.id})<br>
                         By: ${ownerSnippet}<br>
-                        <small>${ev.termin || "no date"}</small><br>
+                        <small class="timestamp">${ev.termin || "no date"}</small><br>
                         ${ev.description || ""}<br>
                         <div class="location-box" id="location_event_${ev.id}" data-location="">
                             <div class="location-summary">
