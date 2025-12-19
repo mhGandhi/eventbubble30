@@ -104,6 +104,14 @@ public class ProfilController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/profiles/{segment}/exists")
+    public boolean profileExists(@PathVariable String segment) {
+        long id = resolveId(segment);
+        return profilService.exists(id);
+    }
+
+
+
     @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
     @PutMapping("/{segment}/avatar")
     public Profil.DTO uploadAvatar(

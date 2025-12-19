@@ -131,4 +131,7 @@ public class ProfilService {
         return new Profil.SmallDTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey()));
     }
 
+    public boolean exists(long id) {
+        return profilRepo.existsById(id);
+    }
 }
