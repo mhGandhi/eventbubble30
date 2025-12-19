@@ -104,7 +104,7 @@ public class ProfilController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/profiles/{segment}/exists")
+    @GetMapping("/{segment}/exists")
     public boolean profileExists(@PathVariable String segment) {
         long id = resolveId(segment);
         return profilService.exists(id);
