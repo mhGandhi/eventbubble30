@@ -119,7 +119,7 @@ public class ProfilController {
     public Profil.DTO deleteAvatar(@PathVariable String segment) {
         long id = resolveId(segment);
 
-        return profilService.toDTO(profilService.deleteAvatar(id));
+        return profilService.toDTO(profilService.deleteAvatar(id));//todo content removed response
     }
 
 }
