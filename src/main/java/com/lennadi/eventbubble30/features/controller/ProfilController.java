@@ -147,4 +147,6 @@ public class ProfilController {
         return ResponseEntity.ok(URI.create(url.toString()));
     }
 
+    //todo events
+
 }
