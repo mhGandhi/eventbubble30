@@ -111,8 +111,14 @@
             color: #95a5a6; /* gray */
         }
     </style>
+
+    <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 </head>
 <body>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <div id="locationModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
     <div style="
         background:white;
@@ -121,6 +127,21 @@
         margin:10% auto;
         border-radius:8px;
     ">
+        <hr>
+
+        <input id="loc_search" placeholder="Search location (city, address, venue)">
+        <button onclick="searchLocation()">Search (OSM)</button>
+
+        <div id="loc_results" style="margin-top:8px;"></div>
+
+        <div
+                id="loc_map"
+                style="height:300px; margin:10px 0; border-radius:6px;"
+        ></div>
+
+        <hr>
+
+
         <h3>Edit Location</h3>
 
         <input id="loc_name" placeholder="Display name">
@@ -1131,6 +1152,8 @@
         activeLocationBoxId = boxId;
 
         const existing = getLocationFromBox(boxId);
+
+        // Fill inputs (unchanged)
         if (existing) {
             loc_name.value   = existing.displayName || "";
             loc_street.value = existing.street || "";
@@ -1145,6 +1168,92 @@
         }
 
         locationModal.style.display = "block";
+
+        setTimeout(() => initLocationMap(existing), 0);
+    }
+
+    function initLocationMap(existing) {
+        if (!locMap) {
+            locMap = L.map("loc_map").setView([52.52, 13.405], 13); // default Berlin
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap contributors"
+            }).addTo(locMap);
+
+            locMap.on("click", onMapClick);
+        }
+
+        if (existing?.latitude && existing?.longitude) {
+            setMarker(existing.latitude, existing.longitude);
+            locMap.setView([existing.latitude, existing.longitude], 15);
+        }
+    }
+
+    function setMarker(lat, lng) {
+        if (!locMarker) {
+            locMarker = L.marker([lat, lng], { draggable: true }).addTo(locMap);
+            locMarker.on("dragend", e => {
+                const p = e.target.getLatLng();
+                updateLatLngInputs(p.lat, p.lng);
+            });
+        } else {
+            locMarker.setLatLng([lat, lng]);
+        }
+
+        updateLatLngInputs(lat, lng);
+    }
+
+    function updateLatLngInputs(lat, lng) {
+        loc_lat.value = lat.toFixed(6);
+        loc_lng.value = lng.toFixed(6);
+    }
+
+    async function onMapClick(e) {
+        const { lat, lng } = e.latlng;
+        setMarker(lat, lng);
+
+        const url = new URL("https://nominatim.openstreetmap.org/reverse");
+        url.search = new URLSearchParams({
+            lat,
+            lon: lng,
+            format: "json",
+            addressdetails: "1"
+        });
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        applyReverseGeocode(data);
+    }
+
+    function applyReverseGeocode(r) {
+        const a = r.address || {};
+
+        loc_name.value =
+            a.attraction ||
+            a.amenity ||
+            a.road ||
+            r.display_name ||
+            "";
+
+        loc_street.value = [
+            a.road,
+            a.house_number
+        ].filter(Boolean).join(" ");
+
+        loc_city.value =
+            a.city ||
+            a.town ||
+            a.village ||
+            "";
+
+        loc_postal.value = a.postcode || "";
+        loc_country.value = a.country_code
+            ? a.country_code.toUpperCase()
+            : "";
+
+        locationModal.dataset.externalSource = "NOMINATIM";
+        locationModal.dataset.externalId = r.place_id || null;
     }
 
     function saveLocation() {
@@ -1164,11 +1273,17 @@
             country: loc_country.value.trim() || null,
             latitude: loc_lat.value ? parseFloat(loc_lat.value) : null,
             longitude: loc_lng.value ? parseFloat(loc_lng.value) : null,
-            externalSource: "MANUAL",
-            externalId: null
+            externalSource: locationModal.dataset.externalSource || "MANUAL",
+            externalId: locationModal.dataset.externalId || null
         };
 
         setLocationInBox(activeLocationBoxId, location);
+
+        // cleanup
+        delete locationModal.dataset.externalSource;
+        delete locationModal.dataset.externalId;
+        loc_results.innerHTML = "";
+
         closeLocationEditor();
     }
 
@@ -1176,10 +1291,103 @@
         setLocationInBox(boxId, null);
     }
 
+    async function searchLocation() {
+        const q = loc_search.value.trim();
+        if (!q) return;
+
+        const url = new URL("https://nominatim.openstreetmap.org/search");
+        url.search = new URLSearchParams({
+            q,
+            format: "json",
+            addressdetails: "1",
+            limit: "5"
+        });
+
+        const res = await fetch(url, {
+            headers: {
+                "Accept": "application/json"
+                // User-Agent is implicitly set by browser
+            }
+        });
+
+        const results = await res.json();
+        renderLocationResults(results);
+    }
+
+    let locMap = null;
+    let locMarker = null;
+
+    function renderLocationResults(results) {
+        const box = document.getElementById("loc_results");
+        box.innerHTML = "";
+
+        if (!results.length) {
+            box.innerHTML = "<i>No results</i>";
+            return;
+        }
+
+        results.forEach(r => {
+            const div = document.createElement("div");
+            div.style.border = "1px solid #ccc";
+            div.style.padding = "6px";
+            div.style.marginBottom = "4px";
+            div.style.cursor = "pointer";
+            div.style.background = "#fdfdfd";
+
+            div.innerHTML = `
+            <b>${escapeHtml(r.display_name)}</b><br>
+            <small>${escapeHtml(r.type || "")}</small>
+        `;
+
+            div.onclick = () => applyNominatimResult(r);
+            box.appendChild(div);
+        });
+    }
+
+    function applyNominatimResult(r) {
+        const a = r.address || {};
+
+        loc_name.value =
+            a.attraction ||
+            a.amenity ||
+            a.road ||
+            r.display_name;
+
+        loc_street.value = [
+            a.road,
+            a.house_number
+        ].filter(Boolean).join(" ") || "";
+
+        loc_city.value =
+            a.city ||
+            a.town ||
+            a.village ||
+            a.municipality ||
+            "";
+
+        loc_postal.value = a.postcode || "";
+        loc_country.value = a.country_code
+            ? a.country_code.toUpperCase()
+            : "";
+
+        loc_lat.value = r.lat;
+        loc_lng.value = r.lon;
+
+        const lat = parseFloat(r.lat);
+        const lng = parseFloat(r.lon);
+        setMarker(lat, lng);
+        locMap.setView([lat, lng], 16);
+
+        // Store external metadata temporarily on modal
+        locationModal.dataset.externalSource = "NOMINATIM";
+        locationModal.dataset.externalId = r.place_id;
+    }
+
     function closeLocationEditor() {
         activeLocationBoxId = null;
         locationModal.style.display = "none";
     }
+
 </script>
 </body>
 </html>
