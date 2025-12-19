@@ -557,6 +557,7 @@
         updateAuthUi(false);
         setStatus("Logged out");
         await initAuditLogIfAdmin();
+        await listEvents();
     }
 
     async function validateSession() {
