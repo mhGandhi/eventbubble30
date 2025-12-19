@@ -226,6 +226,7 @@
             <h3>Create Profile</h3>
             <input id="newProfileName" placeholder="Name">
             <textarea id="newProfileBio" placeholder="Bio"></textarea>
+            <hr>
             <button onclick="createProfile()">Create Profile</button>
             <small id="profileHint" style="display:block;color:#666;"></small>
         </div>
@@ -245,10 +246,10 @@
             <div>
                 <input type="text" id="profileName">
                 <textarea id="profileBio" placeholder="Your bio"></textarea>
-                <button onclick="updateProfile()">Update</button>
             </div>
 
             <hr>
+            <button onclick="updateProfile()">Update</button>
             <button style="background:#e74c3c;color:white"
                     onclick="deleteMyProfile()">
                 Delete Profile
@@ -278,6 +279,7 @@
         </button>
     </div>
 
+    <hr>
     <button onclick="createEventVS()">Create Event</button>
 </div>
 
@@ -676,6 +678,8 @@
                                 Clear
                             </button>
                         </div>
+
+                        <hr>
                         <button onClick="deleteEvent(${ev.id})">Delete</button>
                         <button onClick="updateEvent(${ev.id})">Update</button>
                     `;
