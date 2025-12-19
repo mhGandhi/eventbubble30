@@ -889,10 +889,8 @@
         const img = document.getElementById("avatarImg");
         if (url) {
             img.src = url + "?t=" + Date.now(); // cache busting
-            img.style.display = "block";
         } else {
-            img.style.display = "none";
-            img.src = "";
+            img.src = "https://ui-avatars.com/api/?name=XX";
         }
     }
 
