@@ -21,10 +21,12 @@ public class MemoryFSService implements FileStorageService{
 
     private static class MemoryFile {
         byte[] data;
+        String name;
         String mimeType;
 
-        MemoryFile(byte[] data, String mimeType) {
+        MemoryFile(byte[] data, String pName, String mimeType) {
             this.data = data;
+            this.name = pName;
             this.mimeType = mimeType;
         }
     }
@@ -39,7 +41,7 @@ public class MemoryFSService implements FileStorageService{
         String key = UUID.randomUUID().toString();
 
         try {
-            files.put(key, new MemoryFile(input.readAllBytes(),  mimeType));
+            files.put(key, new MemoryFile(input.readAllBytes(), filename, mimeType));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
