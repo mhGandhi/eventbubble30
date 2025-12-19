@@ -325,6 +325,7 @@
             try {
                 const data = refreshAccessToken();
                 updateAuthUi(true, data.benutzerDTO?.username);
+                getMe();
             } catch {
                 updateAuthUi(false);
                 setStatus("Not logged in");
@@ -336,7 +337,6 @@
 
         listEvents();
         initAuditLogIfAdmin();
-        getMe()
     });
 
     // --------------------------
