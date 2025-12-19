@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -58,7 +59,7 @@ public class LocalFSService implements FileStorageService {
             Files.createDirectories(filePath.getParent());
 
             // Write binary file
-            Files.copy(input, filePath);
+            Files.copy(input, filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // Determine size after writing
             long size = Files.size(filePath);
