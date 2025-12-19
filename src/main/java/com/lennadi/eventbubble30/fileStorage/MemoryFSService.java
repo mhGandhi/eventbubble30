@@ -31,7 +31,7 @@ public class MemoryFSService implements FileStorageService{
         }
     }
 
-    @Value("${storage.memory.base-url:http://localhost:8080/}")
+    @Value("${storage.memory.base-url:http://localhost:8080/file}")
     private String baseUrl;
 
     private final Map<String, MemoryFile> files = new ConcurrentHashMap<>();
@@ -54,7 +54,7 @@ public class MemoryFSService implements FileStorageService{
         if(key==null)return null;
         if(!files.containsKey(key)) return null;
         try {
-            return URI.create(baseUrl).resolve("file").resolve(key).toURL();
+            return URI.create(baseUrl).resolve(key).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

@@ -24,7 +24,7 @@ public class LocalFSService implements FileStorageService {
     @Value("${storage.local.base-path:/app/uploads}")
     private String basePath;
 
-    @Value("${storage.local.base-url:http://localhost:8080}")
+    @Value("${storage.local.base-url:http://localhost:8080/file}")
     private String baseUrl;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -88,7 +88,7 @@ public class LocalFSService implements FileStorageService {
         }
 
         try {
-            return URI.create(baseUrl).resolve("file").resolve(key).toURL();
+            return URI.create(baseUrl).resolve(key).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException("Invalid base URL for LocalFSService", e);
         }
