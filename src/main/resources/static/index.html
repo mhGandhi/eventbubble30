@@ -137,6 +137,35 @@
 
 <pre id="me"></pre>
 
+<!-- PROFILE -->
+<h2>Profile</h2>
+<div class="box">
+    <div id="createProfile">
+        <h3>Create Profile</h3>
+        <input id="newProfileName" placeholder="Name">
+        <textarea id="newProfileBio" placeholder="Bio"></textarea>
+        <button onclick="createProfile()">Create Profile</button>
+        <small id="profileHint" style="display:block;color:#666;"></small>
+    </div>
+    <div id="updateProfile">
+        <div id="avatarBox">
+            <img id="avatarImg"
+                 src=""
+                 alt="avatar"
+                 style="max-width:150px; max-height:150px; display:none; border-radius:8px;">
+        </div>
+
+        <input type="file" id="avatarFile" accept="image/*">
+        <button onclick="uploadAvatar()">Upload Avatar</button>
+        <button onclick="deleteAvatar()">Delete Avatar</button>
+
+        <div>
+            <input type="text" id="profileName">
+            <button onclick="updateName()">Update</button>
+        </div>
+    </div>
+</div>
+
 <!-- EVENTS -->
 <h2>Events</h2>
 <div class="box">
@@ -258,6 +287,7 @@
 
         listEvents();
         initAuditLogIfAdmin();
+        loadMyProfileIfExists();
     });
 
     // --------------------------
@@ -315,6 +345,7 @@
                 setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
 
                 restartAuditStream();
+                await loadMyProfileIfExists();
                 return data;
             } finally {
                 refreshPromise = null;
@@ -346,6 +377,7 @@
 
         await listEvents();
         await initAuditLogIfAdmin();
+        await loadMyProfileIfExists();
     }
 
     async function requestEmailVerification() {
@@ -423,6 +455,8 @@
             document.getElementById("me").textContent = JSON.stringify(data, null, 2);
             setStatus("Logged in as: " + data.username);
         } catch (e) { alert(e); }
+
+        await loadMyProfileIfExists();
     }
     async function getMeSilent() {
         try {
@@ -738,6 +772,115 @@
             }
         });
     }, 60_000);
+
+    function renderAvatar(url) {
+        const img = document.getElementById("avatarImg");
+        if (url) {
+            img.src = url + "?t=" + Date.now(); // cache busting
+            img.style.display = "block";
+        } else {
+            img.style.display = "none";
+            img.src = "";
+        }
+    }
+
+    async function uploadAvatar() {
+        const fileInput = document.getElementById("avatarFile");
+        if (!fileInput.files.length) {
+            alert("Select a file first");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        const res = await fetch(API + "/profiles/me/avatar", {
+            method: "PUT",
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            alert("Upload failed: " + await res.text());
+            return;
+        }
+
+        const updatedProfile = await res.json();
+        renderAvatar(updatedProfile.avatarURL);
+    }
+
+    async function deleteAvatar() {
+        if (!confirm("Delete avatar?")) return;
+
+        const res = await fetch(API + "/profiles/me/avatar", {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
+        });
+
+        if (!res.ok) {
+            alert("Delete failed");
+            return;
+        }
+
+        const updatedProfile = await res.json();
+        renderAvatar(updatedProfile.avatarURL);
+    }
+
+    function setProfileUiState(hasProfile) {
+        const createBox = document.getElementById("createProfile");
+        const updateBox = document.getElementById("updateProfile");
+
+        createBox.style.display = hasProfile ? "none" : "block";
+        updateBox.style.display = hasProfile ? "block" : "none";
+    }
+
+    async function loadMyProfileIfExists() {
+        try {
+            const exists = await api("/profiles/me/exists");
+            setProfileUiState(!!exists);
+
+            if (!exists) {
+                renderAvatar(null);
+                document.getElementById("profileHint").textContent =
+                    "No profile yet. Create one to upload an avatar.";
+                return null;
+            }
+
+            const p = await api("/profiles/me");
+            document.getElementById("profileName").value = p.name || "";
+            renderAvatar(p.avatarURL || p.avatarUrl); // handle either casing
+            document.getElementById("profileHint").textContent = "";
+            return p;
+        } catch (e) {
+            console.error(e);
+            // If endpoint missing or backend error, don’t break the whole page
+            setProfileUiState(false);
+            return null;
+        }
+    }
+
+    async function createProfile() {
+        const name = document.getElementById("newProfileName").value.trim();
+        const bio = document.getElementById("newProfileBio").value.trim();
+
+        if (!name) {
+            alert("Name is required");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "POST", { name, bio });
+            await loadMyProfileIfExists();
+            alert("Profile created!");
+        } catch (e) {
+            alert(e);
+        }
+    }
+
 
 </script>
 </body>
