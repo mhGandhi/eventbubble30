@@ -8,10 +8,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Profile("memoryStorage")
@@ -30,7 +32,7 @@ public class MemoryFSService implements FileStorageService{
     @Value("${storage.memory.base-url:http://localhost:8080/media/}")
     private String baseUrl;
 
-    private final Map<String, MemoryFile> files = new HashMap<>();
+    private final Map<String, MemoryFile> files = new ConcurrentHashMap<>();
 
     @Override
     public String store(InputStream input, String filename, String mimeType) {
@@ -50,7 +52,7 @@ public class MemoryFSService implements FileStorageService{
         if(key==null)return null;
         if(!files.containsKey(key)) return null;
         try {
-            return new URL(baseUrl + key);
+            return URI.create(baseUrl).resolve(key).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
