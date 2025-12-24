@@ -12,7 +12,7 @@ import java.time.Instant;
 @Setter
 public abstract class BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)//todo nicht gut
     @Column(unique = true, nullable = false, updatable = false)
     private Long id;
 
@@ -24,6 +24,9 @@ public abstract class BaseEntity {
     @Setter(AccessLevel.NONE)
     private Instant modificationDate;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;//todo Logik
+
     @PrePersist
     protected void onCreate() {
         this.creationDate = Instant.now();
@@ -33,5 +36,20 @@ public abstract class BaseEntity {
     @PreUpdate
     protected void onUpdate() {
         this.modificationDate = Instant.now();
+    }
+
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public void softDelete() {
+        if (this.deletedAt == null) {
+            this.deletedAt = Instant.now();
+        }
+    }
+
+    public void restore() {
+        this.deletedAt = null;
     }
 }
