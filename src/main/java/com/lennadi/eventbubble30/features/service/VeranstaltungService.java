@@ -1,12 +1,16 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
+import com.lennadi.eventbubble30.features.controller.VeranstaltungController;
 import com.lennadi.eventbubble30.features.db.Location;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -104,9 +108,32 @@ public class VeranstaltungService {
         return veranstaltungRepo.save(veranstaltung);
     }
 
-    public org.springframework.data.domain.Page<Veranstaltung> list(int page, int size) {
+    public Page<Veranstaltung> search(VeranstaltungController.EventSearch s, int page, int size) {
+
+        Specification<Veranstaltung> spec = VeranstaltungsRepository.Specs.textSearch(s.q())
+                        .and(VeranstaltungsRepository.Specs.inCity(s.city()))
+                        .and(VeranstaltungsRepository.Specs.inBoundingBox(
+                                s.minLat(), s.minLon(),
+                                s.maxLat(), s.maxLon()
+                        ))
+                        .and(VeranstaltungsRepository.Specs.near(
+                                s.nearLat(), s.nearLon(), s.radiusKm()
+                        ))
+                        .and(VeranstaltungsRepository.Specs.dateBetween(s.from(), s.to()))
+                        .and(VeranstaltungsRepository.Specs.ownedBy(s.ownerId()));
+
+        Sort sort = Sort.by(
+                s.orderDir() == VeranstaltungsRepository.OrderDir.asc
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC,
+                s.orderBy().name()
+        );
+
         return veranstaltungRepo.findAll(
-                org.springframework.data.domain.PageRequest.of(page, size, Sort.by("modificationDate").descending())
+                spec,
+                PageRequest.of(page, size, sort)
         );
     }
+
+
 }
