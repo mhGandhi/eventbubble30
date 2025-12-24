@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h2>Email verification</h2>
+<p id="status">Verifying your email…</p>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) {
+        document.getElementById("status").innerText = "Invalid verification link.";
+    } else {
+        fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, {
+            method: "POST"
+        })
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById("status").innerText =
+                        "Your email has been successfully verified. You may close this tab now.";
+                } else {
+                    document.getElementById("status").innerText =
+                        "Verification failed or link expired.";
+                }
+            })
+            .catch(() => {
+                document.getElementById("status").innerText =
+                    "Network error.";
+            });
+    }
+</script>
+
+</body>
+</html>

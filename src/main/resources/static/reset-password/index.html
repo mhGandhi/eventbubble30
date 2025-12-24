@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Password</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h2>Reset password</h2>
+
+<form id="form">
+    <input type="password" id="pw" placeholder="New password" required minlength="8">
+    <input type="password" id="pw_confirm" placeholder="Confirm new password" required minlength="8">
+    <button type="submit">Reset</button>
+</form>
+
+<p id="status"></p>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const status = document.getElementById("status");
+
+    if (!token) {
+        status.innerText = "Invalid reset link.";
+        document.getElementById("form").style.display = "none";
+    }
+
+    document.getElementById("form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        if(document.getElementById("pw").value !== document.getElementById("pw_confirm").value){
+            status.innerText = "New password and confirmation have to match.";
+        }
+
+        fetch("/api/auth/reset-password", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                token: token,
+                newPassword: document.getElementById("pw").value
+            })
+        })
+            .then(res => {
+                if (res.ok) {
+                    status.innerText = "Password reset successful.";
+                    document.getElementById("form").remove();
+                } else {
+                    status.innerText = "Reset failed or token expired.";
+                }
+            })
+            .catch(() => {
+                status.innerText = "Network error.";
+            });
+    });
+</script>
+
+</body>
+</html>
