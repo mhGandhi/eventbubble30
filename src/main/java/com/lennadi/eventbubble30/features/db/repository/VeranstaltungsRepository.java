@@ -36,7 +36,7 @@ public interface VeranstaltungsRepository extends
             };
         }
 
-        public static Specification<Veranstaltung> inCity(String city) {
+        public static Specification<Veranstaltung> inCity(String city) {//todo zu instabil (Köln, koeln, köln, cologne etc) -> stattdessen plz oder so?
             return (root, query, cb) -> {
                 if (city == null) return null;
                 return cb.equal(
