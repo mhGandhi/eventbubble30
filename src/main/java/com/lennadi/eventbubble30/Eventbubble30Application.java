@@ -15,8 +15,6 @@ public class Eventbubble30Application {
 
     /*todo
     Inspo:
-        @PreAuthorize 401: PreAuthorize gibt stets 403 zurück, auch wenn eigentlich 401 angebracht wäre :/
-
         CORS
 
         change req logging
@@ -25,9 +23,6 @@ public class Eventbubble30Application {
 
         Profile: Entity getrennt von Benutzer, verbunden mit 1zu1 Beziehung, separate Endpunkte aber dennoch über
         Id des Users identifiziert -> Bio, Name, Events
-
-        Medien: Object Storage, URLs in Entities speichern, ans Frontend nur temporär signierte URLs
-        -> Avatare, Bilder für Veranstaltungen, Banner etc
 
         Soft-Delete: Gelöschte Entitäten mit "boolean: deleted" o.Ä. flaggen + timestamp setzen um Wiederherstellung
         zu erlauben. Nach bestimmter Zeit dann löschen.
