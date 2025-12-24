@@ -60,10 +60,11 @@ public class SecurityConfiguration {
 
                 .authorizeHttpRequests(auth -> auth
                         //static (kommt dann weg iwann) todo
-                        .requestMatchers("/index.html").permitAll()
                         .requestMatchers("/").permitAll()
+                        .requestMatchers("/reset-password").permitAll()
+                        .requestMatchers("/verify-email").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers("/apiDoc.yml").permitAll()
+                        .requestMatchers("/style.css").permitAll()
 
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

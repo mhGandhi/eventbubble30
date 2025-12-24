@@ -30,15 +30,10 @@ public class PasswordResetService {
         tokenRepo.findByUserId(user.getId()).ifPresent(tokenRepo::delete);
         tokenRepo.save(prt);
 
-        emailService.send(//todo translate etc. (frontend reset URL) (maybe offload to frontend?)
+        emailService.send(//todo translate etc. (frontend reset URL) (maybe offload to frontend?) send async
                 user.getEmail(),
-                "Password Zurücksetzen",
-                "\""+ServerConfig.DOMAIN+"/api/auth/reset-password\" Mit dem folgenden Http-Body aufrufen " +
-                        "um das Passwort zurückzusetzen\n\n" +
-                        "{\n" +
-                        "\t\"token\": \"" +token+"\"\n" +
-                        "\t\"newPassword\": \"[NEUES PASSWORT]\"\n" +
-                        "\n}"
+                "Reset Password",
+                "https://"+ServerConfig.DOMAIN+"/reset-password?token="+token
         );
     }
 

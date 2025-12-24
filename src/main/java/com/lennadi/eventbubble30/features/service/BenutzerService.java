@@ -226,8 +226,8 @@ public class BenutzerService {
 
         emailService.send( // todo übersetzen etc
                 user.getEmail(),
-                "Email Verifizieren",
-                "Verifizierungs-Token(gültig bis " + expiry + "):\n\n" + user.getVerificationToken()
+                "Verify Email",
+                "https://"+ServerConfig.DOMAIN+"/verify-email?token="+user.getVerificationToken()+"\n(gültig bis " + expiry + "):\n\n"
         );
 
         // todo send async after commit?
