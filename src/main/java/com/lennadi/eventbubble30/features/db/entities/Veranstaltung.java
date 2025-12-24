@@ -16,7 +16,8 @@ import java.time.Instant;
                 @Index(name = "idx_event_modified", columnList = "modification_date"),
                 @Index(name = "idx_event_owner", columnList = "besitzer_id"),
                 @Index(name = "idx_event_city", columnList = "location_city"),
-                @Index(name = "idx_event_lat_lon", columnList = "location_latitude,location_longitude")
+                @Index(name = "idx_event_lat_lon", columnList = "location_latitude,location_longitude"),
+                @Index(name = "idx_event_title", columnList = "title")
         }
 )
 @Getter @Setter
