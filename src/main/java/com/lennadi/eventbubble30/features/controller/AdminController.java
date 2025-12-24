@@ -99,7 +99,7 @@ public class AdminController {
             @RequestParam(required = false) Long resourceId,
             @RequestParam(required = false) Boolean success
     ) {
-        SseEmitter emitter = new SseEmitter(0L); // no timeout
+        SseEmitter emitter = new SseEmitter(0L); // todo heartbeat (Cloudflare macht nach 100s zu)
 
         auditLogStreamerService.registerListener(emitter, userId, action, resourceType, resourceId, success);
 
