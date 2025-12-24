@@ -16,11 +16,11 @@ public abstract class BaseEntity {
     @Column(unique = true, nullable = false, updatable = false)
     private Long id;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "creation_date", nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private Instant creationDate;
 
-    @Column(nullable = false)
+    @Column(name = "modification_date", nullable = false)
     @Setter(AccessLevel.NONE)
     private Instant modificationDate;
 
