@@ -267,7 +267,7 @@
 
 <!-- EVENTS -->
 <h2>Events</h2>
-<div class="box">
+<div class="box" id="createEvent">
     <h3>Create Event</h3>
     <input id="event_title" placeholder="Title">
     <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
@@ -594,6 +594,7 @@
         document.getElementById("signupSection").style.display = loggedIn ? "none" : "block";
         document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
         document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
+        document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
 
         if (loggedIn && username) {
             setStatus("Logged in as: " + username);
