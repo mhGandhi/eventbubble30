@@ -651,7 +651,7 @@
 
     async function listEvents() {
         try {
-            const page = await api("/events");
+            const page = await api("/events?size=100");
             const out = document.getElementById("events");
             out.innerHTML = "";
 
