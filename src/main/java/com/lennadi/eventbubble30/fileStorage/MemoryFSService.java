@@ -8,10 +8,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Profile("memoryStorage")
@@ -19,25 +21,27 @@ public class MemoryFSService implements FileStorageService{
 
     private static class MemoryFile {
         byte[] data;
+        String name;
         String mimeType;
 
-        MemoryFile(byte[] data, String mimeType) {
+        MemoryFile(byte[] data, String pName, String mimeType) {
             this.data = data;
+            this.name = pName;
             this.mimeType = mimeType;
         }
     }
 
-    @Value("${storage.memory.base-url:http://localhost:8080/media/}")
+    @Value("${storage.memory.base-url:http://localhost:8080/file}")
     private String baseUrl;
 
-    private final Map<String, MemoryFile> files = new HashMap<>();
+    private final Map<String, MemoryFile> files = new ConcurrentHashMap<>();
 
     @Override
     public String store(InputStream input, String filename, String mimeType) {
         String key = UUID.randomUUID().toString();
 
         try {
-            files.put(key, new MemoryFile(input.readAllBytes(),  mimeType));
+            files.put(key, new MemoryFile(input.readAllBytes(), filename, mimeType));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -50,7 +54,7 @@ public class MemoryFSService implements FileStorageService{
         if(key==null)return null;
         if(!files.containsKey(key)) return null;
         try {
-            return new URL(baseUrl + key);
+            return URI.create(baseUrl).resolve(key).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

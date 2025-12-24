@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -22,7 +24,7 @@ public class LocalFSService implements FileStorageService {
     @Value("${storage.local.base-path:/app/uploads}")
     private String basePath;
 
-    @Value("${storage.local.base-url:http://localhost:8080/media/}")
+    @Value("${storage.local.base-url:http://localhost:8080/file}")
     private String baseUrl;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -57,7 +59,7 @@ public class LocalFSService implements FileStorageService {
             Files.createDirectories(filePath.getParent());
 
             // Write binary file
-            Files.copy(input, filePath);
+            Files.copy(input, filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // Determine size after writing
             long size = Files.size(filePath);
@@ -86,7 +88,7 @@ public class LocalFSService implements FileStorageService {
         }
 
         try {
-            return new URL(baseUrl + key);
+            return URI.create(baseUrl).resolve(key).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException("Invalid base URL for LocalFSService", e);
         }

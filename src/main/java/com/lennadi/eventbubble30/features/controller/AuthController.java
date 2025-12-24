@@ -83,7 +83,7 @@ public class AuthController {
     ) {}
 
     @Audit(
-            action = AuditLog.Action.CREATE,
+            action = AuditLog.Action.SIGNUP,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
@@ -211,20 +211,24 @@ public class AuthController {
     }
 
     @Audit(
-            action = AuditLog.Action.UPDATE,
+            action = AuditLog.Action.MAIL_REQUEST,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/request-password-reset")
     public ResponseEntity<Void> requestPasswordReset(
             @Valid @RequestParam String email) {
-
         var userOpt = benutzerRepository.findByEmail(email);
-        userOpt.ifPresent(passwordResetService::requestReset);
         userOpt.ifPresent(user->{
             RequestContextHolder.currentRequestAttributes()
                     .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
         });
+
+        //try{ todo
+            userOpt.ifPresent(passwordResetService::requestReset);
+        //}catch(Exception e){
+        //    log.error(e.getMessage());
+        //}
 
         return ResponseEntity.ok().build(); // always 200
     }
@@ -253,7 +257,7 @@ public class AuthController {
     }
 
     @Audit(
-            action = AuditLog.Action.UPDATE,
+            action = AuditLog.Action.MAIL_REQUEST,
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
@@ -282,7 +286,7 @@ public class AuthController {
             resourceType = AuditLog.RType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
-    @GetMapping("/verify-email")
+    @PostMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         Benutzer b = benutzerService.verifyEmail(token);
         RequestContextHolder.currentRequestAttributes()

@@ -38,27 +38,35 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+        String token = null;
         request.setAttribute("jwt_state", AuthState.UNKNOWN);
         String authHeader = request.getHeader("Authorization");
         //log.warn("Authorization header = '{}'", authHeader);
 
-        //if no token
-        if (authHeader == null) {
-            request.setAttribute("jwt_state", AuthState.NO_TOKEN);
-            filterChain.doFilter(request,response);
-            return;
+        String tokenParam = request.getParameter("accessToken");
+        if (tokenParam != null && !tokenParam.isBlank()) {
+            token = tokenParam;
         }
 
-        //if wrong format
-        String authPrefix = "Bearer ";
-        if(!authHeader.startsWith(authPrefix)){
-            log.warn("Wrong AuthHeader Format \"{}\", expecting \"Bearer <token>\"", authHeader);
-            request.setAttribute("jwt_state", AuthState.WRONG_AUTH_FORMAT);
-            filterChain.doFilter(request,response);
-            return;
-        }
+        if(token == null){
+            //if no token
+            if (authHeader == null) {
+                request.setAttribute("jwt_state", AuthState.NO_TOKEN);
+                filterChain.doFilter(request,response);
+                return;
+            }
 
-        String token = authHeader.substring(authPrefix.length());
+            //if wrong format
+            String authPrefix = "Bearer ";
+            if(!authHeader.startsWith(authPrefix)){
+                log.warn("Wrong AuthHeader Format \"{}\", expecting \"Bearer <token>\"", authHeader);
+                request.setAttribute("jwt_state", AuthState.WRONG_AUTH_FORMAT);
+                filterChain.doFilter(request,response);
+                return;
+            }
+
+            token = authHeader.substring(authPrefix.length());
+        }
 
         //if undefined token
         if (token.isEmpty() ||

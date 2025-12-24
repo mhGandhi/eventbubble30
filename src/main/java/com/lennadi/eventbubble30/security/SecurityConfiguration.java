@@ -66,12 +66,13 @@ public class SecurityConfiguration {
 
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/audit-log/stream").hasRole("ADMIN")
 
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
 
                         //media
-                        .requestMatchers("/media/**").permitAll()
+                        .requestMatchers("/file/**").permitAll()
 
                         //user
                         .requestMatchers("/api/user/**").authenticated()
@@ -106,6 +107,9 @@ public class SecurityConfiguration {
     private void handleAuthError(HttpServletRequest request,
                                  HttpServletResponse response,
                                  AuthenticationException ex) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
 
         AuthState state = (AuthState) request.getAttribute("jwt_state");
         if (state == null) {
@@ -133,6 +137,10 @@ public class SecurityConfiguration {
     private void handleAccessDenied(HttpServletRequest request,
                                     HttpServletResponse response,
                                     AccessDeniedException ex) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
+
         AuthState state = (AuthState) request.getAttribute("jwt_state");
         if (state == null) {
             state = AuthState.UNKNOWN;

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("/media")
+@RequestMapping("/file")
 @RequiredArgsConstructor
 public class FileController {
 

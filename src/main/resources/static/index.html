@@ -9,6 +9,10 @@
             margin: 20px;
             max-width: 900px;
         }
+        body.modal-open {
+            overflow: hidden;
+        }
+
         h2 { margin-top: 40px; }
         input, button, textarea {
             padding: 6px;
@@ -37,51 +41,229 @@
             padding: 10px;
             overflow-x: auto;
         }
+
+        .user-snippet {
+            position: relative;
+            cursor: default;
+        }
+
+        .bio-tooltip {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 120%;
+            background: #333;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 10;
+            white-space: pre-wrap;
+        }
+
+        .user-snippet:hover .bio-tooltip {
+            display: block;
+        }
+
+        .location-box {
+            border-top: 1px dashed #ccc;
+            margin-top: 8px;
+            padding-top: 6px;
+        }
+
+        .audit.success { border-left: 4px solid #4caf50; }
+        .audit.fail    { border-left: 4px solid #f44336; }
+        .audit:hover { background: #fafafa; }
+        .audit {
+            border-top: 1px solid black;
+        }
+
+        .timestamp {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .ipaddress {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        summary {
+            cursor: pointer;
+        }
+
+        .audit-live-status {
+            font-weight: bold;
+        }
+
+        .audit-live-status.connected {
+            color: #2ecc71; /* green */
+        }
+
+        .audit-live-status.connecting {
+            color: #f1c40f; /* yellow */
+        }
+
+        .audit-live-status.error {
+            color: #e74c3c; /* red */
+        }
+
+        .audit-live-status.closed {
+            color: #95a5a6; /* gray */
+        }
     </style>
+
+    <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 </head>
 <body>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div id="locationModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
+    <div style="
+    background:white;
+    padding:20px;
+    max-width:500px;
+    max-height:80vh;
+    overflow-y:auto;
+    margin:5vh auto;
+    border-radius:8px;
+">
+        <hr>
 
-<h1>EventBubble Minimal Frontend</h1>
+        <input id="loc_search" placeholder="Search location (city, address, venue)">
+        <button onclick="searchLocation()">Search (OSM)</button>
+
+        <div id="loc_results" style="margin-top:8px;"></div>
+
+        <div
+                id="loc_map"
+                style="height:300px; margin:10px 0; border-radius:6px;"
+        ></div>
+
+        <hr>
+
+
+        <h3>Edit Location</h3>
+
+        <input id="loc_name" placeholder="Display name">
+        <input id="loc_street" placeholder="Street">
+        <input id="loc_city" placeholder="City">
+        <input id="loc_postal" placeholder="Postal code">
+        <input id="loc_country" placeholder="Country">
+        <input id="loc_lat" type="number" step="any" placeholder="Latitude">
+        <input id="loc_lng" type="number" step="any" placeholder="Longitude">
+
+        <hr>
+
+        <button onclick="saveLocation()">Save</button>
+        <button onclick="closeLocationEditor()">Cancel</button>
+    </div>
+</div>
+
+<h1>EventBubble Minimal Frontend v2</h1>
 
 <!-- STATUS -->
 <div id="statusBox" class="box">
     <b>Session Status:</b>
     <pre id="status">Unknown</pre>
 </div>
+<section id="loginSection">
+    <!-- LOGIN -->
+    <h2>Login</h2>
+    <div class="box">
+        <input id="login_user" placeholder="Username">
+        <input id="login_pass" type="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+    <div class="box">
+        <input id="emailToResetPassword" placeholder="Email for pw reset">
+        <button onclick="requestPasswordReset()">Request Password Reset</button>
+    </div>
+    <div class="box">
+        <input id="passwordToken" placeholder="Password Reset Token">
+        <input id="newPassword" type="password" placeholder="New Password">
+        <button onclick="resetPassword()">Reset Password</button>
+    </div>
+</section>
 
-<!-- LOGIN -->
-<h2>Login</h2>
-<div class="box">
-    <input id="login_user" placeholder="Username">
-    <input id="login_pass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-</div>
+<section id="signupSection">
+    <!-- SIGNUP -->
+    <h2>Signup</h2>
+    <div class="box">
+        <input id="signup_user" placeholder="Username">
+        <input id="signup_mail" placeholder="Email">
+        <input id="signup_pass" type="password" placeholder="Password">
+        <button onclick="signup()">Signup</button>
+    </div>
 
-<!-- SIGNUP -->
-<h2>Signup</h2>
-<div class="box">
-    <input id="signup_user" placeholder="Username">
-    <input id="signup_mail" placeholder="Email">
-    <input id="signup_pass" type="password" placeholder="Password">
-    <button onclick="signup()">Signup</button>
-</div>
+    <div class="box">
+        <input id="emailToVerify" placeholder="Email to Verify">
+        <button onclick="requestEmailVerification()">Request Token</button>
+        <input id="emailToken" placeholder="Verification Token">
+        <button onclick="verifyEmail()">Verify Token</button>
+    </div>
+</section>
 
-<div class="box">
-    <input id="emailToVerify" placeholder="Email to Verify">
-    <button onclick="requestEmailVerification()">Request Token</button>
-    <input id="emailToken" placeholder="Verification Token">
-    <button onclick="verifyEmail()">Verify Token</button>
-</div>
+<section id="sessionSection">
+    <!-- SESSION -->
+    <h2>Session</h2>
+    <div class="box">
+        <button onclick="validateSession()">Validate Session</button>
+        <button onclick="getMe()">Load Current User</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</section>
 
-<!-- SESSION -->
-<h2>Session</h2>
-<div class="box">
-    <button onclick="validateSession()">Validate Session</button>
-    <button onclick="getMe()">Load Current User</button>
-    <button onclick="logout()">Logout</button>
-</div>
+<section id="profileSection">
+    <!-- PROFILE -->
+    <h2>Me</h2>
+    <div class="box">
+        <h3>User</h3>
+        <div id="me"></div>
+    </div>
+    <div class="box">
+        <h3>Profile</h3>
+        <div id="createProfile">
+            <h3>Create Profile</h3>
+            <input id="newProfileName" placeholder="Name">
+            <textarea id="newProfileBio" placeholder="Bio"></textarea>
+            <hr>
+            <button onclick="createProfile()">Create Profile</button>
+            <small id="profileHint" style="display:block;color:#666;"></small>
+        </div>
+        <div id="updateProfile">
+            <div id="avatarBox">
+                <img id="avatarImg"
+                     src=""
+                     alt="avatar"
+                     style="max-width:150px; max-height:150px; display:none; border-radius:8px;">
+            </div>
 
-<pre id="me"></pre>
+            <input type="file" id="avatarFile" accept="image/*">
+            <button onclick="uploadAvatar()">Upload Avatar</button>
+            <button onclick="deleteAvatar()">Delete Avatar</button>
+
+            <hr>
+            <div>
+                <input type="text" id="profileName">
+                <textarea id="profileBio" placeholder="Your bio"></textarea>
+            </div>
+
+            <hr>
+            <button onclick="updateProfile()">Update</button>
+            <button style="background:#e74c3c;color:white"
+                    onclick="deleteMyProfile()">
+                Delete Profile
+            </button>
+
+        </div>
+    </div>
+</section>
 
 <!-- EVENTS -->
 <h2>Events</h2>
@@ -90,6 +272,20 @@
     <input id="event_title" placeholder="Title">
     <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
     <textarea id="event_desc" placeholder="Description"></textarea>
+    <div class="location-box" id="location_createevent" data-location="">
+        <div class="location-summary">
+            <i>No location set</i>
+        </div>
+
+        <button onclick="editLocation('location_createevent')">
+            Set / Change Location
+        </button>
+        <button onclick="clearLocation('location_createevent')">
+            Clear
+        </button>
+    </div>
+
+    <hr>
     <button onclick="createEventVS()">Create Event</button>
 </div>
 
@@ -98,6 +294,74 @@
     <button onclick="listEvents()">Reload Events</button>
     <div id="events"></div>
 </div>
+
+<!-- AUDIT LOG (ADMIN ONLY) -->
+<section id="auditlogwrapper" class="audit-wrap" style="display:none;">
+    <h2>Audit Log</h2>
+
+    <div class="box audit-filters">
+        <h3>Filters</h3>
+
+        <div class="audit-grid">
+            <label>
+                <span>User ID</span>
+                <input id="flt_userId" type="number" placeholder="User ID">
+            </label>
+
+            <label>
+                <span>Success</span>
+                <select id="flt_success">
+                    <option value="">Any</option>
+                    <option value="true">Success</option>
+                    <option value="false">Failure</option>
+                </select>
+            </label>
+
+            <label class="span-2">
+                <span>Actions</span>
+                <select id="flt_action" multiple size="6">
+                    <option value="CREATE">CREATE</option>
+                    <option value="READ">READ</option>
+                    <option value="UPDATE">UPDATE</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="SIGNUP">SIGNUP</option>
+                    <option value="LOGIN">LOGIN</option>
+                    <option value="REFRESH">REFRESH</option>
+                    <option value="INVALIDATE_TOKENS">INVALIDATE_TOKENS</option>
+                    <option value="MAIL_REQUEST">MAIL_REQUEST</option>
+                    <option value="OTHER">OTHER</option>
+                    <option value="CLEANUP_UNVERIFIED_ACCOUNTS">CLEANUP_UNVERIFIED_ACCOUNTS</option>
+                </select>
+                <small class="hint">Tip: Ctrl/⌘+click to multi-select</small>
+            </label>
+
+            <label>
+                <span>Resource Type</span>
+                <select id="flt_resourceType">
+                    <option value="">Any</option>
+                    <option>PROFILE</option>
+                    <option>USER</option>
+                    <option>EVENT</option>
+                    <option>SERVER_CONFIG</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Resource ID</span>
+                <input id="flt_resourceId" type="number" placeholder="Resource ID">
+            </label>
+        </div>
+
+        <button class="btn primary" onclick="applyAuditFilters()">Apply Filters</button>
+    </div>
+
+    <div class="box audit-live">
+        <div class="audit-live-header">
+            <h3 class="audit-live-status connecting" id="auditStreamStatus">● connecting</h3>
+        </div>
+        <div id="auditLog" class="audit-list"></div>
+    </div>
+</section>
 
 
 <script>
@@ -108,6 +372,8 @@
     // ----------------------
     let accessToken = null;
     let refreshToken = localStorage.getItem("refreshToken") || null;
+
+    let auditEventSource = null;
 
     function saveTokens(access, refresh) {
         accessToken = access;
@@ -127,10 +393,21 @@
     window.addEventListener("load", () => {
         if (refreshToken) {
             setStatus("Refresh token found — attempting auto-login...");
-            refreshAccessToken().catch(() => setStatus("Not logged in"));
+            try {
+                const data = refreshAccessToken();
+                updateAuthUi(true, data.benutzerDTO?.username);
+                getMe();
+            } catch {
+                updateAuthUi(false);
+                setStatus("Not logged in");
+            }
         } else {
+            updateAuthUi(false);
             setStatus("Not logged in");
         }
+
+        listEvents();
+        initAuditLogIfAdmin();
     });
 
     // --------------------------
@@ -154,6 +431,7 @@
                 return api(url, method, body, false);
             } catch (_) {
                 clearTokens();
+                updateAuthUi(false);
             }
         }
 
@@ -166,14 +444,38 @@
     // --------------------------
     // REFRESH TOKEN
     // --------------------------
+    let refreshPromise = null;
     async function refreshAccessToken() {
         if (!refreshToken) throw new Error("No refresh token");
 
-        const data = await api("/auth/refresh", "POST", { refreshToken }, false);
+        // 🔒 Already refreshing? Wait for it
+        if (refreshPromise) {
+            return refreshPromise;
+        }
 
-        saveTokens(data.accessToken, data.refreshToken);
-        setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+        refreshPromise = (async () => {
+            try {
+                const data = await api(
+                    "/auth/refresh",
+                    "POST",
+                    { refreshToken },
+                    false
+                );
+
+                saveTokens(data.accessToken, data.refreshToken);
+                setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+
+                restartAuditStream();
+                await getMe();
+                return data;
+            } finally {
+                refreshPromise = null;
+            }
+        })();
+
+        return refreshPromise;
     }
+
 
     function setStatus(msg) {
         document.getElementById("status").textContent = msg;
@@ -190,21 +492,46 @@
             }, false);
 
             saveTokens(data.accessToken, data.refreshToken);
-            setStatus("Logged in as: " + data.benutzerDTO.username);
+            updateAuthUi(true, data.benutzerDTO.username);
 
         } catch (e) { alert(e); }
-    }
 
-    async function verifyEmail() {
-        try{
-            const data = await api("/auth/verify-email?token="+emailToken.value, "POST", null, false);
-        }catch (e) { alert(e); }
+        await listEvents();
+        await initAuditLogIfAdmin();
+        await getMe();
     }
 
     async function requestEmailVerification() {
         let data;
         try{
             data = await api("/auth/request-email-verification?email="+emailToVerify.value, "POST", null, false);
+            alert("Verification email sent: " + JSON.stringify(data));
+        }catch (e) { alert(e); }
+    }
+
+    async function verifyEmail() {
+        let data;
+        try{
+            data = await api("/auth/verify-email?token="+emailToken.value, "POST", null, false);
+            alert("Password reset email sent: " + JSON.stringify(data));
+        }catch (e) { alert(e); }
+
+        alert(data);
+    }
+
+    async function requestPasswordReset() {
+        let data;
+        try{
+            data = await api("/auth/request-password-reset?email="+emailToResetPassword.value, "POST", null, false);
+        }catch (e) { alert(e); }
+    }
+
+    async function resetPassword() {
+        let data;
+        try{
+            const body = {newPassword: newPassword.value, token: passwordToken.value};
+            data = await api("/auth/reset-password", "POST", body, false);
+
         }catch (e) { alert(e); }
 
         alert(data);
@@ -227,7 +554,10 @@
     async function logout() {
         try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
+        updateAuthUi(false);
         setStatus("Logged out");
+        await initAuditLogIfAdmin();
+        await listEvents();
     }
 
     async function validateSession() {
@@ -248,7 +578,28 @@
             document.getElementById("me").textContent = JSON.stringify(data, null, 2);
             setStatus("Logged in as: " + data.username);
         } catch (e) { alert(e); }
+
+        await loadMyProfileIfExists();
     }
+    async function getMeSilent() {
+        try {
+            return await api("/user/me");
+        } catch {
+            return null;
+        }
+    }
+
+    function updateAuthUi(loggedIn, username = null) {
+        document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
+        document.getElementById("signupSection").style.display = loggedIn ? "none" : "block";
+        document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
+        document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
+
+        if (loggedIn && username) {
+            setStatus("Logged in as: " + username);
+        }
+    }
+
 
     // --------------------------
     // EVENTS
@@ -259,7 +610,7 @@
                 title: event_title.value.trim(),
                 description: event_desc.value.trim(),
                 termin: event_date.value ? new Date(event_date.value).toISOString() : null,
-                location: null
+                location: getLocationFromBox("location_createevent")
             };
 
             await api("/events/create", "POST", body);
@@ -276,26 +627,793 @@
         } catch (e) { alert(e); }
     }
 
+    async function updateEvent(id) {
+        if (!confirm("Update event " + id + "?")) return;
+
+        try {
+            const body = {
+                title: document.getElementById(`title_${id}`).value.trim(),
+                description: document.getElementById(`desc_${id}`).value.trim(),
+                termin: document.getElementById(`date_${id}`).value
+                    ? new Date(document.getElementById(`date_${id}`).value).toISOString()
+                    : null,
+                location: getLocationFromBox(`location_event_${id}`)
+            };
+
+            await api(`/events/${id}`, "PATCH", body);
+            alert("Event updated!");
+            await listEvents();
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+
     async function listEvents() {
         try {
             const page = await api("/events");
             const out = document.getElementById("events");
             out.innerHTML = "";
 
-            page.content.forEach(ev => {
+            const me = await getMeSilent();
+
+            for (const ev of page.content) {
                 const div = document.createElement("div");
                 div.className = "event";
-                div.innerHTML = `
-                    <b>${ev.title}</b> (ID ${ev.id})<br>
-                    By: ${ev.besitzer?.username}<br>
-                    <small>${ev.termin || "no date"}</small><br>
-                    ${ev.description || ""}<br>
-                    <button onclick="deleteEvent(${ev.id})">Delete</button>
-                `;
+
+                const ownerSnippet = await buildOwnerSnippet(ev.besitzer);
+
+                const canEdit =
+                    me &&
+                    (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+
+                if(canEdit) {
+                    div.innerHTML = `
+                        <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
+                        By: ${ownerSnippet}<br>
+                        <label>Date:</label><input id="date_${ev.id}" type="datetime-local" value="${ev.termin ? ev.termin.substring(0,16) : ""}"><br>
+                        <label>Description:</label><textarea id="desc_${ev.id}">${escapeHtml(ev.description || "")}</textarea><br>
+                        <div class="location-box" id="location_event_${ev.id}" data-location="">
+                            <div class="location-summary">
+                                <i>No location set</i>
+                            </div>
+
+                            <button onclick="editLocation('location_event_${ev.id}')">
+                                Set / Change Location
+                            </button>
+                            <button onclick="clearLocation('location_event_${ev.id}')">
+                                Clear
+                            </button>
+                        </div>
+
+                        <hr>
+                        <button onClick="deleteEvent(${ev.id})">Delete</button>
+                        <button onClick="updateEvent(${ev.id})">Update</button>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <b>${ev.title}</b> (ID ${ev.id})<br>
+                        By: ${ownerSnippet}<br>
+                        <small class="timestamp">${ev.termin || "no date"}</small><br>
+                        ${ev.description || ""}<br>
+                        <div class="location-box" id="location_event_${ev.id}" data-location="">
+                            <div class="location-summary">
+                                <i>No location set</i>
+                            </div>
+                        </div>
+                    `;
+                }
                 out.appendChild(div);
-            });
+                setLocationInBox(
+                    `location_event_${ev.id}`,
+                    ev.location
+                );
+            }
         } catch (e) { alert(e); }
     }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>"']/g, c => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c]));
+    }
+
+    async function buildOwnerSnippet(besitzer) {
+        if (!besitzer) {
+            return "<i>unknown user</i>";
+        }
+
+        const username = escapeHtml(besitzer.username);
+
+        try {
+            const hasProfile = await api(`/profiles/${besitzer.id}/exists`);
+
+            if (!hasProfile) {
+                // 👤 No profile → username only (distinct style)
+                return `<span title="No profile">@${username}</span>`;
+            }
+
+            const profile = await api(`/profiles/${besitzer.id}`);
+
+            const bio = escapeHtml(profile.bio || "")
+                .replace(/\n+/g, " • ")
+                .trim();
+
+
+            const avatar = profile.avatarURL
+                ? `<img src="${profile.avatarURL}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
+                : `<img src="https://ui-avatars.com/api/?name=${profile.name}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`;
+
+            const name = escapeHtml(profile.name || "Unnamed");
+
+
+            return `
+                <span class="user-snippet">
+                    ${avatar}
+                    <b>${name}</b>
+                    <small style="color:#666">(@${username})</small>
+                    ${bio ? `<span class="bio-tooltip">${bio}</span>` : ""}
+                </span>
+            `;
+
+        } catch (e) {
+            console.warn("Failed to load profile for user", besitzer.id, e);
+            return `<span>@${username}</span>`;
+        }
+    }
+
+
+    // --------------------------
+    // AUDIT LOG (ADMIN ONLY)
+    // --------------------------
+
+    async function initAuditLogIfAdmin() {
+        const wrapper = document.getElementById("auditlogwrapper");
+        const me = await getMeSilent();
+
+        if (!me || !me.roles.includes("ADMIN")) {
+            wrapper.style.display = "none";
+
+            // Stop existing SSE connection
+            if (auditEventSource) {
+                auditEventSource.close();
+                auditEventSource = null;
+            }
+
+            return;
+        }
+
+        wrapper.style.display = "block";
+
+        await loadLatestAuditLogs();
+        if (!auditEventSource) {
+            startAuditStream();
+        }
+    }
+
+    async function loadLatestAuditLogs() {
+        try {
+            const q = buildAuditFilterQuery();
+            const url = "/admin/audit-log?page=0&size=15" + (q ? "&" + q : "");
+
+            const resp = await api(url);
+            const div = document.getElementById("auditLog");
+
+            div.innerHTML = "";
+            resp.content.forEach(entry => {
+                div.appendChild(renderAuditEntry(entry));
+            });
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function restartAuditStream() {
+        if (auditEventSource) {
+            auditEventSource.close();
+            auditEventSource = null;
+        }
+
+        startAuditStream();
+    }
+
+
+    function startAuditStream() {
+        if (auditEventSource) return;
+
+        const q = buildAuditFilterQuery();
+        const url =
+            API +
+            "/admin/audit-log/stream?accessToken=" +
+            encodeURIComponent(accessToken) +
+            (q ? "&" + q : "");
+
+        auditEventSource = new EventSource(url);
+
+        auditEventSource.addEventListener("audit-log", event => {
+            const entry = JSON.parse(event.data);
+            appendAuditEntry(entry);
+        });
+
+        auditEventSource.onopen = () => {
+            setAuditStatus("connected", "live");
+        };
+
+        auditEventSource.onerror = () => {
+            console.warn("Audit log stream disconnected. Browser will retry…");
+            setAuditStatus("error", "disconnected");
+        };
+    }
+
+
+    function renderAuditEntry(entry) {
+        const safePayload = JSON.stringify(entry.payload);
+        let userStr = "?";
+
+        if (entry.user) {
+            let userNameSnap = "";
+            if (entry.user?.username !== entry.usernameSnapshot && entry.usernameSnapshot !== null) {
+                userNameSnap = " (damals " + entry.usernameSnapshot + ")";
+            }
+            userStr = entry.user?.username + userNameSnap;
+        }
+
+        const div = document.createElement("div");
+        div.classList.add("audit", entry.success ? "success" : "fail");
+        div.dataset.timestamp = entry.timestamp;
+
+        div.innerHTML = `
+        <details>
+            <summary>
+                <b>${entry.action}</b> durch <b>${userStr}</b>
+                an <b>${entry.resourceType} #${entry.resourceId || "-"}</b>
+                <small class="ipaddress">${entry.ipAddress}</small>
+                <small class="timestamp ago"></small>
+            </summary>
+            <small class="timestamp">(${entry.timestamp})</small>
+            <small>[${entry.id}]</small><br>
+            Endpoint: ${entry.endpoint}<br>
+            Payload: ${safePayload}
+        </details>
+    `;
+
+        // Initial render
+        div.querySelector(".ago").textContent = `• ${timeAgo(entry.timestamp)}`;
+
+        return div;
+    }
+
+    function appendAuditEntry(entry) {
+        const div = document.getElementById("auditLog");
+
+        // Insert at top
+        div.prepend(renderAuditEntry(entry));
+
+        // Keep only 5
+        while (div.children.length > 15) {
+            div.removeChild(div.lastChild);
+        }
+    }
+
+    function buildAuditFilterQuery() {
+        const params = new URLSearchParams();
+
+        if (flt_userId.value)
+            params.append("userId", flt_userId.value);
+
+        // MULTI-SELECT ACTIONS
+        const selectedActions = Array.from(flt_action.selectedOptions).map(o => o.value);
+        selectedActions.forEach(a => params.append("action", a));
+
+        if (flt_resourceType.value)
+            params.append("resourceType", flt_resourceType.value);
+
+        if (flt_resourceId.value)
+            params.append("resourceId", flt_resourceId.value);
+
+        if (flt_success.value)
+            params.append("success", flt_success.value);
+
+        return params.toString();
+    }
+
+
+    function applyAuditFilters() {
+        // Close SSE if open
+        if (auditEventSource) {
+            auditEventSource.close();
+            auditEventSource = null;
+        }
+
+        loadLatestAuditLogs();
+        startAuditStream();
+    }
+
+    const statusEl = document.getElementById("auditStreamStatus");
+    function setAuditStatus(state, text) {
+        statusEl.className = `audit-live-status ${state}`;
+        statusEl.textContent = `● ${text}`;
+    }
+
+    function timeAgo(isoTimestamp) {
+        const now = new Date();
+        const then = new Date(isoTimestamp);
+        const seconds = Math.floor((now - then) / 1000);
+
+        if (seconds < 10) return "just now";
+        if (seconds < 60) return `${seconds}s ago`;
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+
+        const weeks = Math.floor(days / 7);
+        if (weeks < 5) return `${weeks}w ago`;
+
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months}mo ago`;
+
+        const years = Math.floor(days / 365);
+        return `${years}y ago`;
+    }
+
+    setInterval(() => {
+        document.querySelectorAll(".audit[data-timestamp]").forEach(el => {
+            const ts = el.dataset.timestamp;
+            const agoEl = el.querySelector(".ago");
+            if (agoEl) {
+                agoEl.textContent = `• ${timeAgo(ts)}`;
+            }
+        });
+    }, 60_000);
+
+    function renderAvatar(url) {
+        const img = document.getElementById("avatarImg");
+        if (url) {
+            img.src = url + "?t=" + Date.now(); // cache busting
+        } else {
+            img.src = "https://ui-avatars.com/api/?name=XX";
+        }
+    }
+
+    async function uploadAvatar() {
+        const fileInput = document.getElementById("avatarFile");
+        if (!fileInput.files.length) {
+            alert("Select a file first");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        const res = await fetch(API + "/profiles/me/avatar", {
+            method: "PUT",
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            alert("Upload failed: " + await res.text());
+            return;
+        }
+
+        const updatedProfile = await res.json();
+        renderAvatar(updatedProfile.avatarURL);
+    }
+
+    async function deleteAvatar() {
+        if (!confirm("Delete avatar?")) return;
+
+        const res = await fetch(API + "/profiles/me/avatar", {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + accessToken
+            }
+        });
+
+        if (!res.ok) {
+            alert("Delete failed");
+            return;
+        }
+
+        const updatedProfile = await res.json();
+        renderAvatar(updatedProfile.avatarURL);
+    }
+
+    function setProfileUiState(hasProfile) {
+        const createBox = document.getElementById("createProfile");
+        const updateBox = document.getElementById("updateProfile");
+
+        createBox.style.display = hasProfile ? "none" : "block";
+        updateBox.style.display = hasProfile ? "block" : "none";
+    }
+
+    async function loadMyProfileIfExists() {
+        try {
+            const exists = await api("/profiles/me/exists");
+            setProfileUiState(!!exists);
+
+            if (!exists) {
+                renderAvatar(null);
+                document.getElementById("profileHint").textContent =
+                    "No profile yet. Create one to upload an avatar.";
+                return null;
+            }
+
+            const p = await api("/profiles/me");
+            document.getElementById("profileName").value = p.name || "";
+            document.getElementById("profileBio").value  = p.bio  || "";
+            renderAvatar(p.avatarURL || p.avatarUrl); // handle either casing
+            document.getElementById("profileHint").textContent = "";
+            return p;
+        } catch (e) {
+            console.error(e);
+            // If endpoint missing or backend error, don’t break the whole page
+            setProfileUiState(false);
+            return null;
+        }
+    }
+
+    async function createProfile() {
+        const name = document.getElementById("newProfileName").value.trim();
+        const bio = document.getElementById("newProfileBio").value.trim();
+
+        if (!name) {
+            alert("Name is required");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "POST", { name, bio });
+            await loadMyProfileIfExists();
+            alert("Profile created!");
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+    async function updateProfile() {
+        const name = document.getElementById("profileName").value.trim();
+        const bio  = document.getElementById("profileBio").value.trim();
+
+        if (!name) {
+            alert("Name is required");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "PATCH", { name, bio });
+            alert("Bio updated!");
+            await loadMyProfileIfExists();
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+    async function deleteMyProfile() {
+        if (!confirm("This will permanently delete your profile and avatar. Continue?")) {
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "DELETE");
+            alert("Profile deleted");
+
+            setProfileUiState(false);
+            renderAvatar(null);
+
+            document.getElementById("profileName").value = "";
+            document.getElementById("profileBio").value = "";
+
+        } catch (e) {
+            alert(e);
+        }
+    }
+
+    //LOCATION
+    let activeLocationBoxId = null;
+
+    function getLocationFromBox(boxId) {
+        const el = document.getElementById(boxId);
+        if (!el) return null;
+        const raw = el.dataset.location;
+        return raw ? JSON.parse(raw) : null;
+    }
+
+
+    function setLocationInBox(boxId, location) {
+        const el = document.getElementById(boxId);
+        if (!el) return null;
+        el.dataset.location = location ? JSON.stringify(location) : "";
+        renderLocationSummary(boxId);
+    }
+
+    function renderLocationSummary(boxId) {
+        const el = document.getElementById(boxId);
+        const summary = el.querySelector(".location-summary");
+        const loc = getLocationFromBox(boxId);
+
+        if (!loc) {
+            summary.innerHTML = "<i>No location set</i>";
+            return;
+        }
+
+        summary.innerHTML = `
+        📍 <b>${escapeHtml(loc.displayName)}</b><br>
+        ${[loc.street, loc.postalCode, loc.city].filter(Boolean).join(", ")}
+    `;
+    }
+
+    function editLocation(boxId) {
+        activeLocationBoxId = boxId;
+        document.body.classList.add("modal-open");
+
+        const existing = getLocationFromBox(boxId);
+
+        // Fill inputs (unchanged)
+        if (existing) {
+            loc_name.value   = existing.displayName || "";
+            loc_street.value = existing.street || "";
+            loc_city.value   = existing.city || "";
+            loc_postal.value = existing.postalCode || "";
+            loc_country.value= existing.country || "";
+            loc_lat.value    = existing.latitude ?? "";
+            loc_lng.value    = existing.longitude ?? "";
+        } else {
+            document.querySelectorAll("#locationModal input")
+                .forEach(i => i.value = "");
+        }
+
+        locationModal.style.display = "block";
+
+        setTimeout(() => initLocationMap(existing), 0);
+    }
+
+    function initLocationMap(existing) {
+        if (!locMap) {
+            locMap = L.map("loc_map").setView([52.52, 13.405], 13); // default Berlin
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap contributors"
+            }).addTo(locMap);
+
+            locMap.on("click", onMapClick);
+        }
+
+        if (existing?.latitude && existing?.longitude) {
+            setMarker(existing.latitude, existing.longitude);
+            locMap.setView([existing.latitude, existing.longitude], 15);
+        }
+    }
+
+    function setMarker(lat, lng) {
+        if (!locMarker) {
+            locMarker = L.marker([lat, lng], { draggable: true }).addTo(locMap);
+            locMarker.on("dragend", e => {
+                const p = e.target.getLatLng();
+                updateLatLngInputs(p.lat, p.lng);
+            });
+        } else {
+            locMarker.setLatLng([lat, lng]);
+        }
+
+        updateLatLngInputs(lat, lng);
+    }
+
+    function updateLatLngInputs(lat, lng) {
+        loc_lat.value = lat.toFixed(6);
+        loc_lng.value = lng.toFixed(6);
+    }
+
+    async function onMapClick(e) {
+        const { lat, lng } = e.latlng;
+        setMarker(lat, lng);
+
+        const url = new URL("https://nominatim.openstreetmap.org/reverse");
+        url.search = new URLSearchParams({
+            lat,
+            lon: lng,
+            format: "json",
+            addressdetails: "1"
+        });
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        applyReverseGeocode(data);
+    }
+
+    function applyReverseGeocode(r) {
+        const a = r.address || {};
+
+        loc_name.value =
+            a.attraction ||
+            a.amenity ||
+            a.road ||
+            r.display_name ||
+            "";
+
+        loc_street.value = [
+            a.road,
+            a.house_number
+        ].filter(Boolean).join(" ");
+
+        loc_city.value =
+            a.city ||
+            a.town ||
+            a.village ||
+            "";
+
+        loc_postal.value = a.postcode || "";
+        loc_country.value = a.country_code
+            ? a.country_code.toUpperCase()
+            : "";
+
+        locationModal.dataset.externalSource = "NOMINATIM";
+        locationModal.dataset.externalId = r.place_id || null;
+    }
+
+    function saveLocation() {
+        if (!activeLocationBoxId) return;
+
+        const name = loc_name.value.trim();
+        if (!name) {
+            alert("Display name required");
+            return;
+        }
+
+        const location = {
+            displayName: name,
+            street: loc_street.value.trim() || null,
+            city: loc_city.value.trim() || null,
+            postalCode: loc_postal.value.trim() || null,
+            country: loc_country.value.trim() || null,
+            latitude: loc_lat.value ? parseFloat(loc_lat.value) : null,
+            longitude: loc_lng.value ? parseFloat(loc_lng.value) : null,
+            externalSource: locationModal.dataset.externalSource || "MANUAL",
+            externalId: locationModal.dataset.externalId || null
+        };
+
+        setLocationInBox(activeLocationBoxId, location);
+
+        // cleanup
+        delete locationModal.dataset.externalSource;
+        delete locationModal.dataset.externalId;
+        loc_results.innerHTML = "";
+
+        closeLocationEditor();
+    }
+
+    function clearLocation(boxId) {
+        setLocationInBox(boxId, null);
+    }
+
+    async function searchLocation() {
+        const q = loc_search.value.trim();
+        if (!q) return;
+
+        const url = new URL("https://nominatim.openstreetmap.org/search");
+        url.search = new URLSearchParams({
+            q,
+            format: "json",
+            addressdetails: "1",
+            limit: "5"
+        });
+
+        const res = await fetch(url, {
+            headers: {
+                "Accept": "application/json"
+                // User-Agent is implicitly set by browser
+            }
+        });
+
+        const results = await res.json();
+        renderLocationResults(results);
+    }
+
+    let locMap = null;
+    let locMarker = null;
+
+    function renderLocationResults(results) {
+        const box = document.getElementById("loc_results");
+        box.innerHTML = "";
+
+        if (!results.length) {
+            box.innerHTML = "<i>No results</i>";
+            return;
+        }
+
+        results.forEach(r => {
+            const div = document.createElement("div");
+            div.style.border = "1px solid #ccc";
+            div.style.padding = "6px";
+            div.style.marginBottom = "4px";
+            div.style.cursor = "pointer";
+            div.style.background = "#fdfdfd";
+
+            div.innerHTML = `
+            <b>${escapeHtml(r.display_name)}</b><br>
+            <small>${escapeHtml(r.type || "")}</small>
+        `;
+
+            div.onclick = () => applyNominatimResult(r);
+            box.appendChild(div);
+        });
+    }
+
+    function applyNominatimResult(r) {
+        const a = r.address || {};
+
+        loc_name.value =
+            a.attraction ||
+            a.amenity ||
+            a.road ||
+            r.display_name;
+
+        loc_street.value = [
+            a.road,
+            a.house_number
+        ].filter(Boolean).join(" ") || "";
+
+        loc_city.value =
+            a.city ||
+            a.town ||
+            a.village ||
+            a.municipality ||
+            "";
+
+        loc_postal.value = a.postcode || "";
+        loc_country.value = a.country_code
+            ? a.country_code.toUpperCase()
+            : "";
+
+        loc_lat.value = r.lat;
+        loc_lng.value = r.lon;
+
+        const lat = parseFloat(r.lat);
+        const lng = parseFloat(r.lon);
+        setMarker(lat, lng);
+        locMap.setView([lat, lng], 16);
+
+        // Store external metadata temporarily on modal
+        locationModal.dataset.externalSource = "NOMINATIM";
+        locationModal.dataset.externalId = r.place_id;
+    }
+
+    function closeLocationEditor() {
+        activeLocationBoxId = null;
+        locationModal.style.display = "none";
+        document.body.classList.remove("modal-open");
+    }
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            if (locationModal.style.display === "block") {
+                closeLocationEditor();
+            }
+        }
+    });
+    locationModal.addEventListener("click", e => {
+        if (e.target === locationModal) {
+            closeLocationEditor();
+        }
+    });
+
+
 
 </script>
 </body>

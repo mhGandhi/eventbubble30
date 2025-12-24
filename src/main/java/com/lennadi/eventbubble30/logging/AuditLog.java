@@ -98,11 +98,11 @@ public class AuditLog {
         //CRUD
         CREATE, READ, UPDATE, DELETE,
         //User
-        LOGIN, REFRESH, INVALIDATE_TOKENS,
+        SIGNUP, LOGIN, REFRESH, INVALIDATE_TOKENS, MAIL_REQUEST,
         OTHER, CLEANUP_UNVERIFIED_ACCOUNTS;
 
         public static final Set<Action> CRUD = new HashSet<>(List.of(CREATE, READ, UPDATE, DELETE));
-        public static final Set<Action> AUTH = new HashSet<>(List.of(LOGIN, REFRESH, INVALIDATE_TOKENS));
+        public static final Set<Action> AUTH = new HashSet<>(List.of(SIGNUP, LOGIN, REFRESH, INVALIDATE_TOKENS, MAIL_REQUEST));
     }
 
     public enum RType {
