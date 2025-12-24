@@ -61,6 +61,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         //static (kommt dann weg iwann) todo
                         .requestMatchers("/index.html").permitAll()
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/apiDoc.yml").permitAll()
 
