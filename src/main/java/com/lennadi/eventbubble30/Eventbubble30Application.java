@@ -35,7 +35,6 @@ public class Eventbubble30Application {
 
         Captcha: Altcha o.Ä. (free und am besten self hosted)
 
-
         -> später im Frontend Admin/Mod Dashboard
         vlt kein Login erlauben wenn schon drin? (eig unnötig)
         Gelöschte Nutzer nicht Authentifizieren: Gültige Tokens für nicht existierende Benutzer sind gefährlich!
