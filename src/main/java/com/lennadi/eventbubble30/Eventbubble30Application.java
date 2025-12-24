@@ -15,6 +15,8 @@ public class Eventbubble30Application {
 
     /*todo
     Inspo:
+        Bookmarking/Going
+
         CORS
 
         change req logging
