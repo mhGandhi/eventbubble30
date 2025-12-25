@@ -2,8 +2,11 @@ package com.lennadi.eventbubble30.logging;
 
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.ProceedingJoinPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
@@ -13,7 +16,10 @@ import java.util.Set;
 public class AuditService {
     private final AuditLogRepository auditRepository;
     private final AuditLogStreamerService auditLogStreamerService;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(AuditService.class);
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(
             Benutzer benutzer,
             String ip,
@@ -41,7 +47,12 @@ public class AuditService {
         );
 
         auditRepository.save(log);
-        auditLogStreamerService.publish(log);
+
+        try {
+            auditLogStreamerService.publish(log);
+        } catch (Exception e) {
+            LOGGER.warn("Audit stream failed (ignored): {}", e.getMessage());
+        }
     }
 
     public void logSystemAction(
