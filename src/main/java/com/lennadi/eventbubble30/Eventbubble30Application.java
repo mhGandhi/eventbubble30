@@ -17,14 +17,11 @@ public class Eventbubble30Application {
     Inspo:
         Bookmarking/Going
 
-        CORS
+        embeds (events, builder for params)
 
         change req logging
 
         JacksonEntitySerializationBlocker: Dass man nd ausversehen ALLES zurückschickt
-
-        Profile: Entity getrennt von Benutzer, verbunden mit 1zu1 Beziehung, separate Endpunkte aber dennoch über
-        Id des Users identifiziert -> Bio, Name, Events
 
         Soft-Delete: Gelöschte Entitäten mit "boolean: deleted" o.Ä. flaggen + timestamp setzen um Wiederherstellung
         zu erlauben. Nach bestimmter Zeit dann löschen.
@@ -34,10 +31,6 @@ public class Eventbubble30Application {
         Moderation: Nutzer suspendieren, bannen, löschen. Beiträge melden. Moderator Ansicht für gemeldete Beiträge
 
         Captcha: Altcha o.Ä. (free und am besten self hosted)
-
-        -> später im Frontend Admin/Mod Dashboard
-        vlt kein Login erlauben wenn schon drin? (eig unnötig)
-        Gelöschte Nutzer nicht Authentifizieren: Gültige Tokens für nicht existierende Benutzer sind gefährlich!
 
         Event-Erinnerungen, Tags+Kategorien für Events, einfache Suche +Filter, Privatsphäreeinstellungen Profile+Events, Webhooks, Session Overview, MFA, Cache Layer, Telemetrie
      */
