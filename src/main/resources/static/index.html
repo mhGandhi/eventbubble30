@@ -238,10 +238,13 @@
 <h1>Eventbubble Dev-Frontend v2</h1>
 
 <!-- STATUS -->
-<div id="statusBox" class="box">
-    <b>Session Status:</b>
-    <pre id="status">Unknown</pre>
-</div>
+<section id="statusSection">
+    <div id="statusBox" class="box">
+        <b>Session Status:</b>
+        <pre id="status">Unknown</pre>
+    </div>
+</section>
+
 <section id="loginSection">
     <div class="box">
         <div class="tab-bar">
@@ -276,7 +279,6 @@
         </div>
     </div>
 </section>
-
 
 <section id="sessionSection">
     <!-- SESSION -->
@@ -334,38 +336,110 @@
     </div>
 </section>
 
-<!-- EVENTS -->
-<h2>Events</h2>
-<div class="box" id="createEvent">
-    <h3>Create Event</h3>
-    <input id="event_title" placeholder="Title">
-    <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
-    <textarea id="event_desc" placeholder="Description"></textarea>
-    <div class="location-box" id="location_createevent" data-location="">
-        <div class="location-summary">
-            <i>No location set</i>
+<section id="eventSection">
+    <h2>Events</h2>
+    <div class="box" id="createEvent">
+        <h3>Create Event</h3>
+        <input id="event_title" placeholder="Title">
+        <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
+        <textarea id="event_desc" placeholder="Description"></textarea>
+        <div class="location-box" id="location_createevent" data-location="">
+            <div class="location-summary">
+                <i>No location set</i>
+            </div>
+
+            <button onclick="editLocation('location_createevent')">
+                Set / Change Location
+            </button>
+            <button onclick="clearLocation('location_createevent')">
+                Clear
+            </button>
         </div>
 
-        <button onclick="editLocation('location_createevent')">
-            Set / Change Location
-        </button>
-        <button onclick="clearLocation('location_createevent')">
-            Clear
-        </button>
+        <hr>
+        <button onclick="createEventVS()">Create Event</button>
     </div>
 
-    <hr>
-    <button onclick="createEventVS()">Create Event</button>
-</div>
+    <div class="box">
+        <h3>All Events</h3>
+        <details class="box event-filters">
+            <summary>Filters</summary>
 
-<div class="box">
-    <h3>All Events</h3>
-    <button onclick="listEvents()">Reload Events</button>
-    <div id="events"></div>
-</div>
+            <div class="audit-grid">
+                <label>
+                    <span>Search</span>
+                    <input id="ev_q" placeholder="Title or description">
+                </label>
 
-<!-- AUDIT LOG (ADMIN ONLY) -->
-<section id="auditlogwrapper" class="audit-wrap" style="display:none;">
+                <label>
+                    <span>Owner ID</span>
+                    <input id="ev_owner" type="number" placeholder="User ID">
+                </label>
+
+                <label>
+                    <span>From</span>
+                    <input id="ev_from" type="datetime-local">
+                </label>
+
+                <label>
+                    <span>To</span>
+                    <input id="ev_to" type="datetime-local">
+                </label>
+
+                <label>
+                    <span>Order by</span>
+                    <select id="ev_orderBy">
+                        <option value="termin">Date</option>
+                        <option value="creationDate">Created</option>
+                        <option value="modificationDate">Modified</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Direction</span>
+                    <select id="ev_orderDir">
+                        <option value="asc">Asc</option>
+                        <option value="desc">Desc</option>
+                    </select>
+                </label>
+
+                <label class="span-2">
+                    <span>Near location</span>
+
+                    <div class="location-box" id="location_event_near" data-location="">
+                        <div class="location-summary">
+                            <i>No location set</i>
+                        </div>
+
+                        <button onclick="editLocation('location_event_near')">
+                            Set location
+                        </button>
+                        <button onclick="clearLocation('location_event_near')">
+                            Clear
+                        </button>
+                    </div>
+                </label>
+
+                <label>
+                    <span>Radius (km)</span>
+                    <input id="ev_near_radius" type="number" step="0.5" min="1" value="5" max="100">
+                </label>
+            </div>
+
+            <button onclick="applyEventFilters()">Apply Filters</button>
+        </details>
+
+        <button onclick="listEvents()">Reload Events</button>
+        <div id="events"></div>
+        <div class="box" id="eventPagination">
+            <button onclick="prevEventPage()">◀ Prev</button>
+            <span id="eventPageInfo"></span>
+            <button onclick="nextEventPage()">Next ▶</button>
+        </div>
+    </div>
+</section>
+
+<section id="auditSection" class="audit-wrap" style="display:none;">
     <h2>Audit Log</h2>
 
     <div class="box audit-filters">
@@ -431,7 +505,6 @@
         <div id="auditLog" class="audit-list"></div>
     </div>
 </section>
-
 
 <script>
     const API = "/api";
@@ -675,6 +748,13 @@
     // --------------------------
     // EVENTS
     // --------------------------
+    const eventState = {
+        page: 0,
+        size: 10,
+        totalPages: 0
+    };
+
+
     async function createEventVS() {
         try {
             const body = {
@@ -719,10 +799,78 @@
         }
     }
 
+    function buildEventQuery() {
+        const params = new URLSearchParams();
+
+        if (ev_q.value.trim())
+            params.append("q", ev_q.value.trim());
+
+        if (ev_owner.value)
+            params.append("owner", ev_owner.value);
+
+        if (ev_from.value)
+            params.append("from", new Date(ev_from.value).toISOString());
+
+        if (ev_to.value)
+            params.append("to", new Date(ev_to.value).toISOString());
+
+        // --- NEAR FILTER (using existing location system) ---
+        const nearLoc = getLocationFromBox("location_event_near");
+        const radius = ev_near_radius.value;
+
+        if (
+            nearLoc &&
+            nearLoc.latitude != null &&
+            nearLoc.longitude != null &&
+            radius
+        ) {
+            params.append(
+                "near",
+                `${nearLoc.latitude},${nearLoc.longitude},${radius}`
+            );
+        }
+
+        params.append("orderBy", ev_orderBy.value);
+        params.append("orderDir", ev_orderDir.value);
+        params.append("page", eventState.page);
+        params.append("size", eventState.size);
+
+        return params.toString();
+    }
+
+
+    function applyEventFilters() {
+        eventState.page = 0;
+        listEvents();
+    }
+
+    function nextEventPage() {
+        if (eventState.page + 1 >= eventState.totalPages) return;
+        eventState.page++;
+        listEvents();
+    }
+
+    function prevEventPage() {
+        if (eventState.page === 0) return;
+        eventState.page--;
+        listEvents();
+    }
+
+    function updateEventPagerButtons() {
+        document.querySelector("#eventPagination button:first-child")
+            .disabled = eventState.page === 0;
+
+        document.querySelector("#eventPagination button:last-child")
+            .disabled = eventState.page + 1 >= eventState.totalPages;
+    }
 
     async function listEvents() {
         try {
-            const page = await api("/events?size=100");
+            const q = buildEventQuery();
+            const page = await api("/events?" + q);
+
+            eventState.totalPages = page.totalPages;
+
             const out = document.getElementById("events");
             out.innerHTML = "";
 
@@ -780,7 +928,14 @@
                     ev.location
                 );
             }
-        } catch (e) { notify(e); }
+
+            document.getElementById("eventPageInfo").textContent =
+                `Page ${page.number + 1} / ${page.totalPages}`;
+        } catch (e) {
+            notify(e);
+        }
+
+        updateEventPagerButtons();
     }
 
     function escapeHtml(str) {
@@ -846,7 +1001,7 @@
     // --------------------------
 
     async function initAuditLogIfAdmin() {
-        const wrapper = document.getElementById("auditlogwrapper");
+        const wrapper = document.getElementById("auditSection");
         const me = await getMeSilent();
 
         if (!me || !me.roles.includes("ADMIN")) {
@@ -1224,11 +1379,27 @@
             return;
         }
 
+        // Compact preview for "near" filter
+        if (boxId === "location_event_near") {
+            summary.innerHTML = `
+            📍 <b>${escapeHtml(loc.displayName)}</b>
+            <small style="color:#666">
+                (${[loc.city, loc.country].filter(Boolean).join(", ")})
+            </small><br>
+            <small class="timestamp">
+                lat ${loc.latitude?.toFixed(4)}, lon ${loc.longitude?.toFixed(4)}
+            </small>
+        `;
+            return;
+        }
+
+        // default (events, editor)
         summary.innerHTML = `
         📍 <b>${escapeHtml(loc.displayName)}</b><br>
         ${[loc.street, loc.postalCode, loc.city].filter(Boolean).join(", ")}
     `;
     }
+
 
     function editLocation(boxId) {
         activeLocationBoxId = boxId;
