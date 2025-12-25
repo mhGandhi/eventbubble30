@@ -60,9 +60,9 @@ public class SecurityConfiguration {
 
                 .authorizeHttpRequests(auth -> auth
                         //static (kommt dann weg iwann) todo
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/reset-password").permitAll()
-                        .requestMatchers("/verify-email").permitAll()
+                        .requestMatchers("/","index.html").permitAll()
+                        .requestMatchers("/reset-password","/reset-password/","/reset-password/index.html").permitAll()
+                        .requestMatchers("/verify-email","/verify-email/","/verify-email/index.html").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/style.css").permitAll()
 
