@@ -1324,7 +1324,7 @@
 
         try {
             await api("/profiles/me", "PATCH", { name, bio });
-            notify("Bio updated!");
+            notify("Profile updated!");
             await loadMyProfileIfExists();
         } catch (e) {
             notify(e);
