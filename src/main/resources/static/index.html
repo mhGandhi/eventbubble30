@@ -164,6 +164,7 @@
         .notify-item.success { border-left-color: #2ecc71; }
         .notify-item.error   { border-left-color: #e74c3c; }
         .notify-item.warn    { border-left-color: #f1c40f; }
+        .notify-item.info    { border-left-color: #a5a5a5; }
 
         .notify-close {
             position: absolute;
@@ -236,14 +237,6 @@
 <div id="notifyStack" class="notify-stack"></div>
 
 <h1>Eventbubble Dev-Frontend v2</h1>
-
-<!-- STATUS -->
-<section id="statusSection">
-    <div id="statusBox" class="box">
-        <b>Session Status:</b>
-        <pre id="status">Unknown</pre>
-    </div>
-</section>
 
 <section id="loginSection">
     <div class="box">
@@ -509,6 +502,7 @@
 <script>
     const API = "/api";
 
+    //tab miniscript
     document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
             document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -541,22 +535,20 @@
     }
 
     // ----------------------
-    // AUTO SESSION CHECK
+    // START (session check)
     // ----------------------
     window.addEventListener("load", () => {
         if (refreshToken) {
-            setStatus("Refresh token found — attempting auto-login...");
+            notify("Refresh token found — attempting auto-login...", "info");
             try {
                 const data = refreshAccessToken();
                 updateAuthUi(true, data.benutzerDTO?.username);
                 getMe();
             } catch {
                 updateAuthUi(false);
-                setStatus("Not logged in");
             }
         } else {
             updateAuthUi(false);
-            setStatus("Not logged in");
         }
 
         listEvents();
@@ -616,7 +608,7 @@
                 );
 
                 saveTokens(data.accessToken, data.refreshToken);
-                setStatus(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+                notify(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
 
                 restartAuditStream();
                 await getMe();
@@ -627,11 +619,6 @@
         })();
 
         return refreshPromise;
-    }
-
-
-    function setStatus(msg) {
-        document.getElementById("status").textContent = msg;
     }
 
     // --------------------------
@@ -650,6 +637,7 @@
             await listEvents();
             await initAuditLogIfAdmin();
             await getMe();
+            notify("Welcome!");
         } catch (e) { notify(e); }
     }
 
@@ -699,18 +687,16 @@
         try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
         updateAuthUi(false);
-        setStatus("Logged out");
+        notify("Logged out!");
         await initAuditLogIfAdmin();
         await listEvents();
     }
 
-    async function validateSession() {
-        try {
-            await api("/auth/validate");
-            setStatus("Session VALID");
-        } catch (_) {
-            setStatus("Session INVALID");
-        }
+    function updateAuthUi(loggedIn, username = null) {
+        document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
+        document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
+        document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
+        document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
     }
 
     // --------------------------
@@ -720,7 +706,6 @@
         try {
             const data = await api("/user/me");
             document.getElementById("me").textContent = JSON.stringify(data, null, 2);
-            setStatus("Logged in as: " + data.username);
         } catch (e) { notify(e); }
 
         await loadMyProfileIfExists();
@@ -733,18 +718,6 @@
         }
     }
 
-    function updateAuthUi(loggedIn, username = null) {
-        document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
-        document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
-        document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
-        document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
-
-        if (loggedIn && username) {
-            setStatus("Logged in as: " + username);
-        }
-    }
-
-
     // --------------------------
     // EVENTS
     // --------------------------
@@ -753,7 +726,6 @@
         size: 10,
         totalPages: 0
     };
-
 
     async function createEventVS() {
         try {
@@ -799,6 +771,7 @@
         }
     }
 
+    //LIST
     function buildEventQuery() {
         const params = new URLSearchParams();
 
@@ -837,7 +810,6 @@
 
         return params.toString();
     }
-
 
     function applyEventFilters() {
         eventState.page = 0;
@@ -995,11 +967,9 @@
         }
     }
 
-
     // --------------------------
     // AUDIT LOG (ADMIN ONLY)
     // --------------------------
-
     async function initAuditLogIfAdmin() {
         const wrapper = document.getElementById("auditSection");
         const me = await getMeSilent();
@@ -1051,7 +1021,6 @@
         startAuditStream();
     }
 
-
     function startAuditStream() {
         if (auditEventSource) return;
 
@@ -1078,7 +1047,6 @@
             setAuditStatus("error", "disconnected");
         };
     }
-
 
     function renderAuditEntry(entry) {
         const safePayload = JSON.stringify(entry.payload);
@@ -1151,7 +1119,6 @@
         return params.toString();
     }
 
-
     function applyAuditFilters() {
         // Close SSE if open
         if (auditEventSource) {
@@ -1195,7 +1162,6 @@
         const years = Math.floor(days / 365);
         return `${years}y ago`;
     }
-
     setInterval(() => {
         document.querySelectorAll(".audit[data-timestamp]").forEach(el => {
             const ts = el.dataset.timestamp;
@@ -1206,6 +1172,9 @@
         });
     }, 60_000);
 
+    // --------------------------
+    // PROFIL
+    // --------------------------
     function renderAvatar(url) {
         const img = document.getElementById("avatarImg");
         if (url) {
@@ -1351,7 +1320,9 @@
         }
     }
 
-    //LOCATION
+    // --------------------------
+    // LOCATION
+    // --------------------------
     let activeLocationBoxId = null;
 
     function getLocationFromBox(boxId) {
@@ -1360,7 +1331,6 @@
         const raw = el.dataset.location;
         return raw ? JSON.parse(raw) : null;
     }
-
 
     function setLocationInBox(boxId, location) {
         const el = document.getElementById(boxId);
@@ -1399,7 +1369,6 @@
         ${[loc.street, loc.postalCode, loc.city].filter(Boolean).join(", ")}
     `;
     }
-
 
     function editLocation(boxId) {
         activeLocationBoxId = boxId;
@@ -1655,6 +1624,9 @@
         }
     });
 
+    // --------------------------
+    // NOTIF
+    // --------------------------
     function notify(e, status = null) {
         const stack = document.getElementById("notifyStack");
 
@@ -1716,8 +1688,6 @@
 
         stack.prepend(div);
     }
-
-
 
 </script>
 </body>
