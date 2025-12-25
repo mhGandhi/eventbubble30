@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EventBubble Minimal Frontend (JWT Version)</title>
+    <title>Eventbubble</title>
     <link rel="stylesheet" href="/style.css">
     <style>
         .tab-bar {
@@ -212,22 +212,15 @@
     border-radius:8px;
 ">
         <hr>
-
         <input id="loc_search" placeholder="Search location (city, address, venue)">
         <button onclick="searchLocation()">Search (OSM)</button>
-
         <div id="loc_results" style="margin-top:8px;"></div>
-
         <div
                 id="loc_map"
                 style="height:300px; margin:10px 0; border-radius:6px;"
         ></div>
-
         <hr>
-
-
         <h3>Edit Location</h3>
-
         <input id="loc_name" placeholder="Display name">
         <input id="loc_street" placeholder="Street">
         <input id="loc_city" placeholder="City">
@@ -235,16 +228,14 @@
         <input id="loc_country" placeholder="Country">
         <input id="loc_lat" type="number" step="any" placeholder="Latitude">
         <input id="loc_lng" type="number" step="any" placeholder="Longitude">
-
         <hr>
-
         <button onclick="saveLocation()">Save</button>
         <button onclick="closeLocationEditor()">Cancel</button>
     </div>
 </div>
 <div id="notifyStack" class="notify-stack"></div>
 
-<h1>EventBubble Minimal Frontend v2</h1>
+<h1>Eventbubble Dev-Frontend v2</h1>
 
 <!-- STATUS -->
 <div id="statusBox" class="box">
