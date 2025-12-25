@@ -146,11 +146,6 @@
         <input id="emailToResetPassword" placeholder="Email for pw reset">
         <button onclick="requestPasswordReset()">Request Password Reset</button>
     </div>
-    <div class="box">
-        <input id="passwordToken" placeholder="Password Reset Token">
-        <input id="newPassword" type="password" placeholder="New Password">
-        <button onclick="resetPassword()">Reset Password</button>
-    </div>
 </section>
 
 <section id="signupSection">
@@ -166,8 +161,6 @@
     <div class="box">
         <input id="emailToVerify" placeholder="Email to Verify">
         <button onclick="requestEmailVerification()">Request Token</button>
-        <input id="emailToken" placeholder="Verification Token">
-        <button onclick="verifyEmail()">Verify Token</button>
     </div>
 </section>
 
@@ -463,22 +456,15 @@
         await getMe();
     }
 
-    async function requestEmailVerification() {
+    async function requestEmailVerification(email = null) {
+        if(email===null){
+            email=emailToVerify.value;
+        }
         let data;
         try{
-            data = await api("/auth/request-email-verification?email="+emailToVerify.value, "POST", null, false);
+            data = await api("/auth/request-email-verification?email="+email, "POST", null, false);
             alert("Verification email sent: " + JSON.stringify(data));
         }catch (e) { alert(e); }
-    }
-
-    async function verifyEmail() {
-        let data;
-        try{
-            data = await api("/auth/verify-email?token="+emailToken.value, "POST", null, false);
-            alert("Password reset email sent: " + JSON.stringify(data));
-        }catch (e) { alert(e); }
-
-        alert(data);
     }
 
     async function requestPasswordReset() {
@@ -486,17 +472,6 @@
         try{
             data = await api("/auth/request-password-reset?email="+emailToResetPassword.value, "POST", null, false);
         }catch (e) { alert(e); }
-    }
-
-    async function resetPassword() {
-        let data;
-        try{
-            const body = {newPassword: newPassword.value, token: passwordToken.value};
-            data = await api("/auth/reset-password", "POST", body, false);
-
-        }catch (e) { alert(e); }
-
-        alert(data);
     }
 
     async function signup() {
@@ -510,6 +485,7 @@
 
             const res = await api("/auth/signup", "POST", body);
             alert("Created: " + JSON.stringify(res, null, 2));
+            await requestEmailVerification(signup_mail.value);
         } catch (e) { alert(e); }
     }
 
