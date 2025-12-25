@@ -569,7 +569,7 @@
         });
 
         // Unauthorized? Try refresh once
-        if (res.status === 401 && retry && refreshToken) {
+        if (res.status === 419 && retry && refreshToken) {
             try {
                 await refreshAccessToken();
                 return api(url, method, body, false);
