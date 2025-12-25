@@ -539,7 +539,6 @@
     // ----------------------
     window.addEventListener("load", () => {
         if (refreshToken) {
-            notify("Refresh token found — attempting auto-login...", "info");
             try {
                 const data = refreshAccessToken();
                 updateAuthUi(true, data.benutzerDTO?.username);
@@ -572,7 +571,6 @@
         // Unauthorized? Try refresh once
         if (res.status === 401 && retry && refreshToken) {
             try {
-                notify("Not authorized. Refreshing & Retrying once.", "info")
                 await refreshAccessToken();
                 return api(url, method, body, false);
             } catch (e) {
@@ -592,14 +590,15 @@
     // --------------------------
     let refreshPromise = null;
     async function refreshAccessToken() {
+        //Already refreshing? Wait for it
+        if (refreshPromise) {
+            return refreshPromise;
+        }
+
+        notify("Refreshing access token...", "info");
         if (!refreshToken){
             notify("No refresh Token (log in again)", "error")
             return;
-        }
-
-        // 🔒 Already refreshing? Wait for it
-        if (refreshPromise) {
-            return refreshPromise;
         }
 
         refreshPromise = (async () => {
