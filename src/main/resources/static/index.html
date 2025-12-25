@@ -1109,19 +1109,15 @@
         const formData = new FormData();
         formData.append("file", fileInput.files[0]);
 
-        const res = await fetch(API + "/profiles/me/avatar", {
-            method: "PUT",
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            },
-            body: formData
-        });
-
-        if (!res.ok) {
-            notify("Upload failed: " + await res.text(), "error");
+        let res;
+        try{
+            res = await api("/profiles/me/avatar", "PUT", formData);
+        }catch(e){
+            notify(e);
             return;
         }
 
+        notify("updated avatar", "success");
         const updatedProfile = await res.json();
         renderAvatar(updatedProfile.avatarURL);
     }
@@ -1136,7 +1132,7 @@
             notify(e);
             return;
         }
-
+        notify("Deleted Avatar.", "success");
         const updatedProfile = await res.json();
         renderAvatar(updatedProfile.avatarURL);
     }
