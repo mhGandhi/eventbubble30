@@ -19,7 +19,6 @@ import java.net.URI;
 
 import static com.lennadi.eventbubble30.logging.AuditLog.Action.UPDATE;
 
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/user")
 @RestController
 @RequiredArgsConstructor

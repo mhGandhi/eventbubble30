@@ -37,7 +37,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Slf4j
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

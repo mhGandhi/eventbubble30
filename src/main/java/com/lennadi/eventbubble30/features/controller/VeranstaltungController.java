@@ -20,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.time.Instant;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor

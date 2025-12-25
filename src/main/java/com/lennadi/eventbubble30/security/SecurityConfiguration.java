@@ -59,10 +59,13 @@ public class SecurityConfiguration {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+                        //options
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         //static (kommt dann weg iwann) todo
                         .requestMatchers("/","index.html").permitAll()
-                        .requestMatchers("/reset-password","/reset-password/","/reset-password/index.html").permitAll()
-                        .requestMatchers("/verify-email","/verify-email/","/verify-email/index.html").permitAll()
+                        .requestMatchers("/reset-password","/reset-password/index.html").permitAll()
+                        .requestMatchers("/verify-email","/verify-email/index.html").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/style.css").permitAll()
 
@@ -175,11 +178,15 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {//todo checken
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));          // alle Origins
-        config.setAllowedMethods(List.of("GET", "POST", "PUT",
-                "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);                      // zum Testen einfacher
+        config.setAllowedOrigins(List.of(
+                "https://eventbubble.eu",
+                "https://www.eventbubble.eu",
+                "https://admin.eventbubble.eu",
+                "https://moderation.eventbubble.eu"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
