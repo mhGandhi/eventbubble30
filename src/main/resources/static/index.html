@@ -572,11 +572,12 @@
         // Unauthorized? Try refresh once
         if (res.status === 401 && retry && refreshToken) {
             try {
+                notify("Not authorized. Refreshing & Retrying once.", "info")
                 await refreshAccessToken();
                 return api(url, method, body, false);
-            } catch (_) {
-                clearTokens();
-                updateAuthUi(false);
+            } catch (e) {
+                notify(e);
+                await logout();
             }
         }
 
@@ -591,7 +592,10 @@
     // --------------------------
     let refreshPromise = null;
     async function refreshAccessToken() {
-        if (!refreshToken) throw new Error("No refresh token");
+        if (!refreshToken){
+            notify("No refresh Token (log in again)", "error")
+            return;
+        }
 
         // 🔒 Already refreshing? Wait for it
         if (refreshPromise) {
@@ -613,6 +617,8 @@
                 restartAuditStream();
                 await getMe();
                 return data;
+            } catch(e){
+                notify(e);
             } finally {
                 refreshPromise = null;
             }
@@ -676,7 +682,7 @@
                 captchaToken: "dummy-test"
             };
 
-            const res = await api("/auth/signup", "POST", body);
+            const res = await api("/auth/signup", "POST", body, false);
             notify("Created: " + JSON.stringify(res, null, 2));
             await requestEmailVerification(signup_mail.value);
             document.querySelector('[data-tab="loginTab"]').click();
@@ -1218,15 +1224,11 @@
     async function deleteAvatar() {
         if (!confirm("Delete avatar?")) return;
 
-        const res = await fetch(API + "/profiles/me/avatar", {
-            method: "DELETE",
-            headers: {
-                "Authorization": "Bearer " + accessToken
-            }
-        });
-
-        if (!res.ok) {
-            notify("Delete failed", "error");
+        let res;
+        try{
+            res = await api("/profiles/me/avatar", "DELETE");
+        }catch(e){
+            notify(e);
             return;
         }
 
