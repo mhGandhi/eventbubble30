@@ -279,6 +279,7 @@
     <div class="box">
         <button onclick="getMe()">Reload Current User</button>
         <button onclick="logout()">Logout</button>
+        <button onclick="logoutEverywhere()">Logout Everywhere</button>
     </div>
 </section>
 
@@ -683,12 +684,16 @@
     }
 
     async function logout() {
-        try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         clearTokens();
         updateAuthUi(false);
         notify("Logged out!");
         await initAuditLogIfAdmin();
         await listEvents();
+    }
+
+    async function logoutEverywhere() {
+        try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
+        await logout();
     }
 
     function updateAuthUi(loggedIn, username = null) {
