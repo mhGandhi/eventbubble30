@@ -184,7 +184,7 @@ public class SecurityConfiguration {
                 "https://admin.eventbubble.eu",
                 "https://moderation.eventbubble.eu"
         ));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization","Content-Type"));
         config.setAllowCredentials(true);
 
