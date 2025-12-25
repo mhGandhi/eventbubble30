@@ -5,6 +5,39 @@
     <title>EventBubble Minimal Frontend (JWT Version)</title>
     <link rel="stylesheet" href="/style.css">
     <style>
+        .tab-bar {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            padding: 10px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: #f5f5f5;
+        }
+
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+
         .box {
             border: 1px solid #ccc;
             padding: 15px;
@@ -76,6 +109,89 @@
         .audit-live-status.closed {
             color: #95a5a6; /* gray */
         }
+
+        .notify-stack {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            width: 420px;
+            max-width: calc(100vw - 32px);
+            z-index: 10000;
+        }
+
+        .notify-item {
+            background: #eee;
+            color: #222;
+            border-left: 6px solid #999;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            font-family: monospace;
+            font-size: 13px;
+            position: relative;
+            white-space: pre-wrap;
+            word-break: break-word;
+            transition: opacity 0.3s ease;
+        }
+
+        .notify-item.expired {
+            opacity: 0.55;
+        }
+
+        .notify-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: #bbb;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            transform-origin: left;
+            animation: notify-expire 5s linear forwards;
+        }
+
+        @keyframes notify-expire {
+            from {
+                transform: scaleX(1);
+            }
+            to {
+                transform: scaleX(0);
+            }
+        }
+
+        .notify-item.success { border-left-color: #2ecc71; }
+        .notify-item.error   { border-left-color: #e74c3c; }
+        .notify-item.warn    { border-left-color: #f1c40f; }
+
+        .notify-close {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            line-height: 1;
+
+            color: #666;
+            border-radius: 50%;
+        }
+
+        .notify-close:hover {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.12);
+        }
+
+
     </style>
 
     <link
@@ -126,6 +242,7 @@
         <button onclick="closeLocationEditor()">Cancel</button>
     </div>
 </div>
+<div id="notifyStack" class="notify-stack"></div>
 
 <h1>EventBubble Minimal Frontend v2</h1>
 
@@ -135,34 +252,40 @@
     <pre id="status">Unknown</pre>
 </div>
 <section id="loginSection">
-    <!-- LOGIN -->
-    <h2>Login</h2>
     <div class="box">
-        <input id="login_user" placeholder="Username">
-        <input id="login_pass" type="password" placeholder="Password">
-        <button onclick="login()">Login</button>
-    </div>
-    <div class="box">
-        <input id="emailToResetPassword" placeholder="Email for pw reset">
-        <button onclick="requestPasswordReset()">Request Password Reset</button>
+        <div class="tab-bar">
+            <button class="tab active" data-tab="loginTab">Login</button>
+            <button class="tab" data-tab="signupTab">Signup</button>
+        </div>
+        <div id="loginTab" class="tab-content active">
+            <!-- LOGIN -->
+            <div class="box">
+                <input id="login_user" placeholder="Username">
+                <input id="login_pass" type="password" placeholder="Password">
+                <button onclick="login()">Login</button>
+            </div>
+            <div class="box">
+                <input id="emailToResetPassword" placeholder="Email for pw reset">
+                <button onclick="requestPasswordReset()">Request Password Reset</button>
+            </div>
+        </div>
+        <div id="signupTab" class="tab-content">
+            <!-- SIGNUP -->
+            <div class="box">
+                <input id="signup_user" placeholder="Username">
+                <input id="signup_mail" placeholder="Email">
+                <input id="signup_pass" type="password" placeholder="Password">
+                <button onclick="signup()">Signup</button>
+            </div>
+
+            <div class="box">
+                <input id="emailToVerify" placeholder="Email to Verify">
+                <button onclick="requestEmailVerification()">Request Token</button>
+            </div>
+        </div>
     </div>
 </section>
 
-<section id="signupSection">
-    <!-- SIGNUP -->
-    <h2>Signup</h2>
-    <div class="box">
-        <input id="signup_user" placeholder="Username">
-        <input id="signup_mail" placeholder="Email">
-        <input id="signup_pass" type="password" placeholder="Password">
-        <button onclick="signup()">Signup</button>
-    </div>
-
-    <div class="box">
-        <input id="emailToVerify" placeholder="Email to Verify">
-        <button onclick="requestEmailVerification()">Request Token</button>
-    </div>
-</section>
 
 <section id="sessionSection">
     <!-- SESSION -->
@@ -322,6 +445,17 @@
 <script>
     const API = "/api";
 
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+            tab.classList.add("active");
+            document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+    });
+
+
     // ----------------------
     // JWT STORAGE
     // ----------------------
@@ -449,29 +583,36 @@
             saveTokens(data.accessToken, data.refreshToken);
             updateAuthUi(true, data.benutzerDTO.username);
 
-        } catch (e) { alert(e); }
-
-        await listEvents();
-        await initAuditLogIfAdmin();
-        await getMe();
+            await listEvents();
+            await initAuditLogIfAdmin();
+            await getMe();
+        } catch (e) { notify(e); }
     }
 
     async function requestEmailVerification(email = null) {
         if(email===null){
             email=emailToVerify.value;
         }
-        let data;
+        if (!email || email.trim() === "") {
+            notify("Please enter the email of the account you want to verify", "warn");
+            return;
+        }
         try{
-            data = await api("/auth/request-email-verification?email="+email, "POST", null, false);
-            alert("Verification email sent: " + JSON.stringify(data));
-        }catch (e) { alert(e); }
+            await api("/auth/request-email-verification?email="+encodeURIComponent(email), "POST", null, false);
+            notify("Verification email requested for \""+email+"\"");
+        }catch (e) { notify(e); }
     }
 
     async function requestPasswordReset() {
-        let data;
+        const email =emailToResetPassword.value;
+        if (!email || email.trim() === "") {
+            notify("Please enter the email of the account you want to reset the password of", "warn");
+            return;
+        }
         try{
-            data = await api("/auth/request-password-reset?email="+emailToResetPassword.value, "POST", null, false);
-        }catch (e) { alert(e); }
+            await api("/auth/request-password-reset?email="+email, "POST", null, false);
+            notify("Password Reset requested for \""+email+"\"");
+        }catch (e) { notify(e); }
     }
 
     async function signup() {
@@ -484,9 +625,10 @@
             };
 
             const res = await api("/auth/signup", "POST", body);
-            alert("Created: " + JSON.stringify(res, null, 2));
+            notify("Created: " + JSON.stringify(res, null, 2));
             await requestEmailVerification(signup_mail.value);
-        } catch (e) { alert(e); }
+            document.querySelector('[data-tab="loginTab"]').click();
+        } catch (e) { notify(e); }
     }
 
     async function logout() {
@@ -515,7 +657,7 @@
             const data = await api("/user/me");
             document.getElementById("me").textContent = JSON.stringify(data, null, 2);
             setStatus("Logged in as: " + data.username);
-        } catch (e) { alert(e); }
+        } catch (e) { notify(e); }
 
         await loadMyProfileIfExists();
     }
@@ -529,7 +671,6 @@
 
     function updateAuthUi(loggedIn, username = null) {
         document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
-        document.getElementById("signupSection").style.display = loggedIn ? "none" : "block";
         document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
         document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
         document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
@@ -553,9 +694,9 @@
             };
 
             await api("/events/create", "POST", body);
-            alert("Event created!");
+            notify("Event created!");
             await listEvents();
-        } catch (e) { alert(e); }
+        } catch (e) { notify(e); }
     }
 
     async function deleteEvent(id) {
@@ -563,7 +704,7 @@
         try {
             await api("/events/" + id, "DELETE");
             await listEvents();
-        } catch (e) { alert(e); }
+        } catch (e) { notify(e); }
     }
 
     async function updateEvent(id) {
@@ -580,10 +721,10 @@
             };
 
             await api(`/events/${id}`, "PATCH", body);
-            alert("Event updated!");
+            notify("Event updated!");
             await listEvents();
         } catch (e) {
-            alert(e);
+            notify(e);
         }
     }
 
@@ -648,7 +789,7 @@
                     ev.location
                 );
             }
-        } catch (e) { alert(e); }
+        } catch (e) { notify(e); }
     }
 
     function escapeHtml(str) {
@@ -931,7 +1072,7 @@
     async function uploadAvatar() {
         const fileInput = document.getElementById("avatarFile");
         if (!fileInput.files.length) {
-            alert("Select a file first");
+            notify("Select a file first", "warn");
             return;
         }
 
@@ -947,7 +1088,7 @@
         });
 
         if (!res.ok) {
-            alert("Upload failed: " + await res.text());
+            notify("Upload failed: " + await res.text(), "error");
             return;
         }
 
@@ -966,7 +1107,7 @@
         });
 
         if (!res.ok) {
-            alert("Delete failed");
+            notify("Delete failed", "error");
             return;
         }
 
@@ -1013,16 +1154,16 @@
         const bio = document.getElementById("newProfileBio").value.trim();
 
         if (!name) {
-            alert("Name is required");
+            notify("Name is required", "warn");
             return;
         }
 
         try {
             await api("/profiles/me", "POST", { name, bio });
             await loadMyProfileIfExists();
-            alert("Profile created!");
+            notify("Profile created!");
         } catch (e) {
-            alert(e);
+            notify(e);
         }
     }
 
@@ -1031,16 +1172,16 @@
         const bio  = document.getElementById("profileBio").value.trim();
 
         if (!name) {
-            alert("Name is required");
+            notify("Name is required", "warn");
             return;
         }
 
         try {
             await api("/profiles/me", "PATCH", { name, bio });
-            alert("Bio updated!");
+            notify("Bio updated!");
             await loadMyProfileIfExists();
         } catch (e) {
-            alert(e);
+            notify(e);
         }
     }
 
@@ -1051,7 +1192,7 @@
 
         try {
             await api("/profiles/me", "DELETE");
-            alert("Profile deleted");
+            notify("Profile deleted");
 
             setProfileUiState(false);
             renderAvatar(null);
@@ -1060,7 +1201,7 @@
             document.getElementById("profileBio").value = "";
 
         } catch (e) {
-            alert(e);
+            notify(e);
         }
     }
 
@@ -1212,7 +1353,7 @@
 
         const name = loc_name.value.trim();
         if (!name) {
-            alert("Display name required");
+            notify("Display name required", "warn");
             return;
         }
 
@@ -1351,6 +1492,68 @@
             closeLocationEditor();
         }
     });
+
+    function notify(e, status = null) {
+        const stack = document.getElementById("notifyStack");
+
+        const div = document.createElement("div");
+        div.className = "notify-item";
+
+        let text = "";
+        let type = "success";
+
+        //Extract text
+        if (e instanceof Error) {
+            text = e.message || String(e);
+
+            const match = text.match(/HTTP\s(\d+)/);
+            if (match) {
+                const code = parseInt(match[1], 10);
+                if (code >= 500) type = "error";
+                else if (code >= 400) type = "warn";
+            } else {
+                type = "error";
+            }
+        } else {
+            text = typeof e === "string"
+                ? e
+                : JSON.stringify(e, null, 2);
+        }
+
+        //Explicit override always wins
+        if (status) {
+            type = status;
+        }
+
+        //Console logging (always)
+        if (type === "error") {
+            console.error("[notify]", text);
+        } else if (type === "warn") {
+            console.warn("[notify]", text);
+        } else {
+            console.log("[notify]", text);
+        }
+
+        //Render notification
+        div.classList.add(type);
+        div.textContent = text;
+
+        const close = document.createElement("span");
+        close.className = "notify-close";
+        close.textContent = "×";
+        close.onclick = () => div.remove();
+
+        div.appendChild(close);
+
+        const progress = document.createElement("div");
+        progress.className = "notify-progress";
+        div.appendChild(progress);
+        setTimeout(() => {
+            div.classList.add("expired");
+        }, 5000);
+
+        stack.prepend(div);
+    }
 
 
 
