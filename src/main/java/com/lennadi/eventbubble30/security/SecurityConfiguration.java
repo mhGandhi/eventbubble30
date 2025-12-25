@@ -68,6 +68,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/verify-email","/verify-email/index.html").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/style.css").permitAll()
+                        .requestMatchers("/base.js").permitAll()
+
 
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
