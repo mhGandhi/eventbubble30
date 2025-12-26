@@ -662,7 +662,7 @@
         return canEdit ? renderEditableEvent(ev, ownerSnippet) : renderReadOnlyEvent(ev, ownerSnippet);
     }
 
-    function renderEditableEvent(){
+    function renderEditableEvent(ev){
         const div = document.createElement("div");
         div.className = "event";
 
@@ -692,7 +692,7 @@
         return div;
     }
 
-    function renderReadOnlyEvent(){
+    function renderReadOnlyEvent(ev){
         const div = document.createElement("div");
         div.className = "event";
 
