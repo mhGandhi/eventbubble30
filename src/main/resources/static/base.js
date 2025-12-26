@@ -28,18 +28,22 @@ async function api(url, method = "GET", body = null, retry = true) {
     });
 
     // Unauthorized? Try refresh once
-    if (res.status === 419 && retry && refreshToken) {
+    if (retry && res.status === 419 && refreshToken) {
         try {
             await refreshAccessToken();
             return api(url, method, body, false);
         } catch (e) {
             notify(e);
-            await logout();
+            EventBubbleBus.dispatchEvent(
+                new CustomEvent("auth:refresh_error")
+            );
         }
     }
 
     const text = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${text}`);
+    }
     try { return JSON.parse(text); }
     catch { return text; }
 }
@@ -126,7 +130,7 @@ function getNotifyStack() {
     return stack;
 }
 
-function notify(e, status = null) {
+function notify(e, status = null, expire = false) {
     const stack = getNotifyStack();
 
     const div = document.createElement("div");
@@ -181,9 +185,19 @@ function notify(e, status = null) {
     const progress = document.createElement("div");
     progress.className = "notify-progress";
     div.appendChild(progress);
-    setTimeout(() => {
-        div.classList.add("expired");
-    }, 5000);
+    if(expire){
+        setTimeout(() => {
+            div.classList.add("deleted");
+        }, 5000);
+
+        setTimeout(() => {
+            div.remove();
+        }, 6000);
+    }else{
+        setTimeout(() => {
+            div.classList.add("expired");
+        }, 5000);
+    }
 
     stack.prepend(div);
 }
@@ -286,3 +300,5 @@ function stopTimeAgoRefresh() {
     clearInterval(timeAgoIntervalId);
     timeAgoIntervalId = null;
 }
+
+
