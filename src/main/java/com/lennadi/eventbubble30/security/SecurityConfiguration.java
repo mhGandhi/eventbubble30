@@ -62,14 +62,20 @@ public class SecurityConfiguration {
                         //options
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        //static (kommt dann weg iwann) todo
-                        .requestMatchers("/","index.html").permitAll()
-                        .requestMatchers("/reset-password","/reset-password/index.html").permitAll()
-                        .requestMatchers("/verify-email","/verify-email/index.html").permitAll()
-                        .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers("/style.css").permitAll()
-                        .requestMatchers("/base.js").permitAll()
-
+                        //static
+                        .requestMatchers("/error","/index").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/",
+                                "/reset-password",
+                                "/verify-email"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/favicon.ico",
+                                "/style.css",
+                                "/base.js"
+                        ).permitAll()
 
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
