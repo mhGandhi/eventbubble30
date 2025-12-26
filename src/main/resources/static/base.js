@@ -1,3 +1,6 @@
+const API = "/api";
+window.EventBubbleBus = new EventTarget();
+
 async function bootstrapSession({ onAuthenticated, onAnonymous }) {
     if (hasRefreshToken()) {
         try {
@@ -8,10 +11,6 @@ async function bootstrapSession({ onAuthenticated, onAnonymous }) {
     }
     onAnonymous?.();
 }
-
-
-const API = "/api";
-window.EventBubbleBus = new EventTarget();
 
 // --------------------------
 // F E T C H   W R A P P E R
