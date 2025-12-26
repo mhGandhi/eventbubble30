@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -90,7 +91,7 @@ public class AdminController {
 
     }
 
-    @GetMapping(value = "/audit-log/stream", produces = "text/event-stream")
+    @GetMapping(value = "/audit-log/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamAuditLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,

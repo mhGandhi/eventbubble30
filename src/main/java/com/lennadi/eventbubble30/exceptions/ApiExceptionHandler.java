@@ -16,8 +16,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+@RestControllerAdvice(basePackages = "com.lennadi.eventbubble30.features.controller")
+public class ApiExceptionHandler {
 
     // --- Helper --------------------------------------------------------------
 

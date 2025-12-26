@@ -2,22 +2,16 @@ package com.lennadi.eventbubble30.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.exceptions.ApiErrorResponse;
-import com.lennadi.eventbubble30.exceptions.ForbiddenException;
-import com.lennadi.eventbubble30.exceptions.UnauthorizedException;
 import com.lennadi.eventbubble30.filter.JwtAuthFilter;
 import com.lennadi.eventbubble30.filter.LastSeenFilter;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -27,20 +21,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Configuration
@@ -52,40 +41,21 @@ public class SecurityConfiguration {
     private final ObjectMapper objectMapper;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
+    @Order(1)
+    public SecurityFilterChain apiFilterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
         http
+                .securityMatcher("/api/**")
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        //options
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        //static
-                        .requestMatchers("/error","/index").permitAll()
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/",
-                                "/reset-password",
-                                "/verify-email"
-                        ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/favicon.ico",
-                                "/style.css",
-                                "/base.js"
-                        ).permitAll()
-
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/audit-log/stream").hasRole("ADMIN")
 
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        //media
-                        .requestMatchers("/file/**").permitAll()
 
                         //user
                         .requestMatchers("/api/user/**").authenticated()
@@ -112,7 +82,48 @@ public class SecurityConfiguration {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(lastSeenFilter, JwtAuthFilter.class);
-                ;
+        ;
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain htmlFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(auth -> auth//todo eif permit all?
+                        //options
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        //static
+                        .requestMatchers("/error","/index").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/",
+                                "/reset-password",
+                                "/verify-email"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/favicon.ico",
+                                "/style.css",
+                                "/base.js"
+                        ).permitAll()
+
+                        //media
+                        .requestMatchers("/file/**").permitAll()
+
+                        .anyRequest().permitAll()//für 404 ig
+                )
+
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+        ;
 
         return http.build();
     }

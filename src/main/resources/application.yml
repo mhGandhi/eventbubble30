@@ -6,14 +6,16 @@ server:
   error:
     include-stacktrace: never
     include-exception: false
-    include-message: always
+    include-message: never
     whitelabel:
-      enabled=true:
+      enabled: false
 spring:
   profiles:
     active: keinCaptcha, EMAIL_dummy, memoryStorage
   application:
     name: "eventbubble30"
+  main:
+    web-application-type: servlet
 app:
   jwt:
     secret: ${JWT_SECRET}
