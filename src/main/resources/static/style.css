@@ -159,3 +159,14 @@ summary {
     color: #e74c3c;
     background: rgba(231, 76, 60, 0.12);
 }
+
+.timestamp {
+    font-family: monospace;
+    font-size: 12px;
+    color: #666;
+}
+.ipaddress {
+    font-family: monospace;
+    font-size: 12px;
+    color: #666;
+}
