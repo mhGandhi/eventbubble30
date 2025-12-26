@@ -2,13 +2,10 @@ async function bootstrapSession({ onAuthenticated, onAnonymous }) {
     if (hasRefreshToken()) {
         try {
             await refreshAccessToken();
-            updateAuthUi(true);
-            await refreshMeDisplay();
             onAuthenticated?.();
             return;
         } catch {}
     }
-    updateAuthUi(false);
     onAnonymous?.();
 }
 
