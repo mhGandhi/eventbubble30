@@ -603,6 +603,10 @@
         document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
     }
 
+    EventBubbleBus.addEventListener("auth:refresh_error", () => {
+        logout();
+    });
+
     // --------------------------
     // USER
     // --------------------------

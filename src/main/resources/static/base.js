@@ -85,6 +85,9 @@ async function refreshAccessToken() {
 
             return data;
         } catch(e){
+            EventBubbleBus.dispatchEvent(
+                new CustomEvent("auth:refresh_error")
+            );
             notify(e);
         } finally {
             refreshPromise = null;
