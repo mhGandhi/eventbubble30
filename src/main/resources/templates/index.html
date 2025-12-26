@@ -277,7 +277,7 @@
     <!-- SESSION -->
     <h2>Session</h2>
     <div class="box">
-        <button onclick="refreshMe()">Reload Current User</button>
+        <button onclick="refreshMeDisplay()">Reload Current User</button>
         <button onclick="logout()">Logout</button>
         <button onclick="logoutEverywhere()">Logout Everywhere</button>
     </div>
@@ -504,20 +504,18 @@
     // START (session check)
     // ----------------------
     window.addEventListener("load", () => {
-        if (hasRefreshToken()) {
-            try {
-                refreshAccessToken();
+        bootstrapSession({
+            onAuthenticated:async()=> {
                 updateAuthUi(true);
-                refreshMe();
-            } catch {
+                await refreshMeDisplay();
+                await listEvents();
+                await initAuditLogIfAdmin();
+            },
+            onAnonymous:async()=> {
                 updateAuthUi(false);
+                await listEvents();
             }
-        } else {
-            updateAuthUi(false);
-        }
-
-        listEvents();
-        initAuditLogIfAdmin();
+        });
     });
 
     // --------------------------
@@ -535,7 +533,7 @@
 
             await listEvents();
             await initAuditLogIfAdmin();
-            await refreshMe();
+            await refreshMeDisplay();
             notify("Welcome "+data.benutzerDTO.username+"!");
         } catch (e) { notify(e); }
     }
@@ -609,7 +607,7 @@
     // --------------------------
     // USER
     // --------------------------
-    async function refreshMe() {
+    async function refreshMeDisplay() {
         try {
             const data = await getMe();
             document.getElementById("me").textContent = JSON.stringify(data, null, 2);
@@ -619,7 +617,7 @@
         await loadMyProfileIfExists();
     }
     EventBubbleBus.addEventListener("auth:refreshed", async () => {
-        await refreshMe();
+        await refreshMeDisplay();
     });
 
 
@@ -746,6 +744,15 @@
             const q = buildEventQuery();
             const page = await api("/events?" + q);
 
+            const ownerCache = new Map();
+            async function getOwnerSnippetCached(owner) {
+                if (!owner) return "<i>unknown</i>";
+                if (!ownerCache.has(owner.id)) {
+                    ownerCache.set(owner.id, buildOwnerSnippet(owner));
+                }
+                return ownerCache.get(owner.id);
+            }
+
             eventState.totalPages = page.totalPages;
 
             const out = document.getElementById("events");
@@ -754,17 +761,37 @@
             const me = await getMe();
 
             for (const ev of page.content) {
-                const div = document.createElement("div");
-                div.className = "event";
+                const ownerSnippet = await getOwnerSnippetCached(ev.besitzer);
 
-                const ownerSnippet = await buildOwnerSnippet(ev.besitzer);
+                const div = renderEvent(ev, ownerSnippet, me);
 
-                const canEdit =
-                    me &&
-                    (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+                out.appendChild(div);
+                setLocationInBox(
+                    `location_event_${ev.id}`,
+                    ev.location
+                );
+            }
 
-                if(canEdit) {
-                    div.innerHTML = `
+            document.getElementById("eventPageInfo").textContent =
+                `Page ${page.number + 1} / ${page.totalPages}`;
+        } catch (e) {
+            notify(e);
+        }
+
+        updateEventPagerButtons();
+    }
+
+    function renderEvent(ev, ownerSnippet, me){
+        const canEdit = me && (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+
+        return canEdit ? renderEditableEvent(ev, ownerSnippet) : renderReadOnlyEvent(ev, ownerSnippet);
+    }
+
+    function renderEditableEvent(){
+        const div = document.createElement("div");
+        div.className = "event";
+
+        div.innerHTML = `
                         <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
                         By: ${ownerSnippet}<br>
                         <label>Date:</label><input id="date_${ev.id}" type="datetime-local" value="${ev.termin ? ev.termin.substring(0,16) : ""}"><br>
@@ -786,8 +813,15 @@
                         <button onClick="deleteEvent(${ev.id})">Delete</button>
                         <button onClick="updateEvent(${ev.id})">Update</button>
                     `;
-                } else {
-                    div.innerHTML = `
+
+        return div;
+    }
+
+    function renderReadOnlyEvent(){
+        const div = document.createElement("div");
+        div.className = "event";
+
+        div.innerHTML = `
                         <b>${ev.title}</b> (ID ${ev.id})<br>
                         By: ${ownerSnippet}<br>
                         <small class="timestamp">${ev.termin || "no date"}</small><br>
@@ -798,32 +832,8 @@
                             </div>
                         </div>
                     `;
-                }
-                out.appendChild(div);
-                setLocationInBox(
-                    `location_event_${ev.id}`,
-                    ev.location
-                );
-            }
 
-            document.getElementById("eventPageInfo").textContent =
-                `Page ${page.number + 1} / ${page.totalPages}`;
-        } catch (e) {
-            notify(e);
-        }
-
-        updateEventPagerButtons();
-    }
-
-    function escapeHtml(str) {
-        if (!str) return "";
-        return str.replace(/[&<>"']/g, c => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        }[c]));
+        return div;
     }
 
     async function buildOwnerSnippet(besitzer) {
@@ -980,7 +990,6 @@
 
         const div = document.createElement("div");
         div.classList.add("audit", entry.success ? "success" : "fail");
-        div.dataset.timestamp = entry.timestamp;
 
         div.innerHTML = `
         <details>
@@ -988,7 +997,7 @@
                 <b>${entry.action}</b> durch <b>${userStr}</b>
                 an <b>${entry.resourceType} #${entry.resourceId || "-"}</b>
                 <small class="ipaddress">${entry.ipAddress}</small>
-                <small class="timestamp ago"></small>
+                <small class="timestamp ago" data-timestamp="${entry.timestamp}"></small>
             </summary>
             <small class="timestamp">(${entry.timestamp})</small>
             <small>[${entry.id}]</small><br>
@@ -1053,42 +1062,6 @@
         statusEl.className = `audit-live-status ${state}`;
         statusEl.textContent = `● ${text}`;
     }
-
-    function timeAgo(isoTimestamp) {
-        const now = new Date();
-        const then = new Date(isoTimestamp);
-        const seconds = Math.floor((now - then) / 1000);
-
-        if (seconds < 10) return "just now";
-        if (seconds < 60) return `${seconds}s ago`;
-
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m ago`;
-
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-
-        const days = Math.floor(hours / 24);
-        if (days < 7) return `${days}d ago`;
-
-        const weeks = Math.floor(days / 7);
-        if (weeks < 5) return `${weeks}w ago`;
-
-        const months = Math.floor(days / 30);
-        if (months < 12) return `${months}mo ago`;
-
-        const years = Math.floor(days / 365);
-        return `${years}y ago`;
-    }
-    setInterval(() => {
-        document.querySelectorAll(".audit[data-timestamp]").forEach(el => {
-            const ts = el.dataset.timestamp;
-            const agoEl = el.querySelector(".ago");
-            if (agoEl) {
-                agoEl.textContent = `• ${timeAgo(ts)}`;
-            }
-        });
-    }, 60_000);
 
     // --------------------------
     // PROFIL
