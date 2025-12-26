@@ -128,6 +128,10 @@ public class VeranstaltungController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        if(page<0)badRequest("Page number is negative");
+        if(size<0)badRequest("Page Size is negative");
+        if(size>MAX_PAGE_SIZE)badRequest("Page Size exceeds max of " + MAX_PAGE_SIZE);
+
         EventSearch search = parseSearch(
                 q, city, bbox, near, from, to, owner, orderBy, orderDir
         );
