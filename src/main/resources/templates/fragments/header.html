@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<header th:fragment="header">
-    <nav class="topbar">
-        <a href="/" class="logo">EB</a>
-
-        <div class="nav-right">
-            <a href="/map">Map</a>
-            <p>Loginzeugs</p>
-        </div>
+<header th:fragment="header" style="
+    background-color: #666666;
+    width: 100%;
+">
+    <style>
+        .navbar-item{
+            margin:1rem;
+        }
+    </style>
+    <nav style="
+        display: flex;
+        flex-direction: row;
+    ">
+        <div class="navbar-item"><a href="/" class="logo">Eventbubble</a></div>
+        <div class="navbar-item"><a href="/map">Map</a></div>
     </nav>
 </header>
