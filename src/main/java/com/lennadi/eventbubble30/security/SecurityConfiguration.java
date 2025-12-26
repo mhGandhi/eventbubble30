@@ -18,6 +18,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
@@ -41,8 +42,7 @@ public class SecurityConfiguration {
     private final ObjectMapper objectMapper;
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain apiFilterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
+    public SecurityFilterChain secFilterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
         http
                 .securityMatcher("/api/**")
                 .cors(Customizer.withDefaults())
@@ -50,6 +50,8 @@ public class SecurityConfiguration {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         //admin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/audit-log/stream").hasRole("ADMIN")
@@ -88,49 +90,22 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order(2)
-    public SecurityFilterChain htmlFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(
+                "/favicon.ico",
+                "/style.css",
+                "/base.js",
 
-                .authorizeHttpRequests(auth -> auth//todo eif permit all? + in separate Klasse
-                        //options
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                "/file/**",
 
-                        //static
-                        .requestMatchers("/error","/index").permitAll()
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/",
-                                "/event",
-                                "/profile",
-                                "/me",
-                                "/map",
+                "/","/index",
+                "/event",
+                "/profile",
+                "/map",
 
-                                "/reset-password",
-                                "/verify-email"
-                        ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/favicon.ico",
-                                "/style.css",
-                                "/base.js"
-                        ).permitAll()
-
-                        //media
-                        .requestMatchers("/file/**").permitAll()
-
-                        .anyRequest().permitAll()//für 404 ig
-                )
-
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .logout(AbstractHttpConfigurer::disable)
-        ;
-
-        return http.build();
+                "/reset-password",
+                "/verify-email"
+        );
     }
 
     private void handleAuthError(HttpServletRequest request,
@@ -200,7 +175,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {//todo checken
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "https://eventbubble.eu",
@@ -217,17 +192,6 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
-    /*
-    @Bean//todo move or rename file
-    public WebMvcConfigurer disableDefaultErrorPages() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void configurePathMatch(PathMatchConfigurer configurer) {
-                configurer.setUseTrailingSlashMatch(true);
-            }
-        };
-    }*/
 
     // Passwort-Encoder
     @Bean

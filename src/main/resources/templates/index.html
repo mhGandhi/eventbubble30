@@ -195,10 +195,7 @@
 
     </style>
 
-    <link
-            rel="stylesheet"
-            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
 <body>
 <script src="/base.js"></script>
@@ -236,6 +233,8 @@
     </div>
 </div>
 <div id="notifyStack" class="notify-stack"></div>
+
+<div th:replace="fragments/header :: header"></div>
 
 <h1>Eventbubble Dev-Frontend v2</h1>
 
@@ -1536,5 +1535,7 @@
     });
 
 </script>
+
+<div th:replace="fragments/footer :: footer"></div>
 </body>
 </html>
