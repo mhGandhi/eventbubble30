@@ -100,10 +100,10 @@ async function refreshAccessToken() {
 
             return data;
         } catch(e){
+            notify(e);
             EventBubbleBus.dispatchEvent(
                 new CustomEvent("auth:refresh_error")
             );
-            notify(e);
         } finally {
             refreshPromise = null;
         }
