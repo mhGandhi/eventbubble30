@@ -95,7 +95,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth//todo eif permit all?
+                .authorizeHttpRequests(auth -> auth//todo eif permit all? + in separate Klasse
                         //options
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
@@ -104,6 +104,11 @@ public class SecurityConfiguration {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/",
+                                "/event",
+                                "/profile",
+                                "/me",
+                                "/map",
+
                                 "/reset-password",
                                 "/verify-email"
                         ).permitAll()
