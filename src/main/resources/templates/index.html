@@ -103,40 +103,6 @@
 <div th:replace="fragments/header :: header"></div>
 <main>
 
-<section class="page-width" id="loginSection">
-    <div class="box">
-        <div class="tab-bar">
-            <button class="tab active" data-tab="loginTab">Login</button>
-            <button class="tab" data-tab="signupTab">Signup</button>
-        </div>
-        <div id="loginTab" class="tab-content active">
-            <!-- LOGIN -->
-            <div class="box">
-                <input id="login_user" placeholder="Username">
-                <input id="login_pass" type="password" placeholder="Password">
-                <button onclick="login()">Login</button>
-            </div>
-            <div class="box">
-                <input id="emailToResetPassword" placeholder="Email for pw reset">
-                <button onclick="requestPasswordReset()">Request Password Reset</button>
-            </div>
-        </div>
-        <div id="signupTab" class="tab-content">
-            <!-- SIGNUP -->
-            <div class="box">
-                <input id="signup_user" placeholder="Username">
-                <input id="signup_mail" placeholder="Email">
-                <input id="signup_pass" type="password" placeholder="Password">
-                <button onclick="signup()">Signup</button>
-            </div>
-
-            <div class="box">
-                <input id="emailToVerify" placeholder="Email to Verify">
-                <button onclick="requestEmailVerification()">Request Token</button>
-            </div>
-        </div>
-    </div>
-</section>
 
 <section class="page-width" id="sessionSection">
     <!-- SESSION -->
@@ -386,87 +352,21 @@
     // --------------------------
     // AUTH
     // --------------------------
-    async function login() {
-        try {
-            const data = await api("/auth/login", "POST", {
-                username: login_user.value,
-                password: login_pass.value
-            }, false);
-
-            saveTokens(data.accessToken, data.refreshToken);
-            updateAuthUi(true);
-
-            await listEvents();
-            await initAuditLogIfAdmin();
-            await refreshMeDisplay();
-            notify("Welcome "+data.benutzerDTO.username+"!");
-        } catch (e) { notify(e); }
-    }
-
-    async function requestEmailVerification(email = null) {
-        if(email===null){
-            email=emailToVerify.value;
-        }
-        if (!email || email.trim() === "") {
-            notify("Please enter the email of the account you want to verify", "warn");
-            return;
-        }
-        try{
-            await api("/auth/request-email-verification?email="+encodeURIComponent(email), "POST", null, false);
-            notify("Verification email requested for \""+email+"\"");
-        }catch (e) { notify(e); }
-    }
-
-    async function requestPasswordReset() {
-        const email =emailToResetPassword.value;
-        if (!email || email.trim() === "") {
-            notify("Please enter the email of the account you want to reset the password of", "warn");
-            return;
-        }
-        try{
-            await api("/auth/request-password-reset?email="+email, "POST", null, false);
-            notify("Password Reset requested for \""+email+"\"");
-        }catch (e) { notify(e); }
-    }
-
-    async function signup() {
-        try {
-            const body = {
-                username: signup_user.value,
-                email: signup_mail.value,
-                password: signup_pass.value,
-                captchaToken: "dummy-test"
-            };
-
-            const res = await api("/auth/signup", "POST", body, false);
-            notify("Created: " + JSON.stringify(res, null, 2));
-            await requestEmailVerification(signup_mail.value);
-            document.querySelector('[data-tab="loginTab"]').click();
-        } catch (e) { notify(e); }
-    }
-
-    async function logout() {
-        clearTokens();
-        updateAuthUi(false);
-        notify("Logged out!");
-        await initAuditLogIfAdmin();
-        await listEvents();
-    }
-
     async function logoutEverywhere() {
         try { await api("/auth/invalidate-tokens", "POST"); } catch (_) {}
         await logout();
     }
 
     function updateAuthUi(loggedIn) {
-        document.getElementById("loginSection").style.display  = loggedIn ? "none" : "block";
         document.getElementById("sessionSection").style.display = loggedIn ? "block" : "none";
         document.getElementById("profileSection").style.display = loggedIn ? "block" : "none";
         document.getElementById("createEvent").style.display = loggedIn ? "block" : "none";
     }
 
-    EventBubbleBus.addEventListener("auth:refresh_error", () => {
-        logout();
+    EventBubbleBus.addEventListener("auth:logout",async () => {
+        updateAuthUi(false);
+        await initAuditLogIfAdmin();
+        await listEvents();
     });
 
     // --------------------------
@@ -481,9 +381,7 @@
 
         await loadMyProfileIfExists();
     }
-    EventBubbleBus.addEventListener("auth:refreshed", async () => {
-        await refreshMeDisplay();
-    });
+    EventBubbleBus.addEventListener("auth:refreshed", async () => {await refreshMeDisplay();});
 
 
     // --------------------------

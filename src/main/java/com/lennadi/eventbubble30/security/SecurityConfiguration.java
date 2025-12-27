@@ -102,6 +102,7 @@ public class SecurityConfiguration {
                 "/event",
                 "/profile",
                 "/map",
+                "/login",
 
                 "/reset-password",
                 "/verify-email"

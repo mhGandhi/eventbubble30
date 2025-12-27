@@ -2,19 +2,24 @@ const API = "/api";
 window.EventBubbleBus = new EventTarget();
 
 async function bootstrapSession({ onAuthenticated, onAnonymous }) {
-    if (hasRefreshToken()) {
-        try {
-            await refreshAccessToken();
+    //todo refresh savedMe
+
+    if(refreshToken)
+        await refreshAccessToken();
+
+    try{
+        if (await getMe()!==null) {
             onAuthenticated?.();
-            return;
-        } catch {}
+        } else {
+            onAnonymous?.();
+        }
+    }catch(e){
+        notify(e);
     }
-    onAnonymous?.();
+
+    EventBubbleBus.dispatchEvent(new CustomEvent("bootstrapped"));
 }
 
-// --------------------------
-// F E T C H   W R A P P E R
-// --------------------------
 async function api(url, method = "GET", body = null, retry = true) {
     let headers = {};
     if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
@@ -47,7 +52,7 @@ async function api(url, method = "GET", body = null, retry = true) {
     catch { return text; }
 }
 
-
+////////////////////////////////AUTH
 let accessToken = null;
 let refreshToken = localStorage.getItem("refreshToken") || null;
 
@@ -63,26 +68,18 @@ function clearTokens() {
     localStorage.removeItem("refreshToken");
 }
 
-function hasRefreshToken(){
-    return(refreshToken!==null);
-}
-
-// --------------------------
-// REFRESH TOKEN
-// --------------------------
+//todo track last refresh/expiry time
 let refreshPromise = null;
 async function refreshAccessToken() {
     //Already refreshing? Wait for it
     if (refreshPromise) {
         return refreshPromise;
     }
-
     notify("Refreshing access token...", "info");
     if (!refreshToken){
         notify("No refresh Token (log in again)", "error")
         return;
     }
-
     refreshPromise = (async () => {
         try {
             const data = await api(
@@ -91,30 +88,50 @@ async function refreshAccessToken() {
                 { refreshToken },
                 false
             );
-
             saveTokens(data.accessToken, data.refreshToken);
             notify(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
             EventBubbleBus.dispatchEvent(
                 new CustomEvent("auth:refreshed")
             );
-
             return data;
         } catch(e){
             notify(e);
-            EventBubbleBus.dispatchEvent(
-                new CustomEvent("auth:refresh_error")
-            );
+            EventBubbleBus.dispatchEvent(new CustomEvent("auth:refresh_error"));
+            logout();
         } finally {
             refreshPromise = null;
         }
     })();
-
     return refreshPromise;
 }
 
-// --------------------------
-// NOTIF
-// --------------------------
+
+///////////////////////////////////HELPER
+function logout(){
+    clearTokens();
+    notify("Logged out!");
+    EventBubbleBus.dispatchEvent(
+        new CustomEvent("auth:logout")
+    );
+}
+
+let getMePromise = null;
+async function getMe() {
+    if(getMePromise)return getMePromise;
+    getMePromise = (async () => {
+        try {
+            return await api("/user/me");
+        } catch {
+            return null;
+        } finally {
+            getMePromise = null;
+        }
+    })();
+    return getMePromise;
+}
+
+
+////////////////////////////////////NOTIF
 function getNotifyStack() {
     let stack = document.getElementById("notifyStack");
 
@@ -122,10 +139,8 @@ function getNotifyStack() {
         stack = document.createElement("div");
         stack.id = "notifyStack";
         stack.className = "notify-stack";
-
         document.body.appendChild(stack);
     }
-
     return stack;
 }
 
@@ -201,16 +216,8 @@ function notify(e, status = null, expire = false) {
     stack.prepend(div);
 }
 
-async function getMe() {
-    try {
-        return await api("/user/me");
-    } catch {
-        return null;
-    }
-}
 
-
-////////////////////TABS
+//////////////////////////////TABS
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
@@ -224,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-////UTIL
+/////////////////////////////UTIL
 function escapeHtml(str) {
     if (!str) return "";
     return str.replace(/[&<>"']/g, c => ({
@@ -236,6 +243,8 @@ function escapeHtml(str) {
     }[c]));
 }
 
+
+///////////////////////////////TIME AGO
 function formatTimeAgo(now, isoTimestamp){
     const then = new Date(isoTimestamp);
     const seconds = Math.floor((now - then) / 1000);
