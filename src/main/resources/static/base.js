@@ -75,7 +75,7 @@ async function refreshAccessToken() {
     if (refreshPromise) {
         return refreshPromise;
     }
-    notify("Refreshing access token...", "info");
+    notify("Refreshing access token...", "info", true);
     if (!refreshToken){
         notify("No refresh Token (log in again)", "error")
         return;
@@ -89,7 +89,7 @@ async function refreshAccessToken() {
                 false
             );
             saveTokens(data.accessToken, data.refreshToken);
-            notify(`Token refreshed as ${data.benutzerDTO?.username || "user"}`);
+            notify(`Token refreshed as ${data.benutzerDTO?.username || "user"}`, "success", true);
             EventBubbleBus.dispatchEvent(
                 new CustomEvent("auth:refreshed")
             );
