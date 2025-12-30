@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.DTOLevel;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.service.ProfilService;
 import com.lennadi.eventbubble30.logging.Audit;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -75,11 +78,25 @@ public class ProfilController {
     }
 
     @GetMapping("/{segment}")
-    public ResponseEntity<Profil.DTO> getProfil(@PathVariable String segment) {
+    public ResponseEntity<?> getProfil(
+            @PathVariable String segment,
+            @RequestParam(defaultValue = "full") String level
+    ) throws BadRequestException {
+        DTOLevel dtoLevel;
+        try{
+            dtoLevel = DTOLevel.valueOf(level.toUpperCase(Locale.ROOT));
+        }catch(Exception e){
+            throw new BadRequestException(e.getMessage());
+        }
+
         long id = resolveId(segment);
         Profil profil = profilService.getProfil(id);
-        Profil.DTO ret = profilService.toDTO(profil);
-        return ResponseEntity.ok(ret);
+
+        return ResponseEntity.ok(
+                dtoLevel==DTOLevel.CARD ?
+                profilService.toSmallDTO(profil)
+                : profilService.toDTO(profil)
+        );
     }
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
