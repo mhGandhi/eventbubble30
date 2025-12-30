@@ -53,5 +53,5 @@ public class Profil {
     }
 
     public record DTO(long id, String name, URL avatarURL, String bio) {}
-    public record SmallDTO(long id, String name, URL avatarUrl) {}
+    public record SmallDTO(long id, String name, URL avatarURL) {}
 }
