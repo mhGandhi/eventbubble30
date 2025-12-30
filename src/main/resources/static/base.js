@@ -327,7 +327,7 @@ async function updateEvent(id) {
             title: document.getElementById(`title_${id}`).value.trim(),
             description: document.getElementById(`desc_${id}`).value.trim(),
             termin: document.getElementById(`date_${id}`).value
-                ? new Date(document.getElementById(`date_${id}`).value).toISOString()
+                ? new Date( normalizeDateTime(document.getElementById(`date_${id}`).value)).toISOString()
                 : null,
             location: getLocationFromBox(`location_event_${id}`)
         };
@@ -442,4 +442,15 @@ function renderLocationSummary(boxId) {
     `;
 }
 
+function normalizeDateTime(input) {
+    if (!input) return null;
+
+    // If browser gives full datetime → use it
+    if (input.includes("T")) {
+        return new Date(input).toISOString();
+    }
+
+    // If browser gives only date (YYYY-MM-DD) → default to 00:00
+    return new Date(input + "T00:00").toISOString();
+}
 

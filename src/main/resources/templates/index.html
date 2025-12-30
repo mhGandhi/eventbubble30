@@ -374,7 +374,7 @@
             const body = {
                 title: event_title.value.trim(),
                 description: event_desc.value.trim(),
-                termin: event_date.value ? new Date(event_date.value).toISOString() : null,
+                termin: event_date.value ? new Date(normalizeDateTime(event_date.value)).toISOString() : null,
                 location: getLocationFromBox("location_createevent")
             };
 
