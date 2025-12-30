@@ -309,4 +309,137 @@ function stopTimeAgoRefresh() {
     timeAgoIntervalId = null;
 }
 
+//////////////////////////////EVENTS
+
+async function deleteEvent(id) {
+    if (!confirm("Delete event " + id + "?")) return;
+    try {
+        await api("/events/" + id, "DELETE");
+        await listEvents();
+    } catch (e) { notify(e); }
+}
+
+async function updateEvent(id) {
+    if (!confirm("Update event " + id + "?")) return;
+
+    try {
+        const body = {
+            title: document.getElementById(`title_${id}`).value.trim(),
+            description: document.getElementById(`desc_${id}`).value.trim(),
+            termin: document.getElementById(`date_${id}`).value
+                ? new Date(document.getElementById(`date_${id}`).value).toISOString()
+                : null,
+            location: getLocationFromBox(`location_event_${id}`)
+        };
+
+        await api(`/events/${id}`, "PATCH", body);
+        notify("Event updated!");
+        await listEvents();
+    } catch (e) {
+        notify(e);
+    }
+}
+
+function renderEvent(ev, ownerSnippet=null, me=null){
+    const canEdit = me && (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+
+    return canEdit ? renderEditableEvent(ev, ownerSnippet) : renderReadOnlyEvent(ev, ownerSnippet);
+}
+
+function renderEditableEvent(ev, ownerSnippet){//todo nur auf /event??id=XX
+    const div = document.createElement("div");
+    div.className = "event";
+
+    div.innerHTML = `
+                        <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
+                        ${ownerSnippet ? `By: ${ownerSnippet}<br>`: ""}
+                        <label>Date:</label><input id="date_${ev.id}" type="datetime-local" value="${ev.termin ? ev.termin.substring(0,16) : ""}"><br>
+                        <label>Description:</label><textarea id="desc_${ev.id}">${escapeHtml(ev.description || "")}</textarea><br>
+                        <div class="location-box" id="location_event_${ev.id}" data-location="">
+                            <div class="location-summary">
+                                <i>No location set</i>
+                            </div>
+
+                            <button onclick="editLocation('location_event_${ev.id}')">
+                                Set / Change Location
+                            </button>
+                            <button onclick="clearLocation('location_event_${ev.id}')">
+                                Clear
+                            </button>
+                        </div>
+
+                        <hr>
+                        <button onClick="deleteEvent(${ev.id})">Delete</button>
+                        <button onClick="updateEvent(${ev.id})">Update</button>
+                    `;
+
+    return div;
+}
+
+function renderReadOnlyEvent(ev, ownerSnippet){
+    const div = document.createElement("div");
+    div.className = "event";
+
+    div.innerHTML = `
+                        <a href="/event?id=${ev.id}"><b>${ev.title}</b></a> (ID ${ev.id})<br>
+                        ${ownerSnippet ? `By: ${ownerSnippet}<br>`: ""}
+                        <small class="timestamp">${ev.termin || "no date"}</small><br>
+                        ${ev.description || ""}<br>
+                        <div class="location-box" id="location_event_${ev.id}" data-location="">
+                            <div class="location-summary">
+                                <i>No location set</i>
+                            </div>
+                        </div>
+                    `;
+
+    return div;
+}
+
+
+///////////////////////////////////LOCATION
+function getLocationFromBox(boxId) {
+    const el = document.getElementById(boxId);
+    if (!el) return null;
+    const raw = el.dataset.location;
+    return raw ? JSON.parse(raw) : null;
+}
+
+function setLocationInBox(boxId, location) {
+    const el = document.getElementById(boxId);
+    if (!el) return null;
+    el.dataset.location = location ? JSON.stringify(location) : "";
+    renderLocationSummary(boxId);
+}
+
+function renderLocationSummary(boxId) {
+    const el = document.getElementById(boxId);
+    const summary = el.querySelector(".location-summary");
+    const loc = getLocationFromBox(boxId);
+
+    if (!loc) {
+        summary.innerHTML = "<i>No location set</i>";
+        return;
+    }
+
+    // Compact preview for "near" filter
+    if (boxId === "location_event_near") {
+        summary.innerHTML = `
+            📍 <b>${escapeHtml(loc.displayName)}</b>
+            <small style="color:#666">
+                (${[loc.city, loc.country].filter(Boolean).join(", ")})
+            </small><br>
+            <small class="timestamp">
+                lat ${loc.latitude?.toFixed(4)}, lon ${loc.longitude?.toFixed(4)}
+            </small>
+        `;
+        return;
+    }
+
+    // default (events, editor)
+    summary.innerHTML = `
+        📍 <b>${escapeHtml(loc.displayName)}</b><br>
+        ${[loc.street, loc.postalCode, loc.city].filter(Boolean).join(", ")}
+    `;
+}
+
 

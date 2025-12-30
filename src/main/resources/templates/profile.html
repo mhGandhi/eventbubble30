@@ -22,7 +22,7 @@
                     <img id="avatar">
                 </div>
                 <div>
-                    <span><b id="name">NAME</b><small id="username">USERNAME</small></span>
+                    <span><b id="name">NAME</b></span>
                 </div>
             </div>
             <div class="box">
@@ -33,7 +33,7 @@
         </div>
 
         <div id="invalid" class="box" style="display:none;">
-            <h1>User has not set up a profile or does not exist.</h1>
+            <h1>User has not set up a profile or does not exist. (404)</h1>
         </div>
     </section>
     <section class="page-width">
@@ -68,15 +68,13 @@
         try{
             const hasProfile = await api("/profiles/"+userID+"/exists");
             if(hasProfile){
-                const user = await api("/user/"+userID);
                 const profile = await api("/profiles/"+userID+"?level=full");
 
                 document.getElementById("name").innerHTML = escapeHtml(profile.name);
-                document.getElementById("username").innerHTML = "@"+escapeHtml(user.username);
 
                 let avatarTag = document.getElementById("avatar");
-                if(profile.avatarUrl){
-                    avatarTag.src = profile.avatarUrl;
+                if(profile.avatarURL){
+                    avatarTag.src = profile.avatarURL;
                 }else{
                     avatarTag.src = ""+defAvatarBase+profile.name;
                 }
@@ -110,26 +108,14 @@
             for(const ev of page.content){
                 const div = renderEvent(ev);
                 out.appendChild(div);
+                setLocationInBox(
+                    `location_event_${ev.id}`,
+                    ev.location
+                );
             }
         }catch (e) {
             notify(e);
         }
-    }
-
-    function renderEvent(ev){//todo
-        const div = document.createElement("div");
-
-        if(!ev){
-            div.innerHTML = `<h1>INVALID EVENT</h1>`;
-            return div;
-        }
-
-        div.innerHTML = `
-            <b>${ev.title}</b>
-            <small class="timestamp">${ev.termin}</small>
-            <p>${ev.description}</p>
-        `;
-        return div;
     }
 </script>
 </body>
