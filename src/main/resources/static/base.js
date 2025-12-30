@@ -1,5 +1,6 @@
 const API = "/api";
 window.EventBubbleBus = new EventTarget();
+const defAvatarBase = "https://ui-avatars.com/api/?name=";
 
 async function bootstrapSession({ onAuthenticated, onAnonymous }) {
     //todo refresh savedMe
@@ -315,7 +316,11 @@ async function deleteEvent(id) {
     if (!confirm("Delete event " + id + "?")) return;
     try {
         await api("/events/" + id, "DELETE");
-        await listEvents();
+        new CustomEvent("event:deleted", {
+            detail: {
+                id: id,
+            },
+        })
     } catch (e) { notify(e); }
 }
 
@@ -326,22 +331,31 @@ async function updateEvent(id) {
         const body = {
             title: document.getElementById(`title_${id}`).value.trim(),
             description: document.getElementById(`desc_${id}`).value.trim(),
-            termin: document.getElementById(`date_${id}`).value
-                ? new Date( normalizeDateTime(document.getElementById(`date_${id}`).value)).toISOString()
-                : null,
+            termin: buildInstantFromLocal(
+                document.getElementById(`date_${id}`).value,
+                document.getElementById(`time_${id}`).value
+            ),
             location: getLocationFromBox(`location_event_${id}`)
         };
 
         await api(`/events/${id}`, "PATCH", body);
-        notify("Event updated!");
-        await listEvents();
+        EventBubbleBus.dispatchEvent(
+            new CustomEvent("event:updated", {
+                    detail: {
+                        id: id,
+                    },
+            })
+        );
     } catch (e) {
         notify(e);
     }
 }
 
 function renderEvent(ev, ownerSnippet=null, me=null){
-    const canEdit = me && (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+    let canEdit = false;
+    try{
+        canEdit = me && (me.roles.includes("ADMIN") || me.id === ev.besitzer?.id);
+    }catch{}
 
     return canEdit ? renderEditableEvent(ev, ownerSnippet) : renderReadOnlyEvent(ev, ownerSnippet);
 }
@@ -350,10 +364,13 @@ function renderEditableEvent(ev, ownerSnippet){//todo nur auf /event??id=XX
     const div = document.createElement("div");
     div.className = "event";
 
+    const local = splitInstantToLocal(ev.termin);
     div.innerHTML = `
                         <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
                         ${ownerSnippet ? `By: ${ownerSnippet}<br>`: ""}
-                        <label>Date:</label><input id="date_${ev.id}" type="datetime-local" value="${ev.termin ? ev.termin.substring(0,16) : ""}"><br>
+                        <label>Date:</label>
+                        <input id="date_${ev.id}" type="date" value="${local.date}">
+                        <input id="time_${ev.id}" type="time" value="${local.time}"><br>
                         <label>Description:</label><textarea id="desc_${ev.id}">${escapeHtml(ev.description || "")}</textarea><br>
                         <div class="location-box" id="location_event_${ev.id}" data-location="">
                             <div class="location-summary">
@@ -442,15 +459,69 @@ function renderLocationSummary(boxId) {
     `;
 }
 
-function normalizeDateTime(input) {
-    if (!input) return null;
+////////////////////////////////////IDK
+function buildInstantFromLocal(dateStr, timeStr) {
+    if (!dateStr) return null;
 
-    // If browser gives full datetime → use it
-    if (input.includes("T")) {
-        return new Date(input).toISOString();
+    const time = timeStr && timeStr.trim() ? timeStr : "00:00";
+    const local = `${dateStr}T${time}`;
+
+    // Interpreted as local time → converted to UTC Instant
+    return new Date(local).toISOString();
+}
+
+function splitInstantToLocal(iso) {
+    if (!iso) return { date: "", time: "" };
+
+    const d = new Date(iso);
+    return {
+        date: d.toISOString().slice(0, 10),
+        time: d.toTimeString().slice(0, 5)
+    };
+}
+
+
+
+/////////////IDK
+async function buildUserSnippet(besitzer) {
+    if (!besitzer) {
+        return "<i>unknown user</i>";
     }
 
-    // If browser gives only date (YYYY-MM-DD) → default to 00:00
-    return new Date(input + "T00:00").toISOString();
+    const username = escapeHtml(besitzer.username);
+
+    try {
+        const hasProfile = await api(`/profiles/${besitzer.id}/exists`);
+
+        if (!hasProfile) {
+            return `<span title="No profile">@${username}</span>`;
+        }
+
+        const profile = await api(`/profiles/${besitzer.id}?level=card`);
+
+
+        const avatar = profile.avatarURL
+            ? `<img src="${profile.avatarURL}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
+            : `<img src="https://ui-avatars.com/api/?name=${profile.name}"
+                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`;
+
+        const name = escapeHtml(profile.name || "Unnamed");
+
+
+        return `
+                <a href="/profile?id=${besitzer.id}">
+                <span class="user-snippet">
+                    ${avatar}
+                    <b>${name}</b>
+                    <small style="color:#666">(@${username})</small>
+                </span>
+                </a>
+            `;
+
+    } catch (e) {
+        console.warn("Failed to load profile for user", besitzer.id, e);
+        return `<span>@${username}</span>`;
+    }
 }
 

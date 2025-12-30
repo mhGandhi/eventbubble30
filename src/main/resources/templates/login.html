@@ -50,12 +50,15 @@
 <div th:replace="fragments/footer :: footer"></div>
 
 <script>
+    const params = new URLSearchParams(window.location.search);
+    const re = params.get("re");
+
     window.addEventListener("load", () => {
         bootstrapSession({});
     });
     EventBubbleBus.addEventListener("auth:login", async() => {
         setTimeout(() => {
-            window.location.replace("/");
+            window.location.replace(re?re:"/");
         }, 1500);
 
     });

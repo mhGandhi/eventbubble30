@@ -5,36 +5,15 @@
     <title>Eventbubble</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        .user-snippet {
-            position: relative;
-            cursor: default;
-        }
-        .location-box {
-            border-top: 1px dashed #ccc;
-            margin-top: 8px;
-            padding-top: 6px;
-        }
-        .audit.success { border-left: 4px solid #4caf50; }
-        .audit.fail    { border-left: 4px solid #f44336; }
-        .audit:hover { background: #fafafa; }
-        .audit {
-            border-top: 1px solid black;
-        }
-        .audit-live-status {
-            font-weight: bold;
-        }
-        .audit-live-status.connected {
-            color: #2ecc71; /* green */
-        }
-        .audit-live-status.connecting {
-            color: #f1c40f; /* yellow */
-        }
-        .audit-live-status.error {
-            color: #e74c3c; /* red */
-        }
-        .audit-live-status.closed {
-            color: #95a5a6; /* gray */
-        }
+        .audit.success  { border-left: 4px solid #4caf50; }
+        .audit.fail     { border-left: 4px solid #f44336; }
+        .audit:hover    { background: #fafafa; }
+        .audit          { border-top: 1px solid black; }
+        .audit-live-status              { font-weight: bold; }
+        .audit-live-status.connected    { color: #2ecc71; /* green */ }
+        .audit-live-status.connecting   { color: #f1c40f; /* yellow */ }
+        .audit-live-status.error        { color: #e74c3c; /* red */ }
+        .audit-live-status.closed       { color: #95a5a6; /* gray */ }
     </style>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -42,43 +21,9 @@
 <body>
 <script src="/base.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<div id="locationModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
-    <div style="
-    background:white;
-    padding:20px;
-    max-width:500px;
-    max-height:80vh;
-    overflow-y:auto;
-    margin:5vh auto;
-    border-radius:8px;
-">
-        <hr>
-        <input id="loc_search" placeholder="Search location (city, address, venue)">
-        <button onclick="searchLocation()">Search (OSM)</button>
-        <div id="loc_results" style="margin-top:8px;"></div>
-        <div
-                id="loc_map"
-                style="height:300px; margin:10px 0; border-radius:6px;"
-        ></div>
-        <hr>
-        <h3>Edit Location</h3>
-        <input id="loc_name" placeholder="Display name">
-        <input id="loc_street" placeholder="Street">
-        <input id="loc_city" placeholder="City">
-        <input id="loc_postal" placeholder="Postal code">
-        <input id="loc_country" placeholder="Country">
-        <input id="loc_lat" type="number" step="any" placeholder="Latitude">
-        <input id="loc_lng" type="number" step="any" placeholder="Longitude">
-        <hr>
-        <button onclick="saveLocation()">Save</button>
-        <button onclick="closeLocationEditor()">Cancel</button>
-    </div>
-</div>
-<div id="notifyStack" class="notify-stack"></div>
 
 <div th:replace="fragments/header :: header"></div>
 <main>
-
 
 <section class="page-width" id="sessionSection">
     <!-- SESSION -->
@@ -139,27 +84,8 @@
 <section class="page-width" id="eventSection">
     <h2>Events</h2>
     <div class="box" id="createEvent">
-        <h3>Create Event</h3>
-        <input id="event_title" placeholder="Title">
-        <input id="event_date" type="datetime-local" placeholder="ISO Date (optional)">
-        <textarea id="event_desc" placeholder="Description"></textarea>
-        <div class="location-box" id="location_createevent" data-location="">
-            <div class="location-summary">
-                <i>No location set</i>
-            </div>
-
-            <button onclick="editLocation('location_createevent')">
-                Set / Change Location
-            </button>
-            <button onclick="clearLocation('location_createevent')">
-                Clear
-            </button>
-        </div>
-
-        <hr>
-        <button onclick="createEventVS()">Create Event</button>
+        <a href="/event">Create Event</a>
     </div>
-
     <div class="box">
         <h3>All Events</h3>
         <details class="box event-filters">
@@ -369,21 +295,6 @@
         totalPages: 0
     };
 
-    async function createEventVS() {
-        try {
-            const body = {
-                title: event_title.value.trim(),
-                description: event_desc.value.trim(),
-                termin: event_date.value ? new Date(normalizeDateTime(event_date.value)).toISOString() : null,
-                location: getLocationFromBox("location_createevent")
-            };
-
-            await api("/events/create", "POST", body);
-            notify("Event created!");
-            await listEvents();
-        } catch (e) { notify(e); }
-    }
-
     //LIST
     function buildEventQuery() {
         const params = new URLSearchParams();
@@ -458,7 +369,7 @@
             async function getOwnerSnippetCached(owner) {
                 if (!owner) return "<i>unknown</i>";
                 if (!ownerCache.has(owner.id)) {
-                    ownerCache.set(owner.id, buildOwnerSnippet(owner));
+                    ownerCache.set(owner.id, buildUserSnippet(owner));
                 }
                 return ownerCache.get(owner.id);
             }
@@ -468,12 +379,10 @@
             const out = document.getElementById("events");
             out.innerHTML = "";
 
-            const me = await getMe();
-
             for (const ev of page.content) {
                 const ownerSnippet = await getOwnerSnippetCached(ev.besitzer);
 
-                const div = renderEvent(ev, ownerSnippet, me);
+                const div = renderEvent(ev, ownerSnippet, null);
 
                 out.appendChild(div);
                 setLocationInBox(
@@ -489,48 +398,6 @@
         }
 
         updateEventPagerButtons();
-    }
-
-    async function buildOwnerSnippet(besitzer) {
-        if (!besitzer) {
-            return "<i>unknown user</i>";
-        }
-
-        const username = escapeHtml(besitzer.username);
-
-        try {
-            const hasProfile = await api(`/profiles/${besitzer.id}/exists`);
-
-            if (!hasProfile) {
-                return `<span title="No profile">@${username}</span>`;
-            }
-
-            const profile = await api(`/profiles/${besitzer.id}?level=card`);
-
-
-            const avatar = profile.avatarURL
-                ? `<img src="${profile.avatarURL}"
-                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`
-                : `<img src="https://ui-avatars.com/api/?name=${profile.name}"
-                    style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">`;
-
-            const name = escapeHtml(profile.name || "Unnamed");
-
-
-            return `
-                <a href="/profile?id=${besitzer.id}">
-                <span class="user-snippet">
-                    ${avatar}
-                    <b>${name}</b>
-                    <small style="color:#666">(@${username})</small>
-                </span>
-                </a>
-            `;
-
-        } catch (e) {
-            console.warn("Failed to load profile for user", besitzer.id, e);
-            return `<span>@${username}</span>`;
-        }
     }
 
     // --------------------------
@@ -853,266 +720,6 @@
             notify(e);
         }
     }
-
-    // --------------------------
-    // LOCATION
-    // --------------------------
-    let activeLocationBoxId = null;
-
-    function editLocation(boxId) {
-        activeLocationBoxId = boxId;
-        document.body.classList.add("modal-open");
-
-        const existing = getLocationFromBox(boxId);
-
-        // Fill inputs (unchanged)
-        if (existing) {
-            loc_name.value   = existing.displayName || "";
-            loc_street.value = existing.street || "";
-            loc_city.value   = existing.city || "";
-            loc_postal.value = existing.postalCode || "";
-            loc_country.value= existing.country || "";
-            loc_lat.value    = existing.latitude ?? "";
-            loc_lng.value    = existing.longitude ?? "";
-        } else {
-            document.querySelectorAll("#locationModal input")
-                .forEach(i => i.value = "");
-        }
-
-        locationModal.style.display = "block";
-
-        setTimeout(() => initLocationMap(existing), 0);
-    }
-
-    function initLocationMap(existing) {
-        if (!locMap) {
-            locMap = L.map("loc_map").setView([52.52, 13.405], 13); // default Berlin
-
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap contributors"
-            }).addTo(locMap);
-
-            locMap.on("click", onMapClick);
-        }
-
-        if (existing?.latitude && existing?.longitude) {
-            setMarker(existing.latitude, existing.longitude);
-            locMap.setView([existing.latitude, existing.longitude], 15);
-        }
-    }
-
-    function setMarker(lat, lng) {
-        if (!locMarker) {
-            locMarker = L.marker([lat, lng], { draggable: true }).addTo(locMap);
-            locMarker.on("dragend", e => {
-                const p = e.target.getLatLng();
-                updateLatLngInputs(p.lat, p.lng);
-            });
-        } else {
-            locMarker.setLatLng([lat, lng]);
-        }
-
-        updateLatLngInputs(lat, lng);
-    }
-
-    function updateLatLngInputs(lat, lng) {
-        loc_lat.value = lat.toFixed(6);
-        loc_lng.value = lng.toFixed(6);
-    }
-
-    async function onMapClick(e) {
-        const { lat, lng } = e.latlng;
-        setMarker(lat, lng);
-
-        const url = new URL("https://nominatim.openstreetmap.org/reverse");
-        url.search = new URLSearchParams({
-            lat,
-            lon: lng,
-            format: "json",
-            addressdetails: "1"
-        });
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        applyReverseGeocode(data);
-    }
-
-    function applyReverseGeocode(r) {
-        const a = r.address || {};
-
-        loc_name.value =
-            a.attraction ||
-            a.amenity ||
-            a.road ||
-            r.display_name ||
-            "";
-
-        loc_street.value = [
-            a.road,
-            a.house_number
-        ].filter(Boolean).join(" ");
-
-        loc_city.value =
-            a.city ||
-            a.town ||
-            a.village ||
-            "";
-
-        loc_postal.value = a.postcode || "";
-        loc_country.value = a.country_code
-            ? a.country_code.toUpperCase()
-            : "";
-
-        locationModal.dataset.externalSource = "NOMINATIM";
-        locationModal.dataset.externalId = r.place_id || null;
-    }
-
-    function saveLocation() {
-        if (!activeLocationBoxId) return;
-
-        const name = loc_name.value.trim();
-        if (!name) {
-            notify("Display name required", "warn");
-            return;
-        }
-
-        const location = {
-            displayName: name,
-            street: loc_street.value.trim() || null,
-            city: loc_city.value.trim() || null,
-            postalCode: loc_postal.value.trim() || null,
-            country: loc_country.value.trim() || null,
-            latitude: loc_lat.value ? parseFloat(loc_lat.value) : null,
-            longitude: loc_lng.value ? parseFloat(loc_lng.value) : null,
-            externalSource: locationModal.dataset.externalSource || "MANUAL",
-            externalId: locationModal.dataset.externalId || null
-        };
-
-        setLocationInBox(activeLocationBoxId, location);
-
-        // cleanup
-        delete locationModal.dataset.externalSource;
-        delete locationModal.dataset.externalId;
-        loc_results.innerHTML = "";
-
-        closeLocationEditor();
-    }
-
-    function clearLocation(boxId) {
-        setLocationInBox(boxId, null);
-    }
-
-    async function searchLocation() {
-        const q = loc_search.value.trim();
-        if (!q) return;
-
-        const url = new URL("https://nominatim.openstreetmap.org/search");
-        url.search = new URLSearchParams({
-            q,
-            format: "json",
-            addressdetails: "1",
-            limit: "5"
-        });
-
-        const res = await fetch(url, {
-            headers: {
-                "Accept": "application/json"
-                // User-Agent is implicitly set by browser
-            }
-        });
-
-        const results = await res.json();
-        renderLocationResults(results);
-    }
-
-    let locMap = null;
-    let locMarker = null;
-
-    function renderLocationResults(results) {
-        const box = document.getElementById("loc_results");
-        box.innerHTML = "";
-
-        if (!results.length) {
-            box.innerHTML = "<i>No results</i>";
-            return;
-        }
-
-        results.forEach(r => {
-            const div = document.createElement("div");
-            div.style.border = "1px solid #ccc";
-            div.style.padding = "6px";
-            div.style.marginBottom = "4px";
-            div.style.cursor = "pointer";
-            div.style.background = "#fdfdfd";
-
-            div.innerHTML = `
-            <b>${escapeHtml(r.display_name)}</b><br>
-            <small>${escapeHtml(r.type || "")}</small>
-        `;
-
-            div.onclick = () => applyNominatimResult(r);
-            box.appendChild(div);
-        });
-    }
-
-    function applyNominatimResult(r) {
-        const a = r.address || {};
-
-        loc_name.value =
-            a.attraction ||
-            a.amenity ||
-            a.road ||
-            r.display_name;
-
-        loc_street.value = [
-            a.road,
-            a.house_number
-        ].filter(Boolean).join(" ") || "";
-
-        loc_city.value =
-            a.city ||
-            a.town ||
-            a.village ||
-            a.municipality ||
-            "";
-
-        loc_postal.value = a.postcode || "";
-        loc_country.value = a.country_code
-            ? a.country_code.toUpperCase()
-            : "";
-
-        loc_lat.value = r.lat;
-        loc_lng.value = r.lon;
-
-        const lat = parseFloat(r.lat);
-        const lng = parseFloat(r.lon);
-        setMarker(lat, lng);
-        locMap.setView([lat, lng], 16);
-
-        // Store external metadata temporarily on modal
-        locationModal.dataset.externalSource = "NOMINATIM";
-        locationModal.dataset.externalId = r.place_id;
-    }
-
-    function closeLocationEditor() {
-        activeLocationBoxId = null;
-        locationModal.style.display = "none";
-        document.body.classList.remove("modal-open");
-    }
-    document.addEventListener("keydown", e => {
-        if (e.key === "Escape") {
-            if (locationModal.style.display === "block") {
-                closeLocationEditor();
-            }
-        }
-    });
-    locationModal.addEventListener("click", e => {
-        if (e.target === locationModal) {
-            closeLocationEditor();
-        }
-    });
-
 </script>
 </main>
 <div th:replace="fragments/footer :: footer"></div>
