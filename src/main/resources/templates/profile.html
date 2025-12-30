@@ -11,13 +11,126 @@
 <div th:replace="fragments/header :: header"></div>
 
 <main>
-    PROFILE
+    <section id="profile" class="page-width">
+        <div id="loading" class="box">
+            <h1>Loading...</h1>
+        </div>
+
+        <div id="valid" class="box" style="display: none; flex-direction: column;">
+            <div style="display: flex; flex-direction: row;">
+                <div>
+                    <img id="avatar">
+                </div>
+                <div>
+                    <span><b id="name">NAME</b><small id="username">USERNAME</small></span>
+                </div>
+            </div>
+            <div class="box">
+                <p id="bio">
+
+                </p>
+            </div>
+        </div>
+
+        <div id="invalid" class="box" style="display:none;">
+            <h1>User has not set up a profile or does not exist.</h1>
+        </div>
+    </section>
+    <section class="page-width">
+        <div id="events">
+
+        </div>
+    </section>
 </main>
 
 <div th:replace="fragments/footer :: footer"></div>
 
 <script>
+    const defAvatarBase = "https://ui-avatars.com/api/?name=";
+    const params = new URLSearchParams(window.location.search);
+    const userID = params.get("id");
 
+    window.addEventListener("load", () => {
+        bootstrapSession({
+            onAuthenticated:async()=> {
+                await loadProfile(true);
+            },
+            onAnonymous:async()=> {
+                await loadProfile();
+            }
+        });
+    });
+
+    async function loadProfile(loggedIn = false){//todo editing
+        if(loggedIn){
+            //getMe, see if my Profile etc
+        }
+        try{
+            const hasProfile = await api("/profiles/"+userID+"/exists");
+            if(hasProfile){
+                const user = await api("/user/"+userID);
+                const profile = await api("/profiles/"+userID+"?level=full");
+
+                document.getElementById("name").innerHTML = escapeHtml(profile.name);
+                document.getElementById("username").innerHTML = "@"+escapeHtml(user.username);
+
+                let avatarTag = document.getElementById("avatar");
+                if(profile.avatarUrl){
+                    avatarTag.src = profile.avatarUrl;
+                }else{
+                    avatarTag.src = ""+defAvatarBase+profile.name;
+                }
+
+                document.getElementById("bio").innerHTML = escapeHtml(profile.bio);
+
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("valid").style.display = "flex";
+
+                await loadEvents();
+            }else{
+                notify("No Profile for given Id", "error");
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("invalid").style.display = "block";
+
+                //Events könnten immer noch geladen werden; nicht vom Backend geschützt
+            }
+        }catch (e) {
+            notify(e);
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("invalid").style.display = "block";
+        }
+    }
+
+    async function loadEvents(){//todo paging
+        const out = document.getElementById("events");
+        out.innerHTML = "";
+
+        try{
+            const page = await api("/events?owner="+userID+"&size=100");
+            for(const ev of page.content){
+                const div = renderEvent(ev);
+                out.appendChild(div);
+            }
+        }catch (e) {
+            notify(e);
+        }
+    }
+
+    function renderEvent(ev){//todo
+        const div = document.createElement("div");
+
+        if(!ev){
+            div.innerHTML = `<h1>INVALID EVENT</h1>`;
+            return div;
+        }
+
+        div.innerHTML = `
+            <b>${ev.title}</b>
+            <small class="timestamp">${ev.termin}</small>
+            <p>${ev.description}</p>
+        `;
+        return div;
+    }
 </script>
 </body>
 </html>
