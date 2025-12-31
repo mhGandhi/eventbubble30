@@ -125,6 +125,12 @@
         });
     });
 
+    EventBubbleBus.addEventListener("auth:logout",async () => {
+        setTimeout(() => {
+            window.location.replace("/event?id=" + eventID);
+        }, 500);
+    });
+
     EventBubbleBus.addEventListener("event:updated",async (e) => {
         notify("Event updated!");
         await loadEvent(eventID);
