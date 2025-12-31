@@ -11,6 +11,14 @@
 <div th:replace="fragments/header :: header"></div>
 
 <main>
+    <section id="me" class="page-width" style="display:none;">
+        <div class="box">
+            <div id="mediv">
+
+            </div>
+            <button onclick="logoutEverywhere()">Logout Everywhere</button>
+        </div>
+    </section>
     <section id="profile" class="page-width">
         <div id="loading" class="box">
             <h1>Loading...</h1>
@@ -19,10 +27,13 @@
         <div id="valid" class="box" style="display: none; flex-direction: column;">
             <div style="display: flex; flex-direction: row;">
                 <div>
-                    <img id="avatar" height="128px" width="128px">
+                    <img alt="avatar" id="avatar" height="128px" width="128px">
                 </div>
                 <div>
                     <span><b id="name">NAME</b></span>
+                </div>
+                <div id="edit_btn" style="display:none;">
+                    <button onclick="editProfile()">EDIT</button>
                 </div>
             </div>
             <div class="box">
@@ -32,8 +43,40 @@
             </div>
         </div>
 
+        <div id="edit" class="box" style="display: none; flex-direction: column;">
+            <div style="display: flex; flex-direction: row;">
+                <div>
+                    <img alt="avatar" id="avatarImg" height="128px" width="128px">
+                    <input type="file" id="avatarFile" accept="image/*">
+                    <button onclick="uploadAvatar()">Upload Avatar</button>
+                    <button onclick="deleteAvatar()">Delete Avatar</button>
+                </div>
+                <div>
+                    <span><input type="text" id="profileName"></span>
+                </div>
+            </div>
+            <div class="box">
+                <textarea id="profileBio" placeholder="Your bio"></textarea>
+            </div>
+
+            <hr>
+            <button onclick="updateProfile()">Update</button>
+            <button onclick="cancelEdit()">Back</button>
+            <button style="background:#e74c3c;color:white"
+                    onclick="deleteMyProfile()">
+                Delete Profile
+            </button>
+        </div>
+
         <div id="invalid" class="box" style="display:none;">
             <h1>User has not set up a profile or does not exist. (404)</h1>
+        </div>
+
+        <div id="create" class="box" style="display:none;">
+            <label for="newProfileName">Name</label><input id="newProfileName" placeholder="Name">
+            <label for="newProfileBio">Bio</label><textarea id="newProfileBio" placeholder="Bio"></textarea>
+            <hr>
+            <button onclick="createProfile()">Create Profile</button>
         </div>
     </section>
     <section class="page-width">
@@ -47,7 +90,7 @@
 
 <script>
     const params = new URLSearchParams(window.location.search);
-    const userID = params.get("id");
+    const userID = Number(params.get("id"));
 
     window.addEventListener("load", () => {
         bootstrapSession({
@@ -60,11 +103,20 @@
         });
     });
 
-    async function loadProfile(loggedIn = false){//todo editing
+    async function loadProfile(loggedIn = false){
+        let meins = false;
         if(loggedIn){
-            //getMe, see if my Profile etc
+            const me = await getMe();
+            if(me.id === userID){
+                meins = true;
+                document.getElementById("mediv").textContent = JSON.stringify(me, null, 2);
+                document.getElementById("me").style.display = "block";
+            }
         }
         try{
+            if(meins)
+                document.getElementById("edit_btn").style.display = "block";
+
             const hasProfile = await api("/profiles/"+userID+"/exists");
             if(hasProfile){
                 const profile = await api("/profiles/"+userID+"?level=full");
@@ -84,6 +136,9 @@
                 document.getElementById("valid").style.display = "flex";
 
                 await loadEvents();
+            }else if(meins){
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("create").style.display = "block";
             }else{
                 notify("No Profile for given Id", "error");
                 document.getElementById("loading").style.display = "none";
@@ -116,6 +171,131 @@
             notify(e);
         }
     }
+
+    async function editProfile(){
+        try{
+            const p = await api("/profiles/"+userID+"?level=full");
+
+            document.getElementById("profileName").value = p.name || "";
+            document.getElementById("profileBio").value  = p.bio  || "";
+            renderAvatar(p.avatarURL, p.name);
+
+            document.getElementById("valid").style.display = "none";
+            document.getElementById("edit").style.display = "block";
+        }catch(e) {
+            notify(e);
+        }
+    }
+
+    function cancelEdit(){
+        setTimeout(() => {
+            window.location.replace("/profile?id="+userID);
+        }, 500);
+    }
+
+    async function createProfile() {
+        const name = document.getElementById("newProfileName").value.trim();
+        const bio = document.getElementById("newProfileBio").value.trim();
+
+        if (!name) {
+            notify("Name is required", "warn");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "POST", { name, bio });
+            notify("Profile created!");
+            cancelEdit();
+        } catch (e) {
+            notify(e);
+        }
+    }
+
+    async function updateProfile() {
+        const name = document.getElementById("profileName").value.trim();
+        const bio  = document.getElementById("profileBio").value.trim();
+
+        if (!name) {
+            notify("Name is required", "warn");
+            return;
+        }
+
+        try {
+            await api("/profiles/me", "PATCH", { name, bio });
+            notify("Profile updated!");
+            await editProfile();
+        } catch (e) {
+            notify(e);
+        }
+    }
+
+    async function deleteMyProfile() {
+        if (!confirm("This will permanently delete your profile and avatar. Continue?")) {
+            return;
+        }
+        try {
+            await api("/profiles/me", "DELETE");
+            notify("Profile deleted");
+            cancelEdit();
+        } catch (e) {
+            notify(e);
+        }
+    }
+
+    function renderAvatar(url, name="XX") {
+        const img = document.getElementById("avatarImg");
+        if (url) {
+            img.src = url + "?t=" + Date.now(); // cache busting
+        } else {
+            img.src = "https://ui-avatars.com/api/?name="+name;
+        }
+    }
+
+    async function uploadAvatar() {
+        const fileInput = document.getElementById("avatarFile");
+        if (!fileInput.files.length) {
+            notify("Select a file first", "warn");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        let res;
+        try{
+            res = await api("/profiles/me/avatar", "PUT", formData);
+        }catch(e){
+            notify(e);
+            return;
+        }
+
+        notify("updated avatar", "success");
+        renderAvatar(res.avatarURL, res.name);
+    }
+
+    async function deleteAvatar() {
+        if (!confirm("Delete avatar?")) return;
+
+        let res;
+        try{
+            res = await api("/profiles/me/avatar", "DELETE");
+        }catch(e){
+            notify(e);
+            return;
+        }
+        notify("Deleted Avatar.", "success");
+        renderAvatar(res.avatarURL, res.name);
+    }
+
+    async function logoutEverywhere() {
+        try { await api("/auth/invalidate-tokens", "POST"); notify("Invalidated Tokens globally!");} catch (e) {notify(e);}
+        await logout();
+    }
+
+    EventBubbleBus.addEventListener("auth:logout",async () => {
+        cancelEdit();
+    });
+
 </script>
 </body>
 </html>

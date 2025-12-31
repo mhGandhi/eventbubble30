@@ -36,13 +36,14 @@
         EventBubbleBus.addEventListener("auth:login", () => {setHeaderAuthState(true);});
         EventBubbleBus.addEventListener("bootstrapped", async() => {
             const me = await getMe()
-            setHeaderAuthState(me!==null);
+            await setHeaderAuthState(me!==null);
         });
 
-        function setHeaderAuthState(loggedIn){
+        async function setHeaderAuthState(loggedIn){
             const el = document.getElementById("header-user");
             if(loggedIn){
-                el.innerHTML = `<button onclick="logout()">LOGOUT</button>`;
+                const me = await getMe();
+                el.innerHTML = `<a href="/profile?id=${me.id}">ME</a><button onclick="logout()">LOGOUT</button>`;
             }else{
                 el.innerHTML = `<a href="/login">LOGIN/SIGNUP</a>`;
             }

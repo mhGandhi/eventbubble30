@@ -9,7 +9,7 @@ async function bootstrapSession({ onAuthenticated, onAnonymous }) {
         await refreshAccessToken();
 
     try{
-        const me = getMe();
+        const me = await getMe();
         //todo store me
         if (me!==null) {
             onAuthenticated?.();
@@ -25,32 +25,36 @@ async function bootstrapSession({ onAuthenticated, onAnonymous }) {
 
 async function api(url, method = "GET", body = null, retry = true) {
     let headers = {};
-    if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
-    if (body) headers["Content-Type"] = "application/json";
+    let payload = null;
+
+    if (accessToken) {
+        headers["Authorization"] = "Bearer " + accessToken;
+    }
+
+    if (body instanceof FormData) {
+        payload = body;
+        // ❗ DO NOT SET Content-Type
+    } else if (body !== null) {
+        headers["Content-Type"] = "application/json";
+        payload = JSON.stringify(body);
+    }
 
     const res = await fetch(API + url, {
         method,
         headers,
-        body: body ? JSON.stringify(body) : null
+        body: payload
     });
 
-    // Unauthorized? Try refresh once
     if (retry && res.status === 419 && refreshToken) {
-        try {
-            await refreshAccessToken();
-            return api(url, method, body, false);
-        } catch (e) {
-            notify(e);
-            EventBubbleBus.dispatchEvent(
-                new CustomEvent("auth:refresh_error")
-            );
-        }
+        await refreshAccessToken();
+        return api(url, method, body, false);
     }
 
     const text = await res.text();
     if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${text}`);
     }
+
     try { return JSON.parse(text); }
     catch { return text; }
 }
@@ -318,11 +322,10 @@ async function deleteEvent(id) {
     if (!confirm("Delete event " + id + "?")) return;
     try {
         await api("/events/" + id, "DELETE");
-        new CustomEvent("event:deleted", {
-            detail: {
-                id: id,
-            },
-        })
+        EventBubbleBus.dispatchEvent(
+            new CustomEvent("event:deleted", { detail: { id } })
+        );
+
     } catch (e) { notify(e); }
 }
 
@@ -368,7 +371,7 @@ function renderEditableEvent(ev, ownerSnippet){//todo nur auf /event??id=XX
 
     const local = splitInstantToLocal(ev.termin);
     div.innerHTML = `
-                        <label>Title:</label><input id="title_${ev.id}" value="${ev.title}"> (ID ${ev.id})<br>
+                        <label>Title:</label><input id="title_${ev.id}" value="${escapeHtml(ev.title)}"> (ID ${ev.id})<br>
                         ${ownerSnippet ? `By: ${ownerSnippet}<br>`: ""}
                         <label>Date:</label>
                         <input id="date_${ev.id}" type="date" value="${local.date}">
@@ -400,10 +403,10 @@ function renderReadOnlyEvent(ev, ownerSnippet){
     div.className = "event";
 
     div.innerHTML = `
-                        <a href="/event?id=${ev.id}"><b>${ev.title}</b></a> (ID ${ev.id})<br>
+                        <a href="/event?id=${ev.id}"><b>${escapeHtml(ev.title)}</b></a> (ID ${ev.id})<br>
                         ${ownerSnippet ? `By: ${ownerSnippet}<br>`: ""}
                         <small class="timestamp">${ev.termin || "no date"}</small><br>
-                        ${ev.description || ""}<br>
+                        ${escapeHtml(ev.description) || ""}<br>
                         <div class="location-box" id="location_event_${ev.id}" data-location="">
                             <div class="location-summary">
                                 <i>No location set</i>
