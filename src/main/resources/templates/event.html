@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
 
-    <title th:text="${event.title} + ' | Eventbubble'">Event</title>
+    <title id="winTitle">Event</title>
 
-    <meta property="og:title" th:content="${event.title}"/>
-    <meta property="og:date" th:content="${event.termin}"/>
-    <meta property="og:description" th:content="${#strings.abbreviate(event.description, 150)}"/>
-    <meta property="og:url" th:content="'https://eventbubble.eu/event?id=' + ${event.id}"/>
-    <meta property="og:type" content="website"/>
-
+    <th:block th:if="${event != null}">
+        <meta property="og:title" th:content="${event.title}"/>
+        <meta property="og:date" th:content="${event.termin}"/>
+        <meta property="og:description" th:content="${#strings.abbreviate(event.description, 150)}"/>
+        <meta property="og:url" th:content="'https://eventbubble.eu/event?id=' + ${event.id}"/>
+        <meta property="og:type" content="website"/>
+    </th:block>
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
@@ -163,6 +164,8 @@
                 `location_event_${ev.id}`,
                 ev.location
             );
+
+            document.getElementById("winTitle").innerText = ev.title+" | Eventbubble"
 
             document.getElementById("loading").style.display = "none";
             document.getElementById("valid").style.display = "block";
