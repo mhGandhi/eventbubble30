@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
@@ -130,12 +131,19 @@ public class ProfilController {
 
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
-    @PutMapping("/{segment}/avatar")
+    @PutMapping(
+            value = "/{segment}/avatar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public Profil.DTO uploadAvatar(
             @PathVariable String segment,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         long id = resolveId(segment);
+
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file");
+        }
 
         return profilService.toDTO(profilService.updateAvatar(id, file));
     }
