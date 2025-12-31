@@ -1,10 +1,20 @@
 package com.lennadi.eventbubble30.frontend;
 
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.service.VeranstaltungService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
+@RequiredArgsConstructor
 @Controller
 public class StaticPageController {
+
+    private final VeranstaltungService veranstaltungService;
 
     @GetMapping("/")
     public String index() {
@@ -22,7 +32,13 @@ public class StaticPageController {
     }
 
     @GetMapping("/event")
-    public String event() {
+    public String event(
+            @RequestParam Long id,
+            Model model
+    ) {
+        Veranstaltung ev = veranstaltungService.getVeranstaltungById(id);
+
+        model.addAttribute("event", ev);
         return "event";
     }
 
