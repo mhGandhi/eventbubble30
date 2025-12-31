@@ -107,7 +107,7 @@
         let meins = false;
         if(loggedIn){
             const me = await getMe();
-            if(me.id === userID){
+            if(me.id === userID || me.roles.includes("ADMIN")){
                 meins = true;
                 document.getElementById("mediv").textContent = JSON.stringify(me, null, 2);
                 document.getElementById("me").style.display = "block";
