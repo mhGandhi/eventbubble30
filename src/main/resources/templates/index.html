@@ -494,42 +494,6 @@
         };
     }
 
-    function renderAuditEntry(entry) {
-        const safePayload = JSON.stringify(entry.payload);
-        let userStr = "?";
-
-        if (entry.user) {
-            let userNameSnap = "";
-            if (entry.user?.username !== entry.usernameSnapshot && entry.usernameSnapshot !== null) {
-                userNameSnap = " (damals " + entry.usernameSnapshot + ")";
-            }
-            userStr = entry.user?.username + userNameSnap;
-        }
-
-        const div = document.createElement("div");
-        div.classList.add("audit", entry.success ? "success" : "fail");
-
-        div.innerHTML = `
-        <details>
-            <summary>
-                <b>${entry.action}</b> durch <b>${userStr}</b>
-                an <b>${entry.resourceType} #${entry.resourceId || "-"}</b>
-                <small class="ipaddress">${entry.ipAddress}</small>
-                <small class="timestamp ago" data-timestamp="${entry.timestamp}"></small>
-            </summary>
-            <small class="timestamp">(${entry.timestamp})</small>
-            <small>[${entry.id}]</small><br>
-            Endpoint: ${entry.endpoint}<br>
-            Payload: ${safePayload}
-        </details>
-    `;
-
-        // Initial render
-        div.querySelector(".ago").textContent = `• ${timeAgo(entry.timestamp)}`;
-
-        return div;
-    }
-
     function appendAuditEntry(entry) {
         const div = document.getElementById("auditLog");
 
