@@ -100,7 +100,7 @@ public class ProfilController {
         );
     }
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
     public ResponseEntity<Profil.DTO> updateProfil(
             @PathVariable String segment,
