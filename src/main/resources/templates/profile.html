@@ -84,6 +84,14 @@
 
         </div>
     </section>
+    <section class="page-width">
+        <div class="box" id="auditLog">
+
+        </div>
+        <div class="box" id="userAuditLog">
+
+        </div>
+    </section>
 </main>
 
 <div th:replace="fragments/footer :: footer"></div>
@@ -96,6 +104,8 @@
         bootstrapSession({
             onAuthenticated:async()=> {
                 await loadProfile(true);
+                await loadLatestAuditLogsIfAdmin(`resourceType=PROFILE&resourceId=${userID}`);
+                await loadLatestAuditLogsIfAdmin(`resourceType=USER&resourceId=${userID}&action=CREATE&action=READ&action=UPDATE&action=DELETE&action=SIGNUP&action=LOGIN&action=INVALIDATE_TOKENS&action=MAIL_REQUEST&action=OTHER`, "userAuditLog");
             },
             onAnonymous:async()=> {
                 await loadProfile();

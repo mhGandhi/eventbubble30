@@ -220,22 +220,6 @@
         if (ev_to.value)
             params.append("to", new Date(ev_to.value).toISOString());
 
-        // --- NEAR FILTER (using existing location system) ---
-        const nearLoc = getLocationFromBox("location_event_near");
-        const radius = ev_near_radius.value;
-
-        if (
-            nearLoc &&
-            nearLoc.latitude != null &&
-            nearLoc.longitude != null &&
-            radius
-        ) {
-            params.append(
-                "near",
-                `${nearLoc.latitude},${nearLoc.longitude},${radius}`
-            );
-        }
-
         params.append("orderBy", ev_orderBy.value);
         params.append("orderDir", ev_orderDir.value);
         params.append("page", eventState.page);
@@ -331,7 +315,7 @@
 
         wrapper.style.display = "block";
 
-        await loadLatestAuditLogs();
+        await loadLatestAuditLogs(buildAuditFilterQuery());
         if (!auditEventSource) {
             startAuditStream();
         }
@@ -347,24 +331,6 @@
     function isAuditVisible() {
         const section = document.getElementById("auditSection");
         return section && section.style.display !== "none";
-    }
-
-    async function loadLatestAuditLogs() {
-        try {
-            const q = buildAuditFilterQuery();
-            const url = "/admin/audit-log?page=0&size=15" + (q ? "&" + q : "");
-
-            const resp = await api(url);
-            const div = document.getElementById("auditLog");
-
-            div.innerHTML = "";
-            resp.content.forEach(entry => {
-                div.appendChild(renderAuditEntry(entry));
-            });
-
-        } catch (e) {
-            console.error(e);
-        }
     }
 
     function restartAuditStream() {
@@ -444,7 +410,7 @@
             auditEventSource = null;
         }
 
-        loadLatestAuditLogs();
+        loadLatestAuditLogs(buildAuditFilterQuery());
         startAuditStream();
     }
 

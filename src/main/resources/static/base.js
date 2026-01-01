@@ -569,3 +569,29 @@ function renderAuditEntry(entry) {
     return div;
 }
 
+async function loadLatestAuditLogs(q = null, domId = null) {
+    try {
+        const url = "/admin/audit-log?page=0&size=25" + (q ? "&" + q : "");
+
+        const resp = await api(url);
+        const div = document.getElementById(domId?domId:"auditLog");
+
+        div.innerHTML = "";
+        resp.content.forEach(entry => {
+            div.appendChild(renderAuditEntry(entry));
+        });
+    } catch (e) {
+        notify(e);
+    }
+}
+
+async function loadLatestAuditLogsIfAdmin(q = null, domId = null){
+    try{
+        const me = await getMe();
+        if(me && me.roles.includes("ADMIN")){
+            await loadLatestAuditLogs(q, domId);
+        }
+    }catch (e){
+        notify(e);
+    }
+}

@@ -93,6 +93,11 @@
 
         </div>
     </section>
+    <section class="page-width">
+        <div id="auditLog">
+
+        </div>
+    </section>
 </main>
 
 <div th:replace="fragments/footer :: footer"></div>
@@ -115,6 +120,7 @@
                 }else {
 
                 }
+                await loadLatestAuditLogsIfAdmin(`resourceType=EVENT&resourceId=${eventID}`);
             },
             onAnonymous:async()=> {
                 if(eventID){
