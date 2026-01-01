@@ -187,6 +187,7 @@
 
         function renderEventPopup(ev) {
             const title = escapeHtml(ev.title || "Untitled");
+            const id = ev.id || "";
             const when = ev.termin ? escapeHtml(ev.termin) : "no date";
             const place = ev.location?.displayName
                 ? escapeHtml(ev.location.displayName)
@@ -196,7 +197,7 @@
                 : "";
 
             return `
-        <b>${title}</b><br>
+        <b><a href="/event?id=${id}">${title}</a></b><br>
         <small class="timestamp">${when}</small><br>
         ${place ? `📍 ${place}<br>` : ""}
         ${desc ? `<div style="margin-top:6px">${desc}</div>` : ""}
