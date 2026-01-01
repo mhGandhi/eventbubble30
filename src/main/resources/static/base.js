@@ -576,6 +576,10 @@ async function loadLatestAuditLogs(q = null, domId = null) {
         const resp = await api(url);
         const div = document.getElementById(domId?domId:"auditLog");
 
+        try{
+            document.getElementById("auditSection").style.display = "block";
+        }catch{}
+
         div.innerHTML = "";
         resp.content.forEach(entry => {
             div.appendChild(renderAuditEntry(entry));
