@@ -36,4 +36,20 @@ public class Location {
 
     @Column(name = "location_external_id")
     private String externalId;
+
+
+    @Override
+    public String toString() {
+        return "Location{" +
+                "displayName='" + displayName + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", street='" + street + '\'' +
+                ", city='" + city + '\'' +
+                ", postalCode='" + postalCode + '\'' +
+                ", country='" + country + '\'' +
+                ", externalSource='" + externalSource + '\'' +
+                ", externalId='" + externalId + '\'' +
+                '}';
+    }
 }
