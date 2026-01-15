@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -45,7 +46,8 @@ public class Profil {
     private String name;
     private String bio;
 
-    private String avatarKey;
+    @Embedded
+    private ProfilePicture avatarKey;
 
     public Profil(long id, String pName){
         this.id = id;

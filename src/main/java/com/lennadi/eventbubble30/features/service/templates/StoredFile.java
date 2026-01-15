@@ -1,0 +1,41 @@
+package com.lennadi.eventbubble30.features.service.templates;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.Objects;
+
+@Embeddable//todo auto cleanup
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public abstract class StoredFile {
+
+    @Column(name = "file_key")
+    @Getter // TEMPORARY – later reduce visibility //todo
+    protected String key;
+
+    protected StoredFile(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("file key must not be null or blank");
+        }
+        this.key = key;
+    }
+
+    public boolean isPresent() {
+        return key != null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StoredFile that)) return false;
+        return Objects.equals(key, that.key);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key);
+    }
+}

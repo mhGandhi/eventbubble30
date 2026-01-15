@@ -3,6 +3,7 @@ package com.lennadi.eventbubble30.features.service;
 import com.lennadi.eventbubble30.features.controller.ProfilController;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
+import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
 import com.lennadi.eventbubble30.fileStorage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -77,14 +78,14 @@ public class ProfilService {
 
         Profil profil = getProfil(profilId);
 
-        String oldKey = profil.getAvatarKey();
+        String oldKey = profil.getAvatarKey().getKey();
         // store new file
         String newKey = storage.store(
                 file.getInputStream(),
                 file.getOriginalFilename(),
                 file.getContentType()
         );
-        profil.setAvatarKey(newKey);
+        profil.setAvatarKey(ProfilePicture.ofStoredKey(newKey));
 
         // delete previous avatar
         TransactionSynchronizationManager.registerSynchronization(
@@ -101,22 +102,20 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public Profil deleteAvatar(long profilId) {
+    public void deleteAvatar(long profilId) {
         Profil profil = getProfil(profilId);
 
         if (profil.getAvatarKey() != null) {
-            storage.delete(profil.getAvatarKey());
+            storage.delete(profil.getAvatarKey().getKey());
         }
 
         profil.setAvatarKey(null);
-
-        return profil;
     }
 
     public URL getAvatarUrl(long profilId) {
         Profil profil = getProfil(profilId);
         if(profil==null || profil.getAvatarKey()==null) return null;
-        return storage.getFileURL(profil.getAvatarKey());
+        return storage.getFileURL(profil.getAvatarKey().getKey());
     }
 
     public long getCurrentUserId() {
@@ -124,11 +123,11 @@ public class ProfilService {
     }
 
     public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey()), p.getBio());
+        return new Profil.DTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey().getKey()), p.getBio());
     }
 
     public Profil.SmallDTO toSmallDTO(Profil p){
-        return new Profil.SmallDTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey()));
+        return new Profil.SmallDTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey().getKey()));
     }
 
     public boolean exists(long id) {
