@@ -1,4 +1,4 @@
-package com.lennadi.eventbubble30.features.service.templates;
+package com.lennadi.eventbubble30.fileStorage.templates;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 import java.util.Objects;
 
 //todo auto cleanup
+@Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class StoredFile {
+public  class StoredFile {
 
     @Getter // TEMPORARY – later reduce visibility //todo
+    @Column(name="file_key")
     protected String key;
 
     protected StoredFile(String key) {
@@ -22,8 +24,8 @@ public abstract class StoredFile {
         this.key = key;
     }
 
-    public boolean isPresent() {
-        return key != null;
+    public static StoredFile ofStoredKey(String newKey) {
+        return new StoredFile(newKey);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
-import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
+import com.lennadi.eventbubble30.fileStorage.templates.StoredFile;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -50,7 +50,11 @@ public class Profil {
             name= "key",
             column = @Column(name="avatar_key")
     )
-    private ProfilePicture avatar;
+    private StoredFile avatar;
+
+    public boolean hasAvatar(){
+        return avatar != null;
+    }
 
     public Profil(long id, String pName){
         this.id = id;

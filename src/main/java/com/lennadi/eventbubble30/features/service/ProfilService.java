@@ -3,10 +3,8 @@ package com.lennadi.eventbubble30.features.service;
 import com.lennadi.eventbubble30.features.controller.ProfilController;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
-import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
-import com.lennadi.eventbubble30.features.service.templates.StoredFile;
 import com.lennadi.eventbubble30.fileStorage.FileManagerService;
-import com.lennadi.eventbubble30.fileStorage.FileStorageService;
+import com.lennadi.eventbubble30.fileStorage.templates.StoredFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,7 +78,7 @@ public class ProfilService {
 
         Profil profil = getProfil(profilId);
 
-        ProfilePicture oldAvatar = profil.getAvatar();
+        StoredFile oldAvatar = profil.getAvatar();
 
         profil.setAvatar(fileManagerService.toProfilePicture(file));
 
@@ -101,17 +99,15 @@ public class ProfilService {
     @Transactional
     public void deleteAvatar(long profilId) {
         Profil profil = getProfil(profilId);
-        ProfilePicture oldAvatar = profil.getAvatar();
-        if (oldAvatar != null) {
-            fileManagerService.delete(oldAvatar);
+        if (profil.hasAvatar()) {
+            fileManagerService.delete(profil.getAvatar());
         }
-
         profil.setAvatar(null);
     }
 
     public URL getAvatarUrl(long profilId) {
         Profil profil = getProfil(profilId);
-        if(profil==null || profil.getAvatar()==null) return null;
+        if(profil==null || !profil.hasAvatar()) return null;
         return fileManagerService.getURL(profil.getAvatar());
     }
 
@@ -120,11 +116,11 @@ public class ProfilService {
     }
 
     public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getId(), p.getName(), fileManagerService.getURL(p.getAvatar()), p.getBio());
+        return new Profil.DTO(p.getId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null, p.getBio());
     }
 
     public Profil.SmallDTO toSmallDTO(Profil p){
-        return new Profil.SmallDTO(p.getId(), p.getName(), fileManagerService.getURL(p.getAvatar()));
+        return new Profil.SmallDTO(p.getId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null);
     }
 
     public boolean exists(long id) {
