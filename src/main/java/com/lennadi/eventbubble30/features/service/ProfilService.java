@@ -4,6 +4,8 @@ import com.lennadi.eventbubble30.features.controller.ProfilController;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
 import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
+import com.lennadi.eventbubble30.features.service.templates.StoredFile;
+import com.lennadi.eventbubble30.fileStorage.FileManagerService;
 import com.lennadi.eventbubble30.fileStorage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,7 @@ public class ProfilService {
 
     private final ProfilRepository profilRepo;
     private final BenutzerService benutzerService;
-    private final FileStorageService storage;
+    private final FileManagerService fileManagerService;
     /// //////////////////////////////////////////////////////////////
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
@@ -78,21 +80,16 @@ public class ProfilService {
 
         Profil profil = getProfil(profilId);
 
-        String oldKey = profil.getAvatarKey().getKey();
-        // store new file
-        String newKey = storage.store(
-                file.getInputStream(),
-                file.getOriginalFilename(),
-                file.getContentType()
-        );
-        profil.setAvatarKey(ProfilePicture.ofStoredKey(newKey));
+        ProfilePicture oldAvatar = profil.getAvatar();
+
+        profil.setAvatar(fileManagerService.toProfilePicture(file));
 
         // delete previous avatar
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        if (oldKey != null) storage.delete(oldKey);
+                        if (oldAvatar != null) fileManagerService.delete(oldAvatar);
                     }
                 }
         );
@@ -104,18 +101,18 @@ public class ProfilService {
     @Transactional
     public void deleteAvatar(long profilId) {
         Profil profil = getProfil(profilId);
-
-        if (profil.getAvatarKey() != null) {
-            storage.delete(profil.getAvatarKey().getKey());
+        ProfilePicture oldAvatar = profil.getAvatar();
+        if (oldAvatar != null) {
+            fileManagerService.delete(oldAvatar);
         }
 
-        profil.setAvatarKey(null);
+        profil.setAvatar(null);
     }
 
     public URL getAvatarUrl(long profilId) {
         Profil profil = getProfil(profilId);
-        if(profil==null || profil.getAvatarKey()==null) return null;
-        return storage.getFileURL(profil.getAvatarKey().getKey());
+        if(profil==null || profil.getAvatar()==null) return null;
+        return fileManagerService.getURL(profil.getAvatar());
     }
 
     public long getCurrentUserId() {
@@ -123,11 +120,11 @@ public class ProfilService {
     }
 
     public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey().getKey()), p.getBio());
+        return new Profil.DTO(p.getId(), p.getName(), fileManagerService.getURL(p.getAvatar()), p.getBio());
     }
 
     public Profil.SmallDTO toSmallDTO(Profil p){
-        return new Profil.SmallDTO(p.getId(), p.getName(), storage.getFileURL(p.getAvatarKey().getKey()));
+        return new Profil.SmallDTO(p.getId(), p.getName(), fileManagerService.getURL(p.getAvatar()));
     }
 
     public boolean exists(long id) {

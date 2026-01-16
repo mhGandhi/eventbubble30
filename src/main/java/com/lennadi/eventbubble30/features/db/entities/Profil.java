@@ -47,7 +47,7 @@ public class Profil {
     private String bio;
 
     @Embedded
-    private ProfilePicture avatarKey;
+    private ProfilePicture avatar;
 
     public Profil(long id, String pName){
         this.id = id;
