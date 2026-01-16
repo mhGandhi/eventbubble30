@@ -1,108 +1,201 @@
-html, body{
-    height: 100%;
-    margin: 0;
+/* -------------------------
+   Base & Layout
+------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
-main{
-    margin: 20px;
-    flex: 1;
-}
-.page-width{
-    max-width: 75rem;
-    width: 100%;
-    margin: 0 auto;
+html, body {
+    height: 100%;
+    margin: 0;
 }
 
 body {
     display: flex;
     flex-direction: column;
-    font-family: Arial, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    color: #222;
+    background: #f4f6f8;
+    line-height: 1.5;
     overflow-x: hidden;
 }
+
 body.modal-open {
     overflow: hidden;
 }
 
-h2 { margin-top: 40px; }
+main {
+    flex: 1;
+    padding: 16px;
+}
 
-input, button, textarea {
-    padding: 6px;
-    margin: 4px 0;
+/* Centered content container */
+.page-width {
+    max-width: 72rem;
+    margin: 0 auto;
     width: 100%;
-    max-width: 350px;
-}
-textarea { height: 70px; }
-
-button { cursor: pointer; }
-
-pre {
-    background: #eee;
-    padding: 10px;
-    overflow-x: auto;
-}
-summary {
-    cursor: pointer;
 }
 
+/* -------------------------
+   Typography
+------------------------- */
+h1, h2, h3 {
+    margin: 0 0 12px 0;
+    line-height: 1.25;
+}
 
+h2 {
+    margin-top: 32px;
+}
 
+small,
+.timestamp,
+.ipaddress {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #666;
+}
+
+/* -------------------------
+   Cards / Boxes
+------------------------- */
 .box {
-    border: 1px solid #ccc;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 5px;
-    background: #fafafa;
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #e2e6ea;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
+/* Used for rendered events */
 .event {
-    padding: 10px;
-    border: 1px solid #ddd;
-    margin-top: 5px;
-    border-radius: 5px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #e2e6ea;
+    margin-top: 10px;
+}
+
+/* -------------------------
+   Forms
+------------------------- */
+input,
+textarea,
+select,
+button {
+    font: inherit;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 12px;
+    margin: 6px 0 12px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
     background: #fff;
 }
 
-.user-snippet {
-    position: relative;
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* -------------------------
+   Buttons
+------------------------- */
+button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #3498db;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+button:hover {
+    background: #2f89c6;
+}
+
+button:disabled {
+    opacity: 0.6;
     cursor: default;
 }
-.location-box {
-    border-top: 1px dashed #ccc;
-    margin-top: 8px;
-    padding-top: 6px;
+
+button + button {
+    margin-left: 6px;
 }
 
+/* Danger buttons (you already use inline styles, this is optional) */
+button.danger {
+    background: #e74c3c;
+}
 
-
-
+/* -------------------------
+   Tabs (Login / Signup)
+------------------------- */
 .tab-bar {
     display: flex;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid #e2e6ea;
+    margin-bottom: 12px;
 }
+
 .tab {
     background: none;
     border: none;
-    padding: 10px 16px;
-    font-size: 16px;
+    padding: 12px 16px;
     cursor: pointer;
+    font-size: 15px;
     border-bottom: 3px solid transparent;
 }
+
 .tab:hover {
-    background: #f5f5f5;
+    background: #f1f3f5;
 }
+
 .tab.active {
     border-bottom-color: #3498db;
-    font-weight: bold;
+    font-weight: 600;
 }
+
 .tab-content {
     display: none;
 }
+
 .tab-content.active {
     display: block;
 }
 
+/* -------------------------
+   Location boxes
+------------------------- */
+.location-box {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+}
 
+.location-summary {
+    margin-bottom: 6px;
+}
+
+/* -------------------------
+   Notifications
+------------------------- */
 .notify-stack {
     position: fixed;
     top: 16px;
@@ -111,97 +204,221 @@ summary {
     max-width: calc(100vw - 32px);
     z-index: 10000;
 }
+
 .notify-item {
-    background: #eee;
-    color: #222;
+    background: #fff;
     border-left: 6px solid #999;
-    padding: 10px 12px;
+    padding: 12px 14px;
     margin-bottom: 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    font-family: monospace;
+    font-family: ui-monospace, monospace;
     font-size: 13px;
     position: relative;
     white-space: pre-wrap;
     word-break: break-word;
-    transition: opacity 0.24s ease;
 }
 
-.notify-item.deleted {
-    transition: opacity 0.6s ease;
-    opacity: 0;
-}
-.notify-item.expired {
-    opacity: 0.6;
-}
+.notify-item.success { border-left-color: #2ecc71; }
+.notify-item.error   { border-left-color: #e74c3c; }
+.notify-item.warn    { border-left-color: #f1c40f; }
+.notify-item.info    { border-left-color: #95a5a6; }
+
 .notify-progress {
     position: absolute;
     bottom: 0;
     left: 0;
     height: 4px;
     width: 100%;
-    background: #bbb;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
+    background: rgba(0,0,0,0.15);
     transform-origin: left;
     animation: notify-expire 5s linear forwards;
 }
+
 @keyframes notify-expire {
-    from {
-        transform: scaleX(1);
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
+/* -------------------------
+   Audit log
+------------------------- */
+.audit {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.audit.success { border-left: 4px solid #2ecc71; }
+.audit.fail    { border-left: 4px solid #e74c3c; }
+
+.audit-live-status {
+    font-weight: 600;
+}
+
+.audit-live-status.connected  { color: #2ecc71; }
+.audit-live-status.connecting { color: #f1c40f; }
+.audit-live-status.error      { color: #e74c3c; }
+
+/* -------------------------
+   Mobile tweaks
+------------------------- */
+@media (max-width: 600px) {
+    main {
+        padding: 12px;
     }
-    to {
-        transform: scaleX(0);
+
+    .box {
+        padding: 14px;
+    }
+
+    button {
+        width: 100%;
+        margin: 6px 0;
+    }
+
+    button + button {
+        margin-left: 0;
+    }
+
+    .tab {
+        flex: 1;
+        text-align: center;
     }
 }
-.notify-item.success { border-left-color: #2ecc71; }
-.notify-item.error   { border-left-color: #e74c3c; }
-.notify-item.warn    { border-left-color: #f1c40f; }
-.notify-item.info    { border-left-color: #a5a5a5; }
-.notify-close {
-    position: absolute;
-    top: 4px;
-    right: 4px;
 
-    width: 28px;
-    height: 28px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-    line-height: 1;
+/* =========================
+   Dark mode (auto)
+   ========================= */
+@media (prefers-color-scheme: dark) {
 
-    color: #666;
-    border-radius: 50%;
+    /* ---------- Base ---------- */
+    body {
+        background: #0f1216;
+        color: #e6e8eb;
+    }
+
+    main {
+        background: transparent;
+    }
+
+    h1, h2, h3 {
+        color: #f1f3f5;
+    }
+
+    a {
+        color: #6cb6ff;
+    }
+
+    a:hover {
+        color: #8cc8ff;
+    }
+
+    /* ---------- Cards / boxes ---------- */
+    .box,
+    .event {
+        background: #161a20;
+        border-color: #2a2f38;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- Inputs ---------- */
+    input,
+    textarea,
+    select {
+        background: #0f1216;
+        color: #e6e8eb;
+        border-color: #2a2f38;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #8b919b;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: #6cb6ff;
+    }
+
+    /* ---------- Buttons ---------- */
+    button {
+        background: #2f6fed;
+        color: #ffffff;
+    }
+
+    button:hover {
+        background: #3d7bfd;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+    }
+
+    /* ---------- Tabs ---------- */
+    .tab-bar {
+        border-bottom-color: #2a2f38;
+    }
+
+    .tab {
+        color: #cfd3da;
+    }
+
+    .tab:hover {
+        background: #1c212a;
+    }
+
+    .tab.active {
+        color: #ffffff;
+        border-bottom-color: #6cb6ff;
+    }
+
+    /* ---------- Location / separators ---------- */
+    .location-box {
+        border-top-color: #2a2f38;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid #2a2f38;
+    }
+
+    /* ---------- Notifications ---------- */
+    .notify-item {
+        background: #161a20;
+        color: #e6e8eb;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .notify-item.success { border-left-color: #2ecc71; }
+    .notify-item.error   { border-left-color: #e74c3c; }
+    .notify-item.warn    { border-left-color: #f1c40f; }
+    .notify-item.info    { border-left-color: #6c757d; }
+
+    .notify-progress {
+        background: rgba(255,255,255,0.15);
+    }
+
+    /* ---------- Audit ---------- */
+    .audit {
+        border-top-color: #2a2f38;
+    }
+
+    .audit:hover {
+        background: #1c212a;
+    }
+
+    .audit-live-status.connected  { color: #2ecc71; }
+    .audit-live-status.connecting { color: #f1c40f; }
+    .audit-live-status.error      { color: #e74c3c; }
+
+    /* ---------- Misc text ---------- */
+    .timestamp,
+    .ipaddress,
+    small {
+        color: #9aa0aa;
+    }
 }
-.notify-close:hover {
-    color: #e74c3c;
-    background: rgba(231, 76, 60, 0.12);
-}
 
-.timestamp {
-    font-family: monospace;
-    font-size: 12px;
-    color: #666;
-}
-.ipaddress {
-    font-family: monospace;
-    font-size: 12px;
-    color: #666;
-}
-
-
-
-.audit.success  { border-left: 4px solid #4caf50; }
-.audit.fail     { border-left: 4px solid #f44336; }
-.audit:hover    { background: #fafafa; }
-.audit          { border-top: 1px solid black; }
-.audit-live-status              { font-weight: bold; }
-.audit-live-status.connected    { color: #2ecc71; /* green */ }
-.audit-live-status.connecting   { color: #f1c40f; /* yellow */ }
-.audit-live-status.error        { color: #e74c3c; /* red */ }
-.audit-live-status.closed       { color: #95a5a6; /* gray */ }
