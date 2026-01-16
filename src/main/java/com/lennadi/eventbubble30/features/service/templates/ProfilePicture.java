@@ -1,5 +1,12 @@
 package com.lennadi.eventbubble30.features.service.templates;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProfilePicture extends ImageFile {
 
     private ProfilePicture(String key) {

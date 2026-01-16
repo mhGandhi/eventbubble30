@@ -1,6 +1,5 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lennadi.eventbubble30.features.service.templates.ProfilePicture;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -47,6 +46,10 @@ public class Profil {
     private String bio;
 
     @Embedded
+    @AttributeOverride(
+            name= "key",
+            column = @Column(name="avatar_key")
+    )
     private ProfilePicture avatar;
 
     public Profil(long id, String pName){

@@ -8,11 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
-@Embeddable//todo auto cleanup
+//todo auto cleanup
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class StoredFile {
 
-    @Column(name = "file_key")
     @Getter // TEMPORARY – later reduce visibility //todo
     protected String key;
 
