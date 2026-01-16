@@ -39,6 +39,119 @@ main {
     width: 100%;
 }
 
+/* =========================
+   Header / Navbar
+   ========================= */
+header {
+    background: linear-gradient(135deg, #2f6fed, #3498db);
+    color: #fff;
+    padding: 10px 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+header nav {
+    max-width: 72rem;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.navbar-left,
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Make nav items look like buttons */
+.navbar-item a {
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: background 0.2s ease, transform 0.05s ease;
+}
+
+.navbar-item a:hover {
+    background: rgba(255,255,255,0.18);
+}
+
+.navbar-item a:active {
+    transform: translateY(1px);
+}
+
+/* Brand */
+.navbar-left .navbar-item:first-child a {
+    font-weight: 700;
+    font-size: 17px;
+}
+
+/* Mobile header spacing */
+@media (max-width: 600px) {
+    header nav {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    header {
+        background: linear-gradient(135deg, #1f2937, #111827);
+    }
+
+    .navbar-item a:hover {
+        background: rgba(255,255,255,0.12);
+    }
+}
+
+/* =========================
+   Notification close button
+   ========================= */
+.notify-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+
+    color: #555;
+    background: rgba(0,0,0,0.05);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.notify-close:hover {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+    .notify-close {
+        color: #cfd3da;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .notify-close:hover {
+        color: #ffffff;
+        background: rgba(231, 76, 60, 0.35);
+    }
+}
+
+
 /* -------------------------
    Typography
 ------------------------- */
