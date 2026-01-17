@@ -22,13 +22,13 @@ public interface BenutzerRepository extends JpaRepository<Benutzer, Long> {
     @Query("UPDATE Benutzer b SET b.lastSeen = :ts WHERE b.id = :id")
     void updateLastSeen(@Param("id") Long id, @Param("ts") Instant ts);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
-    DELETE FROM Benutzer b
-    WHERE b.emailVerified = false
-      AND b.verificationTokenExpiresAt IS NOT NULL
-      AND b.verificationTokenExpiresAt < :cutoff
+DELETE FROM Benutzer b
+WHERE b.emailVerified = false
+  AND b.creationDate < :cutoff
 """)
     int cleanupUnverified(@Param("cutoff") Instant cutoff);
+
 
 }
