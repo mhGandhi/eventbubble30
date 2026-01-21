@@ -14,7 +14,7 @@ public class BenutzerDetailsService implements UserDetailsService {
 
     @Override
     public BenutzerDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var benutzer = repo.findByUsername(username)
+        var benutzer = repo.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return loadUser(benutzer);

@@ -10,11 +10,11 @@ import java.time.Instant;
 import java.util.Optional;
 
 public interface BenutzerRepository extends JpaRepository<Benutzer, Long> {
-    public Optional<Benutzer> findByUsername(String username);
+    public Optional<Benutzer> findByUsernameIgnoreCase(String username);
     public Optional<Benutzer> findByEmail(String email);
 
     boolean existsByEmail(String email);
-    boolean existsByUsername(String username);
+    boolean existsByUsernameIgnoreCase(String username);
 
     Optional<Benutzer> findByVerificationToken(String token);
 

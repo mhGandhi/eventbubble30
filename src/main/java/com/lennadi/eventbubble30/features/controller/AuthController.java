@@ -95,7 +95,7 @@ public class AuthController {
         }
 
         // 2. prüfen ob username schon existiert
-        if (benutzerRepository.existsByUsername(req.username())) {
+        if (benutzerRepository.existsByUsernameIgnoreCase(req.username())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Username already taken");
         }
@@ -130,7 +130,7 @@ public class AuthController {
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
-        Benutzer b = benutzerRepository.findByUsername(req.username())
+        Benutzer b = benutzerRepository.findByUsernameIgnoreCase(req.username())
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"));
         BenutzerDetails user;
         boolean emailVerified = b.isEmailVerified();

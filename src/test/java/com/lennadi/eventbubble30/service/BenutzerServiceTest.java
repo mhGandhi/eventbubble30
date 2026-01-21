@@ -35,7 +35,7 @@ class BenutzerServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new BenutzerService(repo, encoder, emailService);
+        service = new BenutzerService(repo, encoder, emailService, null);
         securityMock = mockStatic(SecurityContextHolder.class);
     }
 
@@ -51,7 +51,7 @@ class BenutzerServiceTest {
     @Test
     void createUser_success() {
         when(repo.existsByEmail("mail@test.com")).thenReturn(false);
-        when(repo.existsByUsername("testuser")).thenReturn(false);
+        when(repo.existsByUsernameIgnoreCase("testuser")).thenReturn(false);
         when(encoder.encode("secret")).thenReturn("ENC(secret)");
 
         Benutzer saved = new Benutzer();
@@ -85,7 +85,7 @@ class BenutzerServiceTest {
     @Test
     void createUser_usernameTaken() {
         when(repo.existsByEmail("mail@test.com")).thenReturn(false);
-        when(repo.existsByUsername("testuser")).thenReturn(true);
+        when(repo.existsByUsernameIgnoreCase("testuser")).thenReturn(true);
 
         var ex = assertThrows(
                 ResponseStatusException.class,
@@ -163,7 +163,7 @@ class BenutzerServiceTest {
         Benutzer b = new Benutzer();
         b.setUsername("testuser");
 
-        when(repo.findByUsername("testuser")).thenReturn(Optional.of(b));
+        when(repo.findByUsernameIgnoreCase("testuser")).thenReturn(Optional.of(b));
 
         var result = service.getCurrentUser();
         assertEquals("testuser", result.getUsername());
@@ -190,7 +190,7 @@ class BenutzerServiceTest {
 
         Benutzer b2 = new Benutzer();
         b2.setId(2L);
-        when(repo.findByUsername("user2")).thenReturn(Optional.of(b2));
+        when(repo.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(b2));
 
         assertThrows(ResponseStatusException.class,
                 () -> service.updateBenutzer(5L, new BenutzerController.PatchBenutzerRequest("a","b")));
@@ -211,7 +211,7 @@ class BenutzerServiceTest {
 
         securityMock.when(SecurityContextHolder::getContext).thenReturn(ctx);
         when(ctx.getAuthentication()).thenReturn(auth);
-        when(repo.findByUsername("old")).thenReturn(Optional.of(existing));
+        when(repo.findByUsernameIgnoreCase("old")).thenReturn(Optional.of(existing));
 
         when(encoder.encode("newPw")).thenReturn("ENC(newPw)");
         when(repo.save(any())).thenAnswer(i -> i.getArgument(0));

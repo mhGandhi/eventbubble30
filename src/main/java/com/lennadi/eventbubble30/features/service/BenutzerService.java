@@ -47,7 +47,7 @@ public class BenutzerService {
     }
 
     private Benutzer requireUser(String username) {
-        return repository.findByUsername(username)
+        return repository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Benutzer mit name [" + username + "] nicht gefunden"
@@ -61,7 +61,7 @@ public class BenutzerService {
 
     public Benutzer createUser(String email, String username, String password) {
 
-        if (repository.existsByUsername(username)) {
+        if (repository.existsByUsernameIgnoreCase(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username existiert bereits");
         }
 
