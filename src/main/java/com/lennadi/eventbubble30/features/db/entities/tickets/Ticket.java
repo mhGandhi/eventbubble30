@@ -40,7 +40,7 @@ public class Ticket{
     @JoinColumn(name = "created_by", updatable = false)
     @Setter(AccessLevel.NONE)
     @ManyToOne
-    private Benutzer created_by;
+    private Benutzer createdBy;
 
 
     /// ///////////////////////////////////////////////////////////////////////////workspace
