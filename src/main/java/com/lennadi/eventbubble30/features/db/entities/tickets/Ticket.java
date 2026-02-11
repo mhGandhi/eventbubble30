@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Inheritance(strategy = InheritanceType.JOINED)
 @Setter @Getter
@@ -32,7 +33,6 @@ public class Ticket{
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="external_id", unique = true, nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private String externalId;
@@ -74,6 +74,7 @@ public class Ticket{
 
     @PrePersist
     protected void onCreate() {
+        if (externalId == null) externalId = UUID.randomUUID().toString();
         this.creationDate = Instant.now();
         this.modificationDate = Instant.now();
     }
