@@ -18,7 +18,7 @@ spring:
     web-application-type: servlet
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:dev-secret-no-good-how-do-i-prevent-accidentally-using-this}
     access-token-validity-ms: 900000 #15m
     refresh-token-validity-ms: 2592000000 #30d
 cleanup:
