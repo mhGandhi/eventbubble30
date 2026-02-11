@@ -28,12 +28,12 @@ public class Ticket{
 
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id", nullable = false, updatable = false)
+    @Column(name="id", unique = true, nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private Long id;
 
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name="external_id", nullable = false, updatable = false)
+    @Column(name="external_id", unique = true, nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private String externalId;
 
