@@ -20,6 +20,7 @@ import java.time.Instant;
                 @Index(name = "idx_closed", columnList = "closed"),
                 @Index(name = "idx_escalate", columnList = "escalate"),
                 @Index(name = "idx_created_by", columnList = "created_by"),
+                @Index(name = "idx_assigned_to", columnList = "assigned_to"),
         }
 )
 public class Ticket{
@@ -56,6 +57,10 @@ public class Ticket{
 
     @Column(name="comment")
     private String comment;
+
+    @JoinColumn(name="assigned_to")
+    @ManyToOne
+    private Benutzer assignedTo;
 
 
 
