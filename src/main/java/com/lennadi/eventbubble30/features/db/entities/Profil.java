@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.fileStorage.templates.StoredFile;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @Getter
 @Setter
 public class Profil {
+    public static final EntityType TYPE = EntityType.PROFILE;
 
     @Id @Column(unique = true, nullable = false, updatable = false) @Setter(AccessLevel.NONE)
     private Long id;//immer gleich der BenutzerId
@@ -63,4 +65,6 @@ public class Profil {
 
     public record DTO(long id, String name, URL avatarURL, String bio) {}
     public record SmallDTO(long id, String name, URL avatarURL) {}
+
+    public EntityType getType() {return TYPE;}
 }

@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import java.util.*;
 @Getter
 @Setter
 public class Benutzer extends BaseEntity{
+    public static final EntityType TYPE = EntityType.USER;
 
     @Column(unique = true, nullable = false, length = 20)
     private String username;
@@ -63,6 +65,11 @@ public class Benutzer extends BaseEntity{
 
     public DTO toDTO() {
         return new DTO(this.getId(), this.username, this.roles);
+    }
+
+    @Override
+    public EntityType getType() {
+        return TYPE;
     }
 
     public record DTO(

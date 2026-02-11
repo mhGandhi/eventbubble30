@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.Location;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -22,6 +23,8 @@ import java.time.Instant;
 )
 @Getter @Setter
 public class Veranstaltung extends BaseEntity {
+    public static final EntityType TYPE = EntityType.EVENT;
+
     private Instant termin;
 
     private String title;
@@ -33,6 +36,11 @@ public class Veranstaltung extends BaseEntity {
 
     @Embedded
     private Location location;
+
+    @Override
+    public EntityType getType() {
+        return TYPE;
+    }
 
 
     public static record DTO(
