@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.features.DTOLevel;
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.service.ProfilService;
 import com.lennadi.eventbubble30.logging.Audit;
@@ -64,7 +65,7 @@ public class ProfilController {
     // Endpoints (same methods for /me and /{id})
     // ----------------------------------------------------------
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PostMapping("/{segment}")
     public ResponseEntity<Profil.DTO> createProfil(
             @PathVariable String segment,
@@ -100,7 +101,7 @@ public class ProfilController {
         );
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
     public ResponseEntity<Profil.DTO> updateProfil(
             @PathVariable String segment,
@@ -111,7 +112,7 @@ public class ProfilController {
         return ResponseEntity.ok(profilService.toDTO(updated));
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteProfil(@PathVariable String segment) {
         long id = resolveId(segment);
 
@@ -130,7 +131,7 @@ public class ProfilController {
 
 
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#result.body.id")
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PutMapping(
             value = "/{segment}/avatar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -148,7 +149,7 @@ public class ProfilController {
         return profilService.toDTO(profilService.updateAvatar(id, file));
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}/avatar")
     public ResponseEntity<?> deleteAvatar(@PathVariable String segment) {
         long id = resolveId(segment);

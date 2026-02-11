@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class AuditLogStreamerService {
             SseEmitter emitter,
             Long userId,
             List<AuditLog.Action> actions,
-            AuditLog.RType resourceType,
+            EntityType resourceType,
             Long resourceId,
             Boolean success
     ) {

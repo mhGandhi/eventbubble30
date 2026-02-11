@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,7 +11,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Audit {
     AuditLog.Action action();
-    AuditLog.RType resourceType();
+    EntityType resourceType();
 
     String resourceIdParam() default ""; // nach Parameter
     String resourceIdExpression() default ""; // Ausdruck

@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.logging.AuditLogRepository;
@@ -34,7 +35,7 @@ public class AdminController {
 
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
-            @RequestParam(required = false) AuditLog.RType resourceType,
+            @RequestParam(required = false) EntityType resourceType,
             @RequestParam(required = false) Long resourceId,
             @RequestParam(required = false) Boolean success,
             @RequestParam(required = false) Instant from,
@@ -95,7 +96,7 @@ public class AdminController {
     public SseEmitter streamAuditLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
-            @RequestParam(required = false) AuditLog.RType resourceType,
+            @RequestParam(required = false) EntityType resourceType,
             @RequestParam(required = false) Long resourceId,
             @RequestParam(required = false) Boolean success
     ) {
@@ -112,7 +113,7 @@ public class AdminController {
 
 
 
-    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = AuditLog.RType.SERVER_CONFIG)
+    @Audit(action = AuditLog.Action.INVALIDATE_TOKENS, resourceType = EntityType.SERVER_CONFIG)
     @PostMapping("invalidate-tokens")
     public ResponseEntity<Void> invalidateTokens() {
         try{

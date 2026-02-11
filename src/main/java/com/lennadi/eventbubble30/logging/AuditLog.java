@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -60,7 +61,7 @@ public class AuditLog {
     //ON WHAT
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false, length = 30)
-    private RType resourceType;
+    private EntityType resourceType;
     @Column(nullable = true, updatable = false)
     private Long resourceId;
 
@@ -74,7 +75,7 @@ public class AuditLog {
             boolean success,
             String endpoint,
             Instant timestamp,
-            RType resourceType,
+            EntityType resourceType,
             Long resourceId
     ) {
         this.benutzer = benutzer;
@@ -105,13 +106,6 @@ public class AuditLog {
         public static final Set<Action> AUTH = new HashSet<>(List.of(SIGNUP, LOGIN, REFRESH, INVALIDATE_TOKENS, MAIL_REQUEST));
     }
 
-    public enum RType {
-        PROFILE,
-        USER,
-        EVENT,
-        SERVER_CONFIG
-    }
-
     public DTO toDTO(){
         return new DTO(
                 this.id, this.benutzer!=null?this.benutzer.toDTO():null, this.ipAddress, this.usernameSnapshot, this.roleSnapshot,
@@ -121,9 +115,9 @@ public class AuditLog {
         );
     }
     public record DTO (
-        Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
-        Action action, String payload, boolean success, String endpoint,
-        Instant timestamp,
-        RType resourceType, Long resourceId
+            Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
+            Action action, String payload, boolean success, String endpoint,
+            Instant timestamp,
+            EntityType resourceType, Long resourceId
     ) { }
 }

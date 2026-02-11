@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
@@ -83,7 +84,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.SIGNUP,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/signup")
@@ -124,7 +125,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.LOGIN,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
@@ -166,7 +167,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.REFRESH,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#result.body.benutzerDTO.id"
     )
     @PostMapping("/refresh")
@@ -191,7 +192,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.INVALIDATE_TOKENS,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#currentUser.id"
     )
     @PostMapping("invalidate-tokens")
@@ -211,7 +212,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.MAIL_REQUEST,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/request-password-reset")
@@ -235,7 +236,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/reset-password")
@@ -257,7 +258,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.MAIL_REQUEST,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/request-email-verification")
@@ -282,7 +283,7 @@ public class AuthController {
 
     @Audit(
             action = AuditLog.Action.UPDATE,
-            resourceType = AuditLog.RType.USER,
+            resourceType = EntityType.USER,
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/verify-email")

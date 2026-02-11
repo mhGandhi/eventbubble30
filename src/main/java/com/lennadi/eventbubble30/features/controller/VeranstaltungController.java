@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.Location;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
@@ -70,14 +71,14 @@ public class VeranstaltungController {
         return veranstaltungService.getVeranstaltungById(id).toDTO();
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = AuditLog.RType.EVENT, resourceIdParam = "id")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.EVENT, resourceIdParam = "id")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVeranstaltung(@PathVariable Long id) {
         veranstaltungService.deleteVeranstaltungById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @Audit(action = AuditLog.Action.CREATE, resourceType = AuditLog.RType.EVENT)
+    @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.EVENT)
     @PostMapping("/create")
     public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
             @Valid @RequestBody CreateVeranstaltungRequest req
@@ -95,7 +96,7 @@ public class VeranstaltungController {
                 .body(vs.toDTO());
     }
 
-    @Audit(action = AuditLog.Action.UPDATE, resourceType = AuditLog.RType.EVENT, resourceIdParam = "id")
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.EVENT, resourceIdParam = "id")
     @PatchMapping("/{id}")
     public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
             @PathVariable Long id,

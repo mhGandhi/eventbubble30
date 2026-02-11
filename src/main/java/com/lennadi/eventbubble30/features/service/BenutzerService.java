@@ -2,6 +2,7 @@ package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.controller.BenutzerController;
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.logging.AuditLog;
@@ -95,7 +96,7 @@ public class BenutzerService {
                 "Deleted " + deleted + " unverified accounts older than "+verificationDeadline+" days.",
                 true,
                 "",
-                AuditLog.RType.USER,
+                EntityType.USER,
                 null
         );
     }

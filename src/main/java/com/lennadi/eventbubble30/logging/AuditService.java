@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class AuditService {
             String payload,
             boolean success,
             String endpoint,
-            AuditLog.RType resourceType,
+            EntityType resourceType,
             Long resourceId
     ) {
         AuditLog log = new AuditLog(
@@ -60,7 +61,7 @@ public class AuditService {
             String message,
             boolean success,
             String endpoint,
-            AuditLog.RType resourceType,
+            EntityType resourceType,
             Long resourceId
     ) {
         log(
