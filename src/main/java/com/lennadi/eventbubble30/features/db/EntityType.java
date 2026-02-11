@@ -4,5 +4,6 @@ public enum EntityType {
     PROFILE,
     USER,
     EVENT,
-    SERVER_CONFIG
+    SERVER_CONFIG,
+    TICKET
 }

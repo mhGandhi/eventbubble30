@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -11,6 +12,8 @@ import java.time.Instant;
 @Getter
 @Entity
 public class Ticket{
+    public static final EntityType TYPE = EntityType.TICKET;
+
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
@@ -37,4 +40,6 @@ public class Ticket{
     protected void onUpdate() {
         this.modificationDate = Instant.now();
     }
+
+    public EntityType getType() {return TYPE;}
 }
