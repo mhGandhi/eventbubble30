@@ -26,8 +26,16 @@ import java.time.Instant;
 public class Ticket{
     public static final EntityType TYPE = EntityType.TICKET;
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private Long id;
+
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name="external_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private String externalId;
 
     /// ///////////////////////////////////////////////////////////////////////////userspace
     @Column(name = "creation_date", nullable = false, updatable = false)
