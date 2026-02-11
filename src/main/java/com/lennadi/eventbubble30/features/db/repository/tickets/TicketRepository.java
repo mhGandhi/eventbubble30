@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TicketRepository extends JpaRepository<Ticket, String> {
     Page<Ticket> findByClosedFalse(Pageable pageable);
     Page<Ticket> findByEscalateTrue(Pageable pageable);
-    Page<Ticket> findByCreatedBy_Id(String userId, Pageable pageable);
+    Page<Ticket> findByCreatedBy_Id(Long userId, Pageable pageable);
+    Page<Ticket> findByAssignedTo_Id(Long userId, Pageable pageable);
 }
 
