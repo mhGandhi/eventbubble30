@@ -16,8 +16,15 @@ import java.time.Instant;
 public class Profil {
     public static final EntityType TYPE = EntityType.PROFILE;
 
-    @Id @Column(unique = true, nullable = false, updatable = false) @Setter(AccessLevel.NONE)
+    @Id
+    @Column(name="id", unique = true, nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Long id;//immer gleich der BenutzerId
+
+    @Column(name = "external_id", unique = true, updatable = false) //todo non-nullable
+    @Setter(AccessLevel.NONE)
+    private String externalId;
+
 
     @Column(nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
@@ -58,8 +65,9 @@ public class Profil {
         return avatar != null;
     }
 
-    public Profil(long id, String pName){
+    public Profil(long id, String externalId, String pName){
         this.id = id;
+        this.externalId = externalId;
         this.name = pName;
     }
 

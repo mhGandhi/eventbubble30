@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.features.controller.ProfilController;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
 import com.lennadi.eventbubble30.features.db.repository.ProfilRepository;
 import com.lennadi.eventbubble30.fileStorage.FileManagerService;
@@ -29,12 +30,14 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public Profil createProfil(long id , ProfilController.CreateProfilRequest request) {
+    public Profil createProfil(long id, ProfilController.CreateProfilRequest request) {
         if(profilRepo.existsById(id)){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Profil besteht bereits");
         }
 
-        Profil neu = new Profil(id, request.name());
+        Benutzer benutzer = benutzerService.getBenutzer(id);//todo tmp
+
+        Profil neu = new Profil(id, benutzer.getExternalId(), request.name());
         neu.setName(request.name());
         neu.setBio(request.bio());
 
