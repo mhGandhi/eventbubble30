@@ -7,15 +7,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @MappedSuperclass
 @Getter
 @Setter
 public abstract class BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//todo nicht gut
-    @Column(unique = true, nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", unique = true, nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Long id;
+
+    @Column(name = "external_id", nullable = true, updatable = false, length=36)//todo non-nullable, non-updateable, unq
+    @Setter(AccessLevel.NONE)
+    private String externalId;
 
     @Column(name = "creation_date", nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
@@ -30,6 +36,7 @@ public abstract class BaseEntity {
 
     @PrePersist
     protected void onCreate() {
+        if (externalId == null) externalId = UUID.randomUUID().toString();
         this.creationDate = Instant.now();
         this.modificationDate = Instant.now();
     }
