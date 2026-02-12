@@ -19,7 +19,7 @@ public abstract class BaseEntity {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @Column(name = "external_id", nullable = true, updatable = false, length=36)//todo non-nullable, non-updateable, unq
+    @Column(name = "external_id", unique = true, nullable = false, updatable = false, length=36)
     @Setter(AccessLevel.NONE)
     private String externalId;
 

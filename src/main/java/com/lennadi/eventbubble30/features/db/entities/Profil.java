@@ -13,7 +13,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
-public class Profil {
+public class Profil {//todo inheritance based mit inheritance type joined stattdessen (aufwändig lass mal nd machen)
     public static final EntityType TYPE = EntityType.PROFILE;
 
     @Id
@@ -21,7 +21,7 @@ public class Profil {
     @Setter(AccessLevel.NONE)
     private Long id;//immer gleich der BenutzerId
 
-    @Column(name = "external_id", unique = true, updatable = false) //todo non-nullable
+    @Column(name = "external_id", nullable = false, unique = true, updatable = false)
     @Setter(AccessLevel.NONE)
     private String externalId;
 
