@@ -33,7 +33,7 @@ public class Ticket{
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @Column(name="external_id", unique = true, nullable = false, updatable = false)
+    @Column(name="external_id", unique = true, nullable = false, updatable = false, length=36)
     @Setter(AccessLevel.NONE)
     private String externalId;
 
