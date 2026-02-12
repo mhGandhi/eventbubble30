@@ -12,6 +12,9 @@ import java.util.*;
 @Entity
 @Getter
 @Setter
+@Table(indexes = {
+        @Index(name = "idx_external_id", columnList = "external_id")
+})
 public class Benutzer extends BaseEntity{
     public static final EntityType TYPE = EntityType.USER;
 

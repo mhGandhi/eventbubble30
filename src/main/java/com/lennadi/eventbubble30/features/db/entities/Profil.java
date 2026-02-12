@@ -13,6 +13,9 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
+@Table(indexes = {
+        @Index(name = "idx_external_id", columnList = "external_id")
+})
 public class Profil {//todo inheritance based mit inheritance type joined stattdessen (aufwändig lass mal nd machen)
     public static final EntityType TYPE = EntityType.PROFILE;
 
