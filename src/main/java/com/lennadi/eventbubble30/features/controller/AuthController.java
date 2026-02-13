@@ -180,9 +180,14 @@ public class AuthController {
             String newAccess = jwtService.generateAccessToken(details);
             //todo mby System zum refresh Token rotieren?
 
+            Instant now = Instant.now();
+
+            Instant refreshExpiry = now.plusMillis(jwtService.getRefreshTokenValidityMs());
+            Instant accessExpiry = now.plusMillis(jwtService.getAccessTokenValidityMs());
+
             Benutzer benutzer = benutzerService.getBenutzer(details.getId());
             return ResponseEntity.ok(
-                    new AuthResponse(newAccess, null, refreshToken, null, benutzer.toDTO())//todo
+                    new AuthResponse(newAccess, accessExpiry, refreshToken, refreshExpiry, benutzer.toDTO())//todo
             );
         } catch (TokenException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());

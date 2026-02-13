@@ -13,6 +13,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,9 +32,11 @@ public class JwtService {
     @Value("${app.jwt.secret:}")
     private String secret;
 
+    @Getter
     @Value("${app.jwt.access-token-validity-ms:900000}")
     private long accessTokenValidityMs;
 
+    @Getter
     @Value("${app.jwt.refresh-token-validity-ms:2592000000}")
     private long refreshTokenValidityMs;
 
