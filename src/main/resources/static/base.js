@@ -5,7 +5,7 @@ const defAvatarBase = "https://ui-avatars.com/api/?name=";
 async function bootstrapSession({ onAuthenticated, onAnonymous }) {
     //todo refresh savedMe
 
-    if(refreshToken)
+    if((accessExpiredByTime()||!accessToken)&& refreshToken)
         await refreshAccessToken();
 
     try{
@@ -60,19 +60,42 @@ async function api(url, method = "GET", body = null, retry = true) {
 }
 
 ////////////////////////////////AUTH
-let accessToken = null;
+let accessToken = localStorage.getItem("accessToken") || null;
+let accessExpiry = localStorage.getItem("accessExpiry") || null;
 let refreshToken = localStorage.getItem("refreshToken") || null;
 
-function saveTokens(access, refresh) {
-    accessToken = access;
-    refreshToken = refresh;
-    if (refresh) localStorage.setItem("refreshToken", refresh);
+function saveTokens(access, refresh, accessExp = null) {
+    accessToken = access ?? null;
+    refreshToken = refresh ?? null;
+    accessExpiry = accessExp ?? null;
+
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+    else localStorage.removeItem("refreshToken");
+
+    if (accessToken) localStorage.setItem("accessToken", accessToken);
+    else localStorage.removeItem("accessToken");
+
+    if (accessExpiry) localStorage.setItem("accessExpiry", accessExpiry);
+    else localStorage.removeItem("accessExpiry");
+}
+
+function accessExpiredByTime(skewMs = 15_000) {
+    if (!accessExpiry || typeof accessExpiry !== "string") return true;
+
+    const expiryMs = Date.parse(accessExpiry); // parses ISO-8601
+    if (Number.isNaN(expiryMs)) return true;
+
+    // Consider it expired slightly early to avoid edge cases (clock drift, network latency)
+    return Date.now() + skewMs >= expiryMs;
 }
 
 function clearTokens() {
     accessToken = null;
     refreshToken = null;
+    accessExpiry = null;
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("accessExpiry");
 }
 
 //todo track last refresh/expiry time
@@ -95,7 +118,7 @@ async function refreshAccessToken() {
                 { refreshToken },
                 false
             );
-            saveTokens(data.accessToken, data.refreshToken);
+            saveTokens(data.accessToken, data.refreshToken, data.accessTokenExpiry);
             notify(`Token refreshed as ${data.benutzerDTO?.username || "user"}`, "success", true);
             EventBubbleBus.dispatchEvent(
                 new CustomEvent("auth:refreshed")
