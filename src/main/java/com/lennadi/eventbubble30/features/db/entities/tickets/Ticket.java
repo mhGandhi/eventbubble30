@@ -70,7 +70,9 @@ public class Ticket{
     @ManyToOne
     private Benutzer assignedTo;
 
+    protected Ticket() {
 
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -85,6 +87,11 @@ public class Ticket{
     }
 
     public EntityType getType() {return TYPE;}
+
+    public Ticket(String message, Benutzer createdBy) {
+        this.message = message;
+        this.createdBy = createdBy;
+    }
 
     public record TicketDTO(
             long id, Instant creationDate, Instant modificationDate, String message, Long createdById, boolean closed, boolean escalate, String comment, Long assignedToId

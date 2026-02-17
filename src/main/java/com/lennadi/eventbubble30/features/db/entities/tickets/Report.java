@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.features.db.entities.tickets;
 
 import com.lennadi.eventbubble30.features.db.EntityType;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,6 +42,24 @@ public class Report extends Ticket{
     @Column(name="outcome")
     private Outcome outcome;
 
+    public Report(String message,
+                  Benutzer createdBy,
+                  EntityType entityType,
+                  String resourceId,
+                  Reason reason,
+                  String reasonText) {
+
+        super(message, createdBy);
+
+        this.entityType = entityType;
+        this.resourceId = resourceId;
+        this.reason = reason == null ? Reason.OTHER : reason;
+        this.reason_text = reasonText;
+    }
+
+    protected Report() {
+
+    }
 
     public enum Reason {OTHER, SPAM, INAPPROPRIATE, HATE_SPEECH, CYBER_BULLYING, MISINFORMATION}
 
