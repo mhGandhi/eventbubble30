@@ -51,22 +51,22 @@ public class ModerationController {
     ) {}
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
-    @PostMapping("/ticket")
+    @PostMapping("/tickets")
     public ResponseEntity<Ticket.TicketDTO> createTicket(@Valid @RequestBody CreateTicketRequest req) {
         Ticket neu = ticketService.createTicket(req);
 
         return ResponseEntity
-                .created(URI.create("/api/ticket/" + neu.getId()))
+                .created(URI.create("/api/moderation/tickets/" + neu.getId()))
                 .body(neu.toTicketDTO());
     }
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
-    @PostMapping("/report")
+    @PostMapping("/reports")
     public ResponseEntity<Report.ReportDTO> createReport(@Valid @RequestBody CreateReportRequest req) {
         Report neu = ticketService.createReport(req);
 
         return ResponseEntity
-                .created(URI.create("/api/report/" + neu.getId()))
+                .created(URI.create("/api/moderation/reports/" + neu.getId()))
                 .body(neu.toDTO());
     }
 
