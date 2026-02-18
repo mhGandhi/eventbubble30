@@ -122,7 +122,7 @@ public class BenutzerController {
     @Audit(
             action = UPDATE,
             resourceType = EntityType.USER,
-            resourceIdExpression = "#currentUser.external_id"
+            resourceIdExpression = "#currentUser.externalId"
     )
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
