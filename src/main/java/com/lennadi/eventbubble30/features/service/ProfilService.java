@@ -30,14 +30,14 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public Profil createProfil(long id, ProfilController.CreateProfilRequest request) {
-        if(profilRepo.existsById(id)){
+    public Profil createProfil(String extId, ProfilController.CreateProfilRequest request) {
+        if(profilRepo.existsByExternalId(extId)){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Profil besteht bereits");
         }
 
-        Benutzer benutzer = benutzerService.getBenutzer(id);//todo tmp
+        Benutzer benutzer = benutzerService.getBenutzer(extId);//todo tmp
 
-        Profil neu = new Profil(id, benutzer.getExternalId(), request.name());
+        Profil neu = new Profil(benutzer.getId(), benutzer.getExternalId(), request.name());
         neu.setName(request.name());
         neu.setBio(request.bio());
 
@@ -46,8 +46,8 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public Profil updateProfil(long id, ProfilController.UpdateProfilRequest updateProfilRequest) {
-        Profil profil = getProfil(id);
+    public Profil updateProfil(String extId, ProfilController.UpdateProfilRequest updateProfilRequest) {
+        Profil profil = getProfil(extId);
         if(updateProfilRequest.name()!=null)
             profil.setName(updateProfilRequest.name());
 
@@ -59,19 +59,19 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public void deleteProfil(long id){
-        profilRepo.deleteById(id);
+    public void deleteProfil(String extId){
+        profilRepo.deleteByExternalId(extId);
     }
 
     @Transactional(readOnly = true)
-    public Profil getProfil(long id) {
-        return profilRepo.getProfilById(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"/api/profil/"+id));
+    public Profil getProfil(String extId) {
+        return profilRepo.getProfilByExternalId(extId)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"/api/profil/"+extId));
     }
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public Profil updateAvatar(long profilId, MultipartFile file) throws IOException {
+    public Profil updateAvatar(String profilExtId, MultipartFile file) throws IOException {
         String ct = file.getContentType();
         if (ct == null || !ct.startsWith("image/")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "wrong file type");
@@ -79,7 +79,7 @@ public class ProfilService {
 
         if (file.getSize() > (5 * 1024 * 1024)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"file to large");
 
-        Profil profil = getProfil(profilId);
+        Profil profil = getProfil(profilExtId);
 
         StoredFile oldAvatar = profil.getAvatar();
 
@@ -100,16 +100,16 @@ public class ProfilService {
 
     @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
     @Transactional
-    public void deleteAvatar(long profilId) {
-        Profil profil = getProfil(profilId);
+    public void deleteAvatar(String profilExtId) {
+        Profil profil = getProfil(profilExtId);
         if (profil.hasAvatar()) {
             fileManagerService.delete(profil.getAvatar());
         }
         profil.setAvatar(null);
     }
 
-    public URL getAvatarUrl(long profilId) {
-        Profil profil = getProfil(profilId);
+    public URL getAvatarUrl(String profilExtId) {
+        Profil profil = getProfil(profilExtId);
         if(profil==null || !profil.hasAvatar()) return null;
         return fileManagerService.getURL(profil.getAvatar());
     }
@@ -118,15 +118,19 @@ public class ProfilService {
         return benutzerService.getCurrentUser().getId();
     }
 
+    public String getCurrentUserExternalId(){
+        return benutzerService.getCurrentUser().getExternalId();
+    }
+
     public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null, p.getBio());
+        return new Profil.DTO(p.getExternalId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null, p.getBio());
     }
 
     public Profil.SmallDTO toSmallDTO(Profil p){
-        return new Profil.SmallDTO(p.getId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null);
+        return new Profil.SmallDTO(p.getExternalId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null);
     }
 
-    public boolean exists(long id) {
-        return profilRepo.existsById(id);
+    public boolean exists(String extId) {
+        return profilRepo.existsByExternalId(extId);
     }
 }

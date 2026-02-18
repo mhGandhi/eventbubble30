@@ -74,8 +74,8 @@ public class Profil {//todo inheritance based mit inheritance type joined stattd
         this.name = pName;
     }
 
-    public record DTO(long id, String name, URL avatarURL, String bio) {}
-    public record SmallDTO(long id, String name, URL avatarURL) {}
+    public record DTO(String id, String name, URL avatarURL, String bio) {}
+    public record SmallDTO(String id, String name, URL avatarURL) {}
 
     public EntityType getType() {return TYPE;}
 }

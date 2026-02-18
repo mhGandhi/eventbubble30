@@ -45,7 +45,7 @@ public class Veranstaltung extends BaseEntity {
 
 
     public static record DTO(
-            Long id,
+            String id,
             Instant creationDate,
             Instant modificationDate,
             Instant termin,
@@ -58,7 +58,7 @@ public class Veranstaltung extends BaseEntity {
 
     public DTO toDTO() {
         return new DTO(
-                this.getId(),
+                this.getExternalId(),
                 this.getCreationDate(),
                 this.getModificationDate(),
                 this.getTermin(),

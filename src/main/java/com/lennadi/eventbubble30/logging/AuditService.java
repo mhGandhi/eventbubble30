@@ -31,7 +31,7 @@ public class AuditService {
             boolean success,
             String endpoint,
             EntityType resourceType,
-            Long resourceId
+            String resourceId
     ) {
         AuditLog log = new AuditLog(
                 benutzer,
@@ -62,7 +62,7 @@ public class AuditService {
             boolean success,
             String endpoint,
             EntityType resourceType,
-            Long resourceId
+            String resourceId
     ) {
         log(
                 null, // no user

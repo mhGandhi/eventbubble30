@@ -39,15 +39,23 @@ public class BenutzerService {
 
     /// //////////////////////////////////INTERNAL
 
-    public Benutzer requireUser(long id) {
-        return repository.findById(id)
+    public Benutzer requireUser(String extId) {
+        return repository.findByExternalIdIgnoreCase(extId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Benutzer mit id [" + id + "] nicht gefunden"
+                        "Benutzer mit id [" + extId + "] nicht gefunden"
                 ));
     }
 
-    private Benutzer requireUser(String username) {
+    public Benutzer requireUser(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Benutzer mit interner id [" + id + "] nicht gefunden"
+                ));
+    }
+
+    private Benutzer requireUserByUsername(String username) {
         return repository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -55,8 +63,8 @@ public class BenutzerService {
                 ));
     }
 
-    public void resetPassword(Long id, String newPassword) {
-        Benutzer b = requireUser(id);
+    public void resetPassword(String extId, String newPassword) {
+        Benutzer b = requireUser(extId);
         b.setPasswordHash(passwordEncoder.encode(newPassword));
     }
 
@@ -159,9 +167,9 @@ public class BenutzerService {
         requireUser(id).setLastLoginDate(Instant.now());
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public void invalidateTokens(Long id) {
-        requireUser(id).setTokensInvalidatedAt(Instant.now());
+    @PreAuthorize("@authz.isSelf(#extId) or @authz.hasRole('ADMIN')")
+    public void invalidateTokens(String extId) {
+        requireUser(extId).setTokensInvalidatedAt(Instant.now());
     }
 
     ////////////////////////////////CRUD
@@ -171,17 +179,17 @@ public class BenutzerService {
         return createUser(req.email(), req.username(), req.password());
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
+    @PreAuthorize("@authz.isSelf(#extId) or @authz.hasRole('ADMIN')")
     @Transactional(readOnly = true)
-    public Benutzer getBenutzer(long id) {
-        return requireUser(id);
+    public Benutzer getBenutzer(String extId) {
+        return requireUser(extId);
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public Benutzer updateBenutzer(Long id, BenutzerController.PatchBenutzerRequest req) {
-        Benutzer b = requireUser(id);
-        String email = b.getEmail();
-        String username = b.getUsername();
+    @PreAuthorize("@authz.isSelf(#extId) or @authz.hasRole('ADMIN')")
+    public Benutzer updateBenutzer(String extId, BenutzerController.PatchBenutzerRequest req) {
+        Benutzer b = requireUser(extId);
+        String email = req.email();
+        String username = req.username();
 
         if (email != null && !email.isEmpty()) {
             b.setEmail(email);
@@ -193,26 +201,26 @@ public class BenutzerService {
         return b;
     }
 
-    @PreAuthorize("@authz.isSelf(#id) or @authz.hasRole('ADMIN')")
-    public void deleteUserById(long id) {
-        repository.delete(requireUser(id));
+    @PreAuthorize("@authz.isSelf(#extId) or @authz.hasRole('ADMIN')")
+    public void deleteUserById(String extId) {
+        repository.delete(requireUser(extId));
     }
 
     /// //////////////////////////////PW
 
-    @PreAuthorize("@authz.isSelf(#id)")
-    public void changePassword(Long id, String oldPassword, String newPassword) {
-        Benutzer b = requireUser(id);
+    @PreAuthorize("@authz.isSelf(#extId)")
+    public void changePassword(String extId, String oldPassword, String newPassword) {
+        Benutzer b = requireUser(extId);
         if(passwordEncoder.matches(oldPassword, b.getPasswordHash())) {
-            resetPassword(id, newPassword);
+            resetPassword(extId, newPassword);
         }else{
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect old password");
         }
     }
 
     @PreAuthorize("@authz.hasRole('ADMIN')")
-    public void setPassword(Long id, String newPassword) {
-        resetPassword(id, newPassword);
+    public void setPassword(String extId, String newPassword) {
+        resetPassword(extId, newPassword);
     }
 
     //////////////////////////////////////////////////////////MAIL

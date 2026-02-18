@@ -7,10 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.time.Instant;
+import java.util.Optional;
 
 public interface VeranstaltungsRepository extends
         JpaRepository<Veranstaltung, Long>,
         JpaSpecificationExecutor<Veranstaltung> {
+
+    Optional<Veranstaltung> findByExternalIdIgnoreCase(String externalId);
 
     public enum OrderBy {
         creationDate,
@@ -89,10 +92,10 @@ public interface VeranstaltungsRepository extends
             };
         }
 
-        public static Specification<Veranstaltung> ownedBy(Long userId) {
+        public static Specification<Veranstaltung> ownedBy(String userExtId) {
             return (root, query, cb) -> {
-                if (userId == null) return null;
-                return cb.equal(root.get("besitzer").get("id"), userId);
+                if (userExtId == null) return null;
+                return cb.equal(root.get("besitzer").get("external_id"), userExtId);
             };
         }
 

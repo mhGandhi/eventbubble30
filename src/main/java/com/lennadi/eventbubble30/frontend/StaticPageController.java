@@ -41,7 +41,7 @@ public class StaticPageController {
 
     @GetMapping("/event/{id}")
     public String eventDetail(
-            @PathVariable Long id,
+            @PathVariable String id,
             Model model
     ) {
         Veranstaltung ev = veranstaltungService

@@ -66,7 +66,7 @@ public class Report extends Ticket{
     public enum Outcome { DELETED, CREATOR_BANNED, NOTHING, STRAIGHT_UP_CALLED_THE_POPO_ON_THIS_FREAK}
 
     public record ReportDTO(
-            long id,
+            String id,
             Instant creationDate,
             Instant modificationDate,
             String message,
@@ -84,7 +84,7 @@ public class Report extends Ticket{
 
     public ReportDTO toDTO(){
         return new ReportDTO(
-                this.getId(),
+                this.getExternalId(),
                 this.getCreationDate(),
                 this.getModificationDate(),
                 this.getMessage(),

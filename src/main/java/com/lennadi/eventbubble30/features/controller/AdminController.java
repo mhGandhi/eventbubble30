@@ -33,10 +33,10 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
 
-            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
             @RequestParam(required = false) EntityType resourceType,
-            @RequestParam(required = false) Long resourceId,
+            @RequestParam(required = false) String resourceId,
             @RequestParam(required = false) Boolean success,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to
@@ -94,10 +94,10 @@ public class AdminController {
 
     @GetMapping(value = "/audit-log/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamAuditLogs(
-            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String userId,
             @RequestParam(required = false) List<AuditLog.Action> action,
             @RequestParam(required = false) EntityType resourceType,
-            @RequestParam(required = false) Long resourceId,
+            @RequestParam(required = false) String resourceId,
             @RequestParam(required = false) Boolean success
     ) {
         SseEmitter emitter = new SseEmitter(0L); // todo heartbeat (Cloudflare macht nach 100s zu)

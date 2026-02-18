@@ -50,15 +50,17 @@ public class ProfilController {
     // Internal ID resolver
     // ----------------------------------------------------------
 
-    private long resolveId(String segment) {
+    private String resolveExtId(String segment) {
         if ("me".equalsIgnoreCase(segment)) {
-            return profilService.getCurrentUserId();
+            return profilService.getCurrentUserExternalId();
         }
 
+        return segment;
+        /*
         try {
             return Long.parseLong(segment);
         } catch (NumberFormatException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid identifier: " + segment);        }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid identifier: " + segment);        }*/
     }
 
     // ----------------------------------------------------------
@@ -71,11 +73,11 @@ public class ProfilController {
             @PathVariable String segment,
             @Valid @RequestBody CreateProfilRequest request
     ) {
-        long id = resolveId(segment);
-        Profil created = profilService.createProfil(id, request);
+        String extId = resolveExtId(segment);
+        Profil created = profilService.createProfil(extId, request);
 
         return ResponseEntity
-                .created(URI.create("/api/profiles/" + id))
+                .created(URI.create("/api/profiles/" + extId))
                 .body(profilService.toDTO(created));
     }
 
@@ -91,8 +93,8 @@ public class ProfilController {
             throw new BadRequestException(e.getMessage());
         }
 
-        long id = resolveId(segment);
-        Profil profil = profilService.getProfil(id);
+        String extId = resolveExtId(segment);
+        Profil profil = profilService.getProfil(extId);
 
         return ResponseEntity.ok(
                 dtoLevel==DTOLevel.CARD ?
@@ -107,26 +109,26 @@ public class ProfilController {
             @PathVariable String segment,
             @Valid @RequestBody UpdateProfilRequest request
     ) {
-        long id = resolveId(segment);
-        Profil updated = profilService.updateProfil(id, request);
+        String extId = resolveExtId(segment);
+        Profil updated = profilService.updateProfil(extId, request);
         return ResponseEntity.ok(profilService.toDTO(updated));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteProfil(@PathVariable String segment) {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
 
         RequestContextHolder.currentRequestAttributes()
-                .setAttribute("auditResourceId", id, RequestAttributes.SCOPE_REQUEST);
+                .setAttribute("auditResourceId", extId, RequestAttributes.SCOPE_REQUEST);
 
-        profilService.deleteProfil(id);
+        profilService.deleteProfil(extId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{segment}/exists")
     public boolean profileExists(@PathVariable String segment) {
-        long id = resolveId(segment);
-        return profilService.exists(id);
+        String extId = resolveExtId(segment);
+        return profilService.exists(extId);
     }
 
 
@@ -140,32 +142,32 @@ public class ProfilController {
             @PathVariable String segment,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
 
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file");
         }
 
-        return profilService.toDTO(profilService.updateAvatar(id, file));
+        return profilService.toDTO(profilService.updateAvatar(extId, file));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}/avatar")
     public ResponseEntity<?> deleteAvatar(@PathVariable String segment) {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
         RequestContextHolder.currentRequestAttributes()
-                .setAttribute("auditResourceId", id, RequestAttributes.SCOPE_REQUEST);
+                .setAttribute("auditResourceId", extId, RequestAttributes.SCOPE_REQUEST);
 
-        profilService.deleteAvatar(id);
+        profilService.deleteAvatar(extId);
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("{segment}/avatar")
     public ResponseEntity<URI> getAvatar(@PathVariable String segment) {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
 
-        URL url = profilService.getAvatarUrl(id);
+        URL url = profilService.getAvatarUrl(extId);
         if (url == null) {
             return ResponseEntity.noContent().build();
         }
@@ -173,6 +175,6 @@ public class ProfilController {
         return ResponseEntity.ok(URI.create(url.toString()));
     }
 
-    //todo events
+    //todo events // was?
 
 }

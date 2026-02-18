@@ -94,12 +94,12 @@ public class Ticket{
     }
 
     public record TicketDTO(
-            long id, Instant creationDate, Instant modificationDate, String message, Long createdById, boolean closed, boolean escalate, String comment, Long assignedToId
+            String id, Instant creationDate, Instant modificationDate, String message, Long createdById, boolean closed, boolean escalate, String comment, Long assignedToId
     ){};
 
     public TicketDTO toTicketDTO(){
         return new TicketDTO(
-                this.id, this.creationDate, this.modificationDate, this.message, this.createdBy==null?null:this.createdBy.getId(), this.closed, this.escalate, this.comment, this.assignedTo==null?null:this.assignedTo.getId()
+                this.externalId, this.creationDate, this.modificationDate, this.message, this.createdBy==null?null:this.createdBy.getId(), this.closed, this.escalate, this.comment, this.assignedTo==null?null:this.assignedTo.getId()
         );
     }
 }

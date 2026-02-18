@@ -25,16 +25,16 @@ public class VeranstaltungService {
     private final BenutzerService benutzerService;
 
 
-    public Veranstaltung getVeranstaltungById(Long id) {
-        return veranstaltungRepo.findById(id)
+    public Veranstaltung getVeranstaltungById(String extId) {
+        return veranstaltungRepo.findByExternalIdIgnoreCase(extId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Veranstaltung mit id [" + id + "] nicht gefunden"
+                        "Veranstaltung mit id [" + extId + "] nicht gefunden"
                 ));
     }
 
-    public String exportAsIcs(Long id) {//todo abchecken mal ka
-        Veranstaltung vs = getVeranstaltungById(id);
+    public String exportAsIcs(String extId) {//todo abchecken mal ka
+        Veranstaltung vs = getVeranstaltungById(extId);
 
         // ICS requires UTC timestamps in format: yyyyMMdd'T'HHmmss'Z'
         Instant start = vs.getTermin();
@@ -43,7 +43,7 @@ public class VeranstaltungService {
                 .withZone(java.time.ZoneOffset.UTC)
                 .format(start);
 
-        String uid = "event-" + id + "@"+ ServerConfig.DOMAIN;
+        String uid = "event-" + extId + "@"+ ServerConfig.DOMAIN;
 
         return """
             BEGIN:VCALENDAR
@@ -74,14 +74,14 @@ public class VeranstaltungService {
     }
 
 
-    @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
-    public void deleteVeranstaltungById(Long id) {
-        veranstaltungRepo.delete(getVeranstaltungById(id));
+    @PreAuthorize("@authz.isEventOwner(#extId) or hasRole('ADMIN')")
+    public void deleteVeranstaltungById(String extId) {
+        veranstaltungRepo.delete(getVeranstaltungById(extId));
     }
 
-    @PreAuthorize("@authz.isEventOwner(#id) or hasRole('ADMIN')")
-    public Veranstaltung patchVeranstaltungById(Long id, Instant termin, String title, String description, Location location) {
-        Veranstaltung veranstaltung = veranstaltungRepo.findById(id)
+    @PreAuthorize("@authz.isEventOwner(#extId) or hasRole('ADMIN')")
+    public Veranstaltung patchVeranstaltungById(String extId, Instant termin, String title, String description, Location location) {
+        Veranstaltung veranstaltung = veranstaltungRepo.findByExternalIdIgnoreCase(extId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung nicht gefunden"));
 
         if(termin!=null)

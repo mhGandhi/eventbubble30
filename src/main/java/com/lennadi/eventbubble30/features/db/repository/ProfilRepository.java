@@ -7,4 +7,8 @@ import java.util.Optional;
 
 public interface ProfilRepository extends JpaRepository<Profil, Long> {
     Optional<Profil> getProfilById(long l);
+
+    boolean existsByExternalId(String extId);
+    Optional<Profil> getProfilByExternalId(String extId);
+    void deleteByExternalId(String extId);
 }

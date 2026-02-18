@@ -16,20 +16,20 @@ public class AuthzService {
     private final VeranstaltungService veranstaltungService;
     private final BenutzerService benutzerService;
 
-    public boolean isEventOwner(Long eventId) {
+    public boolean isEventOwner(String eventExtId) {
         Benutzer current = benutzerService.getCurrentUserOrNull();
         if (current == null) {
             throw new AccessDeniedException("Not authenticated");
         }
 
-        Veranstaltung v = veranstaltungService.getVeranstaltungById(eventId);
+        Veranstaltung v = veranstaltungService.getVeranstaltungById(eventExtId);
         if (v == null) {
-            throw new AccessDeniedException("Event " + eventId + " does not exist");
+            throw new AccessDeniedException("Event " + eventExtId + " does not exist");
         }
 
         if (!v.getBesitzer().equals(current)) {
             throw new AccessDeniedException(
-                    "User " + current.getId() + " is not the owner of event " + eventId
+                    "User " + current.getId() + " is not the owner of event " + eventExtId
             );
         }
 
@@ -44,6 +44,19 @@ public class AuthzService {
         if (!current.getId().equals(userId))
             throw new AccessDeniedException(
                     "User " + current.getId() + " cannot access resource of user " + userId
+            );
+
+        return true;
+    }
+
+    public boolean isSelf(String extUserId) {
+        var current = benutzerService.getCurrentUserOrNull();
+        if (current == null)
+            throw new AccessDeniedException("Not authenticated");
+
+        if (!current.getExternalId().equals(extUserId))
+            throw new AccessDeniedException(
+                    "User " + current.getExternalId() + " cannot access resource of user " + extUserId
             );
 
         return true;

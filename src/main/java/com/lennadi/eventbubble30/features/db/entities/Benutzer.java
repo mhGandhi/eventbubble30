@@ -67,7 +67,7 @@ public class Benutzer extends BaseEntity{
     }
 
     public DTO toDTO() {
-        return new DTO(this.getId(), this.username, this.roles);
+        return new DTO(this.getExternalId(), this.username, this.roles);
     }
 
     @Override
@@ -76,21 +76,21 @@ public class Benutzer extends BaseEntity{
     }
 
     public record DTO(
-            Long id,
+            String id,
             String username,
             Set<Role> roles
     ) { }
 
     public largeDTO toLargeDTO() {
         return new largeDTO(
-                this.getId(), this.getUsername(),
+                this.getExternalId(), this.getUsername(),
                 this.getEmail(), this.getRoles(),
                 this.getLastLoginDate(), this.getLastSeen(), this.getPasswordChangedAt(), this.getTokensInvalidatedAt(),
                 this.isEmailVerified());
     }
 
     public record largeDTO(
-            Long id,
+            String id,
             String username,
             String email,
             Set<Role> roles,

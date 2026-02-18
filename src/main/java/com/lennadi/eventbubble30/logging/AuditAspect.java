@@ -57,7 +57,7 @@ public class AuditAspect {
             try {
                 boolean success = (thrown == null);
 
-                Long resourceId = null;
+                String resourceId = null;
 
                 // 0) NEW: resourceIdExpression (SpEL) – top priority
                 resourceId = evalResourceIdExpression(audit, pjp, result, thrown);
@@ -77,7 +77,7 @@ public class AuditAspect {
                 // 4) fallback: actions affecting current user
                 if (resourceId == null && modifiesCurrentUser(audit.action())) {
                     Benutzer current = safeGetUser();
-                    resourceId = (current != null ? current.getId() : null);
+                    resourceId = (current != null ? current.getExternalId() : null);
                 }
 
                 writeAuditLogSafe(pjp, audit, success, resourceId);
@@ -92,7 +92,7 @@ public class AuditAspect {
     //                  RESOURCE ID VIA EXPRESSION (SPEL)
     // ====================================================================
 
-    private Long evalResourceIdExpression(
+    private String evalResourceIdExpression(
             Audit audit,
             ProceedingJoinPoint pjp,
             Object result,
@@ -122,7 +122,7 @@ public class AuditAspect {
             ExpressionParser parser = new SpelExpressionParser();
             Object val = parser.parseExpression(expr).getValue(ctx);
 
-            if (val instanceof Number n) return n.longValue();
+            if (val instanceof String n) return n;
             return null;
 
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class AuditAspect {
     //                  RESOURCE ID EXTRACTION (PARAMETER)
     // ====================================================================
 
-    private Long extractResourceIdParam(ProceedingJoinPoint pjp, String paramName) {
+    private String extractResourceIdParam(ProceedingJoinPoint pjp, String paramName) {
         if (paramName == null || paramName.isBlank()) return null;
 
         MethodSignature sig = (MethodSignature) pjp.getSignature();
@@ -154,7 +154,7 @@ public class AuditAspect {
     //                     RESOURCE ID EXTRACTION (RESULT)
     // ====================================================================
 
-    private Long extractFromResult(Object result) {
+    private String extractFromResult(Object result) {
         if (result == null) return null;
 
         if (result instanceof ResponseEntity<?> r)
@@ -167,7 +167,7 @@ public class AuditAspect {
     //            RESOURCE ID EXTRACTION (EXCEPTION OBJECTS)
     // ====================================================================
 
-    private Long extractFromException(Exception ex) {
+    private String extractFromException(Exception ex) {
         if (ex == null) return null;
         return extractIdFromObject(ex);
     }
@@ -176,17 +176,24 @@ public class AuditAspect {
     //                     UNIVERSAL ID EXTRACTOR
     // ====================================================================
 
-    private Long extractIdFromObject(Object obj) {
+    private String extractIdFromObject(Object obj) {
         if (obj == null) return null;
 
-        if (obj instanceof Benutzer b) return b.getId();
+        if (obj instanceof Benutzer b) return b.getExternalId();
         if (obj instanceof Benutzer.DTO dto) return dto.id();
+
+        try {
+            Field f = obj.getClass().getDeclaredField("external_id");
+            f.setAccessible(true);
+            Object val = f.get(obj);
+            if (val instanceof String num) return num;
+        } catch (Exception ignore) {}
 
         try {
             Field f = obj.getClass().getDeclaredField("id");
             f.setAccessible(true);
             Object val = f.get(obj);
-            if (val instanceof Number num) return num.longValue();
+            if (val instanceof String num) return num;
         } catch (Exception ignore) {}
 
         return null;
@@ -211,7 +218,7 @@ public class AuditAspect {
             ProceedingJoinPoint pjp,
             Audit audit,
             boolean success,
-            Long resourceId
+            String resourceId
     ) {
         try {
             writeAuditLog(pjp, audit, success, resourceId);
@@ -228,7 +235,7 @@ public class AuditAspect {
             ProceedingJoinPoint pjp,
             Audit audit,
             boolean success,
-            Long resourceId
+            String resourceId
     ) {
         Benutzer user = safeGetUser();
         String payload = serializeArgs(pjp.getArgs());

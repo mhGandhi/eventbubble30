@@ -14,6 +14,8 @@ public class BenutzerDetails implements UserDetails {
 
     @Getter
     private final Long id;
+    @Getter
+    private final String externalId;
     private final String username;
     private final String passwordHash;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -28,6 +30,7 @@ public class BenutzerDetails implements UserDetails {
 
     public BenutzerDetails(Benutzer b) {
         this.id = b.getId();
+        this.externalId = b.getExternalId();
         this.username = b.getUsername();
         this.passwordHash = b.getPasswordHash();
         // Convert roles → Spring Security authorities

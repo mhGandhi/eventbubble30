@@ -36,10 +36,10 @@ public class AuditLogStreamerService {
 
     public void registerListener(
             SseEmitter emitter,
-            Long userId,
+            String userId,
             List<AuditLog.Action> actions,
             EntityType resourceType,
-            Long resourceId,
+            String resourceId,
             Boolean success
     ) {
 
@@ -47,7 +47,7 @@ public class AuditLogStreamerService {
 
             if (userId != null &&
                     (log.getBenutzer() == null ||
-                            !userId.equals(log.getBenutzer().getId())))
+                            !userId.equals(log.getBenutzer().getExternalId())))
                 return false;
 
             if (actions != null && !actions.isEmpty() &&

@@ -63,7 +63,7 @@ public class AuditLog {
     @Column(nullable = false, updatable = false, length = 30)
     private EntityType resourceType;
     @Column(nullable = true, updatable = false)
-    private Long resourceId;
+    private String resourceId;
 
     public AuditLog(
             Benutzer benutzer,
@@ -76,7 +76,7 @@ public class AuditLog {
             String endpoint,
             Instant timestamp,
             EntityType resourceType,
-            Long resourceId
+            String resourceId
     ) {
         this.benutzer = benutzer;
         this.ipAddress = ipAddress;
@@ -118,6 +118,6 @@ public class AuditLog {
             Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
             Action action, String payload, boolean success, String endpoint,
             Instant timestamp,
-            EntityType resourceType, Long resourceId
+            EntityType resourceType, String resourceId
     ) { }
 }

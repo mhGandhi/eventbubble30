@@ -38,7 +38,7 @@ public class ModerationController {
 
             @NotBlank
             @Size(max = 128)
-            String resourceId,
+            String resourceId,//public id
 
             @NotNull
             Report.Reason reason,

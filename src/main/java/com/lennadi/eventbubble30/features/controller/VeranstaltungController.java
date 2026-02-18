@@ -60,20 +60,20 @@ public class VeranstaltungController {
             Instant from,
             Instant to,
 
-            Long ownerId,
+            String ownerId,
 
             VeranstaltungsRepository.OrderBy orderBy,
             VeranstaltungsRepository.OrderDir orderDir
     ) {}
 
     @GetMapping("/{id}")
-    public Veranstaltung.DTO getVeranstaltungById(@PathVariable Long id) {
+    public Veranstaltung.DTO getVeranstaltungById(@PathVariable String id) {
         return veranstaltungService.getVeranstaltungById(id).toDTO();
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.EVENT, resourceIdParam = "id")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVeranstaltung(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteVeranstaltung(@PathVariable String id) {
         veranstaltungService.deleteVeranstaltungById(id);
         return ResponseEntity.noContent().build();
     }
@@ -92,14 +92,14 @@ public class VeranstaltungController {
         );
 
         return ResponseEntity
-                .created(URI.create("/api/events/" + vs.getId()))
+                .created(URI.create("/api/events/" + vs.getExternalId()))
                 .body(vs.toDTO());
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.EVENT, resourceIdParam = "id")
     @PatchMapping("/{id}")
     public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Valid @RequestBody PatchVeranstaltungRequest req
     ) {
         Veranstaltung vs = veranstaltungService.patchVeranstaltungById(
@@ -123,7 +123,7 @@ public class VeranstaltungController {
             @RequestParam(required = false) String near,
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to,
-            @RequestParam(required = false) Long owner,//todo für User ohne Profil Datenschutz ermöglichen
+            @RequestParam(required = false) String owner,//todo für User ohne Profil Datenschutz ermöglichen
             @RequestParam(defaultValue = "termin") VeranstaltungsRepository.OrderBy orderBy,
             @RequestParam(defaultValue = "asc") VeranstaltungsRepository.OrderDir orderDir,
             @RequestParam(defaultValue = "0") int page,
@@ -152,7 +152,7 @@ public class VeranstaltungController {
             String near,
             Instant from,
             Instant to,
-            Long owner,
+            String owner,
             VeranstaltungsRepository.OrderBy orderBy,
             VeranstaltungsRepository.OrderDir orderDir
     ) {
@@ -240,7 +240,7 @@ public class VeranstaltungController {
 
 
     @GetMapping("/{id}/export.ics")
-    public ResponseEntity<String> exportIcs(@PathVariable Long id) {
+    public ResponseEntity<String> exportIcs(@PathVariable String id) {
         String icsData = veranstaltungService.exportAsIcs(id);
 
         return ResponseEntity

@@ -115,24 +115,28 @@ public class AuthController {
         );
 
         RequestContextHolder.currentRequestAttributes()
-                .setAttribute("auditResourceId", neu.getId(), RequestAttributes.SCOPE_REQUEST);
+                .setAttribute("auditResourceId", neu.getExternalId(), RequestAttributes.SCOPE_REQUEST);
 
         // 5. 201 Created zurück
         return ResponseEntity
-                .created(URI.create("/api/user/" + neu.getId()))
+                .created(URI.create("/api/user/" + neu.getExternalId()))
                 .body(neu.toDTO());
     }
 
     @Audit(
             action = AuditLog.Action.LOGIN,
             resourceType = EntityType.USER,
-            resourceIdExpression = "#result.body.benutzerDTO.id"
+            resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
         Benutzer b = benutzerRepository.findByUsernameIgnoreCase(req.username())
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"));
+
+        RequestContextHolder.currentRequestAttributes()
+                .setAttribute("auditResourceId", b.getExternalId(), RequestAttributes.SCOPE_REQUEST);
+
         BenutzerDetails user;
         boolean emailVerified = b.isEmailVerified();
 
@@ -185,7 +189,7 @@ public class AuthController {
             Instant refreshExpiry = now.plusMillis(jwtService.getRefreshTokenValidityMs());
             Instant accessExpiry = now.plusMillis(jwtService.getAccessTokenValidityMs());
 
-            Benutzer benutzer = benutzerService.getBenutzer(details.getId());
+            Benutzer benutzer = benutzerService.getBenutzer(details.getExternalId());
             return ResponseEntity.ok(
                     new AuthResponse(newAccess, accessExpiry, refreshToken, refreshExpiry, benutzer.toDTO())//todo
             );
@@ -198,13 +202,13 @@ public class AuthController {
     @Audit(
             action = AuditLog.Action.INVALIDATE_TOKENS,
             resourceType = EntityType.USER,
-            resourceIdExpression = "#currentUser.id"
+            resourceIdExpression = "#currentUser.external_id"
     )
     @PostMapping("invalidate-tokens")
     @PreAuthorize("@authz.isAuthenticated()")
     public ResponseEntity<Void> invalidateOwnTokens() {
         Benutzer benutzer = benutzerService.getCurrentUser();
-        benutzerService.invalidateTokens(benutzer.getId());
+        benutzerService.invalidateTokens(benutzer.getExternalId());
 
         return ResponseEntity.noContent().build();
     }
@@ -226,7 +230,7 @@ public class AuthController {
         var userOpt = benutzerRepository.findByEmail(email);
         userOpt.ifPresent(user->{
             RequestContextHolder.currentRequestAttributes()
-                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+                    .setAttribute("auditResourceId", user.getExternalId(), RequestAttributes.SCOPE_REQUEST);
         });
 
         //try{ todo
@@ -250,10 +254,10 @@ public class AuthController {
 
         try {
             Benutzer user = passwordResetService.validateTokenAndConsume(req.token());
-            benutzerService.resetPassword(user.getId(), req.newPassword());
+            benutzerService.resetPassword(user.getExternalId(), req.newPassword());
 
             RequestContextHolder.currentRequestAttributes()
-                    .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+                    .setAttribute("auditResourceId", user.getExternalId(), RequestAttributes.SCOPE_REQUEST);
 
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException ex) {
@@ -280,7 +284,7 @@ public class AuthController {
                 //todo put there
 
                 RequestContextHolder.currentRequestAttributes()
-                        .setAttribute("auditResourceId", user.getId(), RequestAttributes.SCOPE_REQUEST);
+                        .setAttribute("auditResourceId", user.getExternalId(), RequestAttributes.SCOPE_REQUEST);
             }
         }
         return ResponseEntity.ok().build(); // always 200 for security
@@ -295,7 +299,7 @@ public class AuthController {
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
         Benutzer b = benutzerService.verifyEmail(token);
         RequestContextHolder.currentRequestAttributes()
-                .setAttribute("auditResourceId", b.getId(), RequestAttributes.SCOPE_REQUEST);
+                .setAttribute("auditResourceId", b.getExternalId(), RequestAttributes.SCOPE_REQUEST);
 
 
         return ResponseEntity.ok("Email successfully verified.");

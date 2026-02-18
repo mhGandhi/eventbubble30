@@ -9,12 +9,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
@@ -27,16 +25,17 @@ public class BenutzerController {
 
     private final BenutzerService service;
 
-    private long resolveId(String segment) {
+    private String resolveExtId(String segment) {
         if ("me".equalsIgnoreCase(segment)) {
-            return service.getCurrentUser().getId();
+            return service.getCurrentUser().getExternalId();
         }
-
+        return segment;
+        /*
         try {
             return Long.parseLong(segment);
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid identifier: " + segment);
-        }
+        }*/
     }
 
     // ===== DTOs =====
@@ -73,7 +72,7 @@ public class BenutzerController {
         Benutzer neu = service.createBenutzer(req);
 
         return ResponseEntity
-                .created(URI.create("/api/user/" + neu.getId())) // Location Header
+                .created(URI.create("/api/user/" + neu.getExternalId())) // Location Header
                 .body(neu.toDTO());                                     // Response Body
     }
 
@@ -83,9 +82,9 @@ public class BenutzerController {
             @PathVariable String segment,
             @Valid @RequestBody PatchBenutzerRequest req
     ) {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
 
-        Benutzer b = service.updateBenutzer(id, req);
+        Benutzer b = service.updateBenutzer(extId, req);
 
         return ResponseEntity
                 .ok()
@@ -95,19 +94,19 @@ public class BenutzerController {
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.USER, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteUserById(@PathVariable String segment) {
-        long id = resolveId(segment);
+        String extId = resolveExtId(segment);
 
         RequestContextHolder.currentRequestAttributes()
-                .setAttribute("auditResourceId", id, RequestAttributes.SCOPE_REQUEST);
+                .setAttribute("auditResourceId", extId, RequestAttributes.SCOPE_REQUEST);
 
-        service.deleteUserById(id);
+        service.deleteUserById(extId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{segment}")
     public Benutzer.DTO findUser(@PathVariable String segment) {
-        long id = resolveId(segment);
-        Benutzer ret = service.getBenutzer(id);
+        String extId = resolveExtId(segment);
+        Benutzer ret = service.getBenutzer(extId);
 
         return ret.toDTO();
     }
@@ -123,14 +122,14 @@ public class BenutzerController {
     @Audit(
             action = UPDATE,
             resourceType = EntityType.USER,
-            resourceIdExpression = "#currentUser.id"
+            resourceIdExpression = "#currentUser.external_id"
     )
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody UpdateOwnPasswordRequest req
     ) {
         Benutzer benutzer = service.getCurrentUser();
-        service.changePassword(benutzer.getId(), req.oldPassword, req.newPassword);
+        service.changePassword(benutzer.getExternalId(), req.oldPassword, req.newPassword);
 
         return ResponseEntity.noContent().build();
     }
