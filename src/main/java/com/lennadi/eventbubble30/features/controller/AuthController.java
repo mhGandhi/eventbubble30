@@ -202,7 +202,7 @@ public class AuthController {
     @Audit(
             action = AuditLog.Action.INVALIDATE_TOKENS,
             resourceType = EntityType.USER,
-            resourceIdExpression = "#currentUser.external_id"
+            resourceIdExpression = "#currentUser.externalId"
     )
     @PostMapping("invalidate-tokens")
     @PreAuthorize("@authz.isAuthenticated()")

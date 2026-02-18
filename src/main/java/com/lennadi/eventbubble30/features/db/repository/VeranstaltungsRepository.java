@@ -95,7 +95,7 @@ public interface VeranstaltungsRepository extends
         public static Specification<Veranstaltung> ownedBy(String userExtId) {
             return (root, query, cb) -> {
                 if (userExtId == null) return null;
-                return cb.equal(root.get("besitzer").get("external_id"), userExtId);
+                return cb.equal(root.get("besitzer").get("externalId"), userExtId);
             };
         }
 
