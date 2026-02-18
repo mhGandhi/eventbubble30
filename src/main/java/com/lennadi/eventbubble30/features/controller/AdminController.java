@@ -48,7 +48,7 @@ public class AdminController {
 
         if (userId != null) {
             filters.add((root, q, cb) ->
-                    cb.equal(root.get("benutzer").get("id"), userId));
+                    cb.equal(root.get("benutzer").get("externalId"), userId.trim()));
         }
 
         if (action != null && !action.isEmpty()) {

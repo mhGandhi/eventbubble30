@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,5 +16,5 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long>,
     Page<AuditLog> findByActionIn(Set<AuditLog.Action> actions, Pageable pageable);
     Page<AuditLog> findByActionNotIn(Set<AuditLog.Action> excluded, Pageable pageable);
     Page<AuditLog> findByBenutzer(Benutzer benutzer, Pageable pageable);
-    Page<AuditLog> findByResourceTypeAndResourceId(String type, Long id, Pageable pageable);
+    Page<AuditLog> findByResourceTypeAndResourceId(EntityType resourceType, String resourceId, Pageable pageable);
 }
