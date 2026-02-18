@@ -99,7 +99,10 @@
 
 <script>
     const params = new URLSearchParams(window.location.search);
-    const userID = Number(params.get("id"));
+    const userID = params.get("id"); // string (UUID or "me")
+    if (!userID) {
+        notify("Missing id parameter", "error");
+    }
 
     window.addEventListener("load", () => {
         bootstrapSession({
