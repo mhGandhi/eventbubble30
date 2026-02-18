@@ -136,7 +136,7 @@ public class BenutzerService {
 
         String username = auth.getName();
 
-        return requireUser(username);
+        return requireUserByUsername(username);//todo use id mby?
     }
 
     /// ////////////////////////////////ADMIN
