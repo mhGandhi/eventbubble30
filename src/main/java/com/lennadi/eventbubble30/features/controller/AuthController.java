@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.exceptions.ErrorCodes;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.logging.Audit;
@@ -131,31 +132,14 @@ public class AuthController {
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
-        Benutzer b = benutzerRepository.findByEmailIgnoreCase(req.username())
-                .orElse(benutzerRepository.findByUsernameIgnoreCase(req.username())
-                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))
-                );
-        /*
-        String foundByMail = "not tried";
-        String foundByName = "not tried";
         Optional<Benutzer> ben = benutzerRepository.findByEmailIgnoreCase(req.username());
         if (ben.isEmpty()) {
-            foundByMail = "no";
             ben = benutzerRepository.findByUsernameIgnoreCase(req.username());
-            if(ben.isEmpty()){
-                foundByName = "no";
-            }else {
-                foundByName = ben.get().getEmail();
-            }
-        }else{
-            foundByMail = ben.get().getUsername();
         }
-
-
         if(ben.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "byMail: " + foundByMail+" byUsername: "+foundByName);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.INVALID_CREDENTIALS.toString());
         }
-        Benutzer b = ben.get();*/
+        Benutzer b = ben.get();
 
 
         RequestContextHolder.currentRequestAttributes()
@@ -171,12 +155,12 @@ public class AuthController {
             user = (BenutzerDetails) auth.getPrincipal();
         } catch (DisabledException e) {
             if(emailVerified) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account nicht aktiv");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.ACCOUNT_NOT_ACTIVE.toString());
             }else{
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email nicht verifiziert");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.EMAIL_NOT_VERIFIED.toString());
             }
         } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.INVALID_CREDENTIALS.toString());
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fehler bei der Anmeldung");
         }
