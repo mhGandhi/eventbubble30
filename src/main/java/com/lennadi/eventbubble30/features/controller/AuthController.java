@@ -131,12 +131,11 @@ public class AuthController {
     )
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
-
-        /*
         Benutzer b = benutzerRepository.findByEmailIgnoreCase(req.username())
                 .orElse(benutzerRepository.findByUsernameIgnoreCase(req.username())
-                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))//todo unauthorized
-                );*/
+                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))
+                );
+        /*
         String foundByMail = "not tried";
         String foundByName = "not tried";
         Optional<Benutzer> ben = benutzerRepository.findByEmailIgnoreCase(req.username());
@@ -156,7 +155,7 @@ public class AuthController {
         if(ben.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "byMail: " + foundByMail+" byUsername: "+foundByName);
         }
-        Benutzer b = ben.get();
+        Benutzer b = ben.get();*/
 
 
         RequestContextHolder.currentRequestAttributes()
@@ -177,7 +176,7 @@ public class AuthController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email nicht verifiziert");
             }
         } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten: "+ Arrays.toString(e.getStackTrace()));//todo nd gut
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten");
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fehler bei der Anmeldung");
         }
