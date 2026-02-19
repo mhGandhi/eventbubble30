@@ -1,8 +1,5 @@
-README – Authentifizierungssystem (für Frontend-Entwickler, React Native)
-
-ÜBERSICHT
 Unser Backend verwendet JWT-Tokens zur Authentifizierung.
-Es gibt zwei Arten von Tokens:
+2 Arten von Tokens:
 
 1) ACCESS TOKEN
 - Gültigkeit: ca. 15 Minuten
@@ -17,12 +14,6 @@ Es gibt zwei Arten von Tokens:
 - Wird NICHT automatisch an API-Endpunkte geschickt
 - Wird NUR benutzt, um ein neues Access Token zu holen
 
-Warum zwei Tokens?
-- Access Token ist kurzlebig → sicherer
-- Refresh Token hält den Benutzer eingeloggt → guter Komfort
-- Access Token kann bei Diebstahl nur kurz genutzt werden
-- Refresh Token kann zentral invalidiert werden
-
 -------------------------------------------------------------
 
 LOGIN
@@ -30,14 +21,16 @@ POST /api/auth/login
 
 Body:
 {
-  "username": "...",
+  "username": "...", //username oder email
   "password": "..."
 }
 
 Response:
 {
   "accessToken": "...",
+  "accessTokenExpiry" : "...",
   "refreshToken": "...",
+  "refreshTokenExpiry" : "...",
   "user": {
     "id": ...,
     "username": "..."
@@ -89,12 +82,10 @@ Falls /refresh ebenfalls 401 zurückgibt:
 -------------------------------------------------------------
 
 LOGOUT (alle Tokens ungültig machen)
-POST /api/auth/invalidate-tokens
 
 FRONTEND-AUFGABE:
 - accessToken aus dem Arbeitsspeicher löschen
 - refreshToken aus SecureStore löschen
-- Benutzer abmelden
 
 -------------------------------------------------------------
 
@@ -137,5 +128,7 @@ ZUSAMMENFASSUNG FÜR EILIGE
 5. Logout → /invalidate-tokens + Tokens löschen
 
 -------------------------------------------------------------
+
+Refresh gibt auch expiry für tokens mit. Anhand dieser kann man automatisch refreshen oder überprüfen ob bereits ein Refresh vonnöten ist.
 
 eif mit Postman testen
