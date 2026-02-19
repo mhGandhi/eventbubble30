@@ -131,10 +131,32 @@ public class AuthController {
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
+        /*
         Benutzer b = benutzerRepository.findByEmailIgnoreCase(req.username())
                 .orElse(benutzerRepository.findByUsernameIgnoreCase(req.username())
-                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))
-                );
+                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))//todo unauthorized
+                );*/
+        String foundByMail = "not tried";
+        String foundByName = "not tried";
+        Optional<Benutzer> ben = benutzerRepository.findByEmailIgnoreCase(req.username());
+        if (ben.isEmpty()) {
+            foundByMail = "no";
+            ben = benutzerRepository.findByUsernameIgnoreCase(req.username());
+            if(ben.isEmpty()){
+                foundByName = "no";
+            }else {
+                foundByName = ben.get().getEmail();
+            }
+        }else{
+            foundByMail = ben.get().getUsername();
+        }
+
+
+        if(ben.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "byMail: " + foundByMail+" byUsername: "+foundByName);
+        }
+        Benutzer b = ben.get();
+
 
         RequestContextHolder.currentRequestAttributes()
                 .setAttribute("auditResourceId", b.getExternalId(), RequestAttributes.SCOPE_REQUEST);
