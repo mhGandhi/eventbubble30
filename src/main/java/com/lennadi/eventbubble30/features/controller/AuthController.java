@@ -35,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
@@ -176,7 +177,7 @@ public class AuthController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email nicht verifiziert");
             }
         } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten: "+ Arrays.toString(e.getStackTrace()));//todo nd gut
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Fehler bei der Anmeldung");
         }
