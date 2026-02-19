@@ -14,7 +14,8 @@ import java.util.*;
 @Setter
 @Table(indexes = {
         @Index(name = "idx_external_id", columnList = "external_id"),
-        @Index(name = "idx_username", columnList = "username")
+        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_email", columnList = "email")
 })
 public class Benutzer extends BaseEntity{
     public static final EntityType TYPE = EntityType.USER;
