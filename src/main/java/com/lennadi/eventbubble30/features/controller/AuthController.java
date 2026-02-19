@@ -54,7 +54,7 @@ public class AuthController {
     // ==== DTO ====
 
     public record LoginRequest(
-            @NotBlank String username,
+            @NotBlank String username,//or email
             @NotBlank String password
     ) {}
 
@@ -131,8 +131,10 @@ public class AuthController {
     @PostMapping("/login")//todo require captcha (mby filter?)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
 
-        Benutzer b = benutzerRepository.findByUsernameIgnoreCase(req.username())
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"));
+        Benutzer b = benutzerRepository.findByEmailIgnoreCase(req.username())
+                .orElse(benutzerRepository.findByUsernameIgnoreCase(req.username())
+                        .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ungültige Anmeldedaten"))
+                );
 
         RequestContextHolder.currentRequestAttributes()
                 .setAttribute("auditResourceId", b.getExternalId(), RequestAttributes.SCOPE_REQUEST);
@@ -227,7 +229,7 @@ public class AuthController {
     @PostMapping("/request-password-reset")
     public ResponseEntity<Void> requestPasswordReset(
             @Valid @RequestParam String email) {
-        var userOpt = benutzerRepository.findByEmail(email);
+        var userOpt = benutzerRepository.findByEmailIgnoreCase(email);
         userOpt.ifPresent(user->{
             RequestContextHolder.currentRequestAttributes()
                     .setAttribute("auditResourceId", user.getExternalId(), RequestAttributes.SCOPE_REQUEST);
@@ -272,7 +274,7 @@ public class AuthController {
     )
     @PostMapping("/request-email-verification")
     public ResponseEntity<Void> requestEmailVerification(@RequestParam @Email String email) {
-        Optional<Benutzer> b = benutzerRepository.findByEmail(email);
+        Optional<Benutzer> b = benutzerRepository.findByEmailIgnoreCase(email);
         if(b.isPresent()){
             Benutzer user = b.get();
             if (!user.isEmailVerified()) {
