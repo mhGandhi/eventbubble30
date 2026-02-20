@@ -57,7 +57,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/admin/audit-log/stream").hasRole("ADMIN")
 
                         //mod
-                        .requestMatchers("/api/moderation/**").authenticated()//todo mby public method somewhere else und das nur für mods und admins?
+                        .requestMatchers("/api/moderation/**").authenticated()//todo user können tickets erstellen und ihre sehen, sonst .hasAnyRole("ADMIN","MODERATOR")
 
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
