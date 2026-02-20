@@ -21,6 +21,70 @@
         </div>
 
         <div id="modMain" style="display:none;">
+
+            <!-- CREATE -->
+            <div class="box">
+                <h3>Create</h3>
+
+                <details class="box" open>
+                    <summary>Create Ticket / Report</summary>
+
+                    <div class="audit-grid">
+                        <label class="span-2">
+                            <span>Ticket message</span>
+                            <textarea id="c_ticket_message" placeholder="Message (required for Ticket)"></textarea>
+                        </label>
+                    </div>
+
+                    <button onclick="createTicket()">Create Ticket</button>
+
+                    <hr>
+
+                    <div class="audit-grid">
+                        <label>
+                            <span>Report entityType</span>
+                            <input id="c_report_entityType" placeholder="EVENT / PROFILE / USER / ...">
+                        </label>
+
+                        <label>
+                            <span>Report resourceId</span>
+                            <input id="c_report_resourceId" placeholder="public id of resource">
+                        </label>
+
+                        <label>
+                            <span>Reason</span>
+                            <select id="c_report_reason">
+                                <option value="OTHER">OTHER</option>
+                                <option value="SPAM">SPAM</option>
+                                <option value="INAPPROPRIATE">INAPPROPRIATE</option>
+                                <option value="HATE_SPEECH">HATE_SPEECH</option>
+                                <option value="CYBER_BULLYING">CYBER_BULLYING</option>
+                                <option value="MISINFORMATION">MISINFORMATION</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Reason text (only if OTHER)</span>
+                            <input id="c_report_reasonText" placeholder="optional">
+                        </label>
+
+                        <label class="span-2">
+                            <span>Extra message (optional)</span>
+                            <textarea id="c_report_message" placeholder="optional extra text by reporter"></textarea>
+                        </label>
+                    </div>
+
+                    <button onclick="createReport()">Create Report</button>
+
+                    <div style="margin-top:10px;">
+                        <small class="timestamp">
+                            Tip: For reports, you can paste the event/profile/user ID and it will appear as “Open reported resource” in the list.
+                        </small>
+                    </div>
+                </details>
+            </div>
+
+            <!-- LIST -->
             <div class="box">
                 <h3>Tickets</h3>
 
@@ -130,7 +194,7 @@
         bootstrapSession({
             onAuthenticated: async () => {
                 const me = await getMe();
-                const isMod = me && ((me.roles || []).includes("MODERATOR")||(me.roles || []).includes("ADMIN"));
+                const isMod = me && ((me.roles || []).includes("MODERATOR") || (me.roles || []).includes("ADMIN"));
                 if (!isMod) {
                     modGate.style.display = "block";
                     modMain.style.display = "none";
@@ -146,6 +210,83 @@
             }
         });
     });
+
+    // --------------------------
+    // CREATE
+    // --------------------------
+    async function createTicket() {
+        const message = (c_ticket_message.value || "").trim();
+        if (!message) {
+            notify("Ticket message is required", "warn");
+            return;
+        }
+
+        try {
+            const res = await api("/moderation/tickets", "POST", { message });
+            notify("Ticket created!", "success", true);
+            c_ticket_message.value = "";
+            ticketState.page = 0;
+            await listTickets();
+
+            // optional: go directly to ticket page
+            // window.location.href = "/ticket?id=" + encodeURIComponent(res.id);
+        } catch (e) {
+            notify(e);
+        }
+    }
+
+    async function createReport() {
+        const entityType = (c_report_entityType.value || "").trim().toUpperCase();
+        const resourceId = (c_report_resourceId.value || "").trim();
+        const reason = c_report_reason.value;
+        const reasonText = (c_report_reasonText.value || "").trim();
+        const message = (c_report_message.value || "").trim();
+
+        if (!entityType) {
+            notify("Report entityType is required", "warn");
+            return;
+        }
+        if (!resourceId) {
+            notify("Report resourceId is required", "warn");
+            return;
+        }
+        if (!reason) {
+            notify("Report reason is required", "warn");
+            return;
+        }
+        if (reason === "OTHER" && !reasonText) {
+            // optional strictness; remove if you allow empty reasonText
+            notify("Please provide reason text for OTHER", "warn");
+            return;
+        }
+
+        try {
+            const body = {
+                entityType,
+                resourceId,
+                reason,
+                reasonText: reasonText || null,
+                message: message || null
+            };
+
+            const res = await api("/moderation/reports", "POST", body);
+            notify("Report created!", "success", true);
+
+            c_report_entityType.value = "";
+            c_report_resourceId.value = "";
+            c_report_reason.value = "OTHER";
+            c_report_reasonText.value = "";
+            c_report_message.value = "";
+
+            ticketState.page = 0;
+            await listTickets();
+
+            // optional: go directly to ticket page
+            // window.location.href = "/ticket?id=" + encodeURIComponent(res.id);
+        } catch (e) {
+            notify(e);
+        }
+    }
 
     // --------------------------
     // STATE
@@ -206,7 +347,7 @@
     function linkToResource(details) {
         if (!details) return null;
 
-        const entityType = details.entityType || details.entity_type; // tolerate older keys
+        const entityType = details.entityType || details.entity_type;
         const resourceId = details.resourceId || details.resource_id;
 
         if (!entityType || !resourceId) return null;
@@ -214,7 +355,7 @@
         const type = String(entityType).toUpperCase();
         if (type === "EVENT") return `/event?id=${encodeURIComponent(resourceId)}`;
         if (type === "PROFILE") return `/profile?id=${encodeURIComponent(resourceId)}`;
-        if (type === "USER") return `/profile?id=${encodeURIComponent(resourceId)}`; // adjust if you have /user?id=...
+        if (type === "USER") return `/profile?id=${encodeURIComponent(resourceId)}`;
         return null;
     }
 
@@ -224,17 +365,14 @@
         const keys = Object.keys(details);
         if (keys.length === 0) return "<i>no details</i>";
 
-        const rows = keys.map(k => {
+        return keys.map(k => {
             const v = details[k];
             const vv = (v === null || v === undefined) ? "-" : escapeHtml(String(v));
             return `<div><small><b>${escapeHtml(k)}:</b> ${vv}</small></div>`;
         }).join("");
-
-        return rows;
     }
 
     async function renderTicketCard(t) {
-        // user snippets (cached)
         const createdBy = t.createdBy || null;
         const assignedTo = t.assignedTo || null;
 
@@ -242,12 +380,10 @@
         const assignedToSnippet = assignedTo ? await buildUserSnippet(assignedTo) : "<i>unassigned</i>";
 
         const detailsLink = linkToResource(t.details);
-        const resourceLinkHtml = detailsLink
-            ? `<a href="${detailsLink}">Open reported resource</a>`
-            : "";
+        const resourceLinkHtml = detailsLink ? `<a href="${detailsLink}">Open reported resource</a>` : "";
 
         const div = document.createElement("div");
-        div.className = "event"; // reuse card styling
+        div.className = "event";
 
         div.innerHTML = `
             <a href="/ticket?id=${encodeURIComponent(t.id)}"><b>${escapeHtml(t.ticketType || "TICKET")}</b></a>
