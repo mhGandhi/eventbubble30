@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -133,7 +134,7 @@ public class ApiExceptionHandler {
                 Instant.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 e.getClass().getSimpleName(),
-                e.getMessage(),//todo dass später weg um keine internals zu leaken, vlt mit profile entscheiden?
+                e.getMessage()+"\n"+ Arrays.toString(e.getStackTrace()),//todo dass später weg um keine internals zu leaken, vlt mit profile entscheiden?
                 request.getRequestURI(),
                 null,
                 getAuthState(request)
