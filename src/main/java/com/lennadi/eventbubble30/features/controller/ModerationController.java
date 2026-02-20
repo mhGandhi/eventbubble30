@@ -112,6 +112,7 @@ public class ModerationController {
         return ticketService.getByExternalIdOrThrow(externalId).toDTO();
     }
 
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PatchMapping("/tickets/{id}")
     public ResponseEntity<Ticket.DTO> patchTicket(
             @PathVariable("id") String id,
@@ -121,6 +122,7 @@ public class ModerationController {
         return ResponseEntity.ok(updated.toDTO());
     }
 
+    @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PatchMapping("/reports/{id}")
     public ResponseEntity<Ticket.DTO> patchReport(
             @PathVariable("id") String id,
