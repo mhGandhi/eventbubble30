@@ -64,14 +64,16 @@ public class Report extends Ticket{
 
     @Transient
     @Override
-    public Map<String, Object> getDetails(){
-        return Map.of(
-                "entityType", entityType,
-                "resourceId", resourceId,
-                "reason", reason,
-                "reasonText", reason_text,
-                "outcome", outcome
-        );
+    public Map<String, Object> getDetails() {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("entityType", entityType);
+        m.put("resourceId", resourceId);
+        m.put("reason", reason);
+        m.put("reasonText", reason_text);
+        m.put("outcome", outcome);
+        return m;
+
+        //nicht Map.of() weil das macht Faxen bei null-values (NPE)
     }
     public enum Reason {OTHER, SPAM, INAPPROPRIATE, HATE_SPEECH, CYBER_BULLYING, MISINFORMATION}
     public enum Outcome { DELETED, CREATOR_BANNED, NOTHING, STRAIGHT_UP_CALLED_THE_POPO_ON_THIS_FREAK}
