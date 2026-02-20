@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Moderation | Eventbubble</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<script src="/base.js"></script>
+
+<div th:replace="fragments/header :: header"></div>
+
+<main>
+    <section class="page-width">
+        <h2>Moderation</h2>
+
+        <div id="modGate" class="box" style="display:none;">
+            <h3>Not allowed</h3>
+            <p>You need the <b>MODERATOR</b> role to view this page.</p>
+        </div>
+
+        <div id="modMain" style="display:none;">
+            <div class="box">
+                <h3>Tickets</h3>
+
+                <details class="box">
+                    <summary>Filters</summary>
+
+                    <div class="audit-grid">
+                        <label>
+                            <span>Search (message)</span>
+                            <input id="t_q" placeholder="message contains...">
+                        </label>
+
+                        <label>
+                            <span>Type</span>
+                            <input id="t_type" placeholder="REPORT / TICKET / ...">
+                        </label>
+
+                        <label>
+                            <span>Closed</span>
+                            <select id="t_closed">
+                                <option value="">Any</option>
+                                <option value="true">Closed</option>
+                                <option value="false">Open</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Escalate</span>
+                            <select id="t_escalate">
+                                <option value="">Any</option>
+                                <option value="true">Escalated</option>
+                                <option value="false">Not escalated</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Created From</span>
+                            <input id="t_createdFrom" type="datetime-local">
+                        </label>
+
+                        <label>
+                            <span>Created To</span>
+                            <input id="t_createdTo" type="datetime-local">
+                        </label>
+
+                        <label>
+                            <span>Modified From</span>
+                            <input id="t_modifiedFrom" type="datetime-local">
+                        </label>
+
+                        <label>
+                            <span>Modified To</span>
+                            <input id="t_modifiedTo" type="datetime-local">
+                        </label>
+
+                        <label>
+                            <span>CreatedBy (user externalId)</span>
+                            <input id="t_createdBy" placeholder="user externalId">
+                        </label>
+
+                        <label>
+                            <span>AssignedTo (user externalId)</span>
+                            <input id="t_assignedTo" placeholder="user externalId">
+                        </label>
+
+                        <label>
+                            <span>Order by</span>
+                            <select id="t_orderBy">
+                                <option value="creationDate">Created</option>
+                                <option value="modificationDate">Modified</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>Direction</span>
+                            <select id="t_orderDir">
+                                <option value="desc">Desc</option>
+                                <option value="asc">Asc</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <button onclick="applyTicketFilters()">Apply Filters</button>
+                </details>
+
+                <button onclick="listTickets()">Reload Tickets</button>
+
+                <div id="tickets"></div>
+
+                <div class="box" id="ticketPagination">
+                    <button onclick="prevTicketPage()">◀ Prev</button>
+                    <span id="ticketPageInfo"></span>
+                    <button onclick="nextTicketPage()">Next ▶</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script>
+    // ----------------------
+    // START (session check)
+    // ----------------------
+    window.addEventListener("load", () => {
+        bootstrapSession({
+            onAuthenticated: async () => {
+                const me = await getMe();
+                const isMod = me && (me.roles || []).includes("MODERATOR");
+                if (!isMod) {
+                    modGate.style.display = "block";
+                    modMain.style.display = "none";
+                    return;
+                }
+
+                modGate.style.display = "none";
+                modMain.style.display = "block";
+                await listTickets();
+            },
+            onAnonymous: async () => {
+                window.location.replace("/login?re=/moderation");
+            }
+        });
+    });
+
+    // --------------------------
+    // STATE
+    // --------------------------
+    const ticketState = { page: 0, size: 20, totalPages: 0 };
+
+    function applyTicketFilters() {
+        ticketState.page = 0;
+        listTickets();
+    }
+
+    function nextTicketPage() {
+        if (ticketState.page + 1 >= ticketState.totalPages) return;
+        ticketState.page++;
+        listTickets();
+    }
+
+    function prevTicketPage() {
+        if (ticketState.page === 0) return;
+        ticketState.page--;
+        listTickets();
+    }
+
+    function updateTicketPagerButtons() {
+        document.querySelector("#ticketPagination button:first-child").disabled = ticketState.page === 0;
+        document.querySelector("#ticketPagination button:last-child").disabled = ticketState.page + 1 >= ticketState.totalPages;
+    }
+
+    function buildTicketQuery() {
+        const params = new URLSearchParams();
+
+        if (t_q.value.trim()) params.append("q", t_q.value.trim());
+        if (t_type.value.trim()) params.append("type", t_type.value.trim());
+
+        if (t_closed.value !== "") params.append("closed", t_closed.value);
+        if (t_escalate.value !== "") params.append("escalate", t_escalate.value);
+
+        if (t_createdBy.value.trim()) params.append("createdBy", t_createdBy.value.trim());
+        if (t_assignedTo.value.trim()) params.append("assignedTo", t_assignedTo.value.trim());
+
+        if (t_createdFrom.value) params.append("createdFrom", new Date(t_createdFrom.value).toISOString());
+        if (t_createdTo.value) params.append("createdTo", new Date(t_createdTo.value).toISOString());
+
+        if (t_modifiedFrom.value) params.append("modifiedFrom", new Date(t_modifiedFrom.value).toISOString());
+        if (t_modifiedTo.value) params.append("modifiedTo", new Date(t_modifiedTo.value).toISOString());
+
+        params.append("orderBy", t_orderBy.value);
+        params.append("orderDir", t_orderDir.value);
+        params.append("page", ticketState.page);
+        params.append("size", ticketState.size);
+
+        return params.toString();
+    }
+
+    // --------------------------
+    // RENDER
+    // --------------------------
+    function linkToResource(details) {
+        if (!details) return null;
+
+        const entityType = details.entityType || details.entity_type; // tolerate older keys
+        const resourceId = details.resourceId || details.resource_id;
+
+        if (!entityType || !resourceId) return null;
+
+        const type = String(entityType).toUpperCase();
+        if (type === "EVENT") return `/event?id=${encodeURIComponent(resourceId)}`;
+        if (type === "PROFILE") return `/profile?id=${encodeURIComponent(resourceId)}`;
+        if (type === "USER") return `/profile?id=${encodeURIComponent(resourceId)}`; // adjust if you have /user?id=...
+        return null;
+    }
+
+    function renderDetailsMap(details) {
+        if (!details || typeof details !== "object") return "<i>no details</i>";
+
+        const keys = Object.keys(details);
+        if (keys.length === 0) return "<i>no details</i>";
+
+        const rows = keys.map(k => {
+            const v = details[k];
+            const vv = (v === null || v === undefined) ? "-" : escapeHtml(String(v));
+            return `<div><small><b>${escapeHtml(k)}:</b> ${vv}</small></div>`;
+        }).join("");
+
+        return rows;
+    }
+
+    async function renderTicketCard(t) {
+        // user snippets (cached)
+        const createdBy = t.createdBy || null;
+        const assignedTo = t.assignedTo || null;
+
+        const createdBySnippet = createdBy ? await buildUserSnippet(createdBy) : "<i>unknown</i>";
+        const assignedToSnippet = assignedTo ? await buildUserSnippet(assignedTo) : "<i>unassigned</i>";
+
+        const detailsLink = linkToResource(t.details);
+        const resourceLinkHtml = detailsLink
+            ? `<a href="${detailsLink}">Open reported resource</a>`
+            : "";
+
+        const div = document.createElement("div");
+        div.className = "event"; // reuse card styling
+
+        div.innerHTML = `
+            <a href="/ticket?id=${encodeURIComponent(t.id)}"><b>${escapeHtml(t.ticketType || "TICKET")}</b></a>
+            <small class="timestamp">#${escapeHtml(t.id)}</small>
+            <small class="timestamp ago" data-timestamp="${t.creationDate}"></small>
+            <br>
+
+            <small>Created by: ${createdBySnippet}</small><br>
+            <small>Assigned to: ${assignedToSnippet}</small><br>
+
+            <small class="timestamp">Created: ${escapeHtml(t.creationDate || "-")}</small><br>
+            <small class="timestamp">Modified: ${escapeHtml(t.modificationDate || "-")}</small><br>
+
+            <div style="margin-top:8px;">
+                ${escapeHtml(t.message || "")}
+            </div>
+
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
+                <small><b>Status:</b>
+                    ${t.closed ? "Closed" : "Open"}
+                    • ${t.escalate ? "Escalated" : "Normal"}
+                </small>
+                ${t.comment ? `<div><small><b>Comment:</b> ${escapeHtml(t.comment)}</small></div>` : ""}
+            </div>
+
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
+                <small><b>Details</b></small><br>
+                ${renderDetailsMap(t.details)}
+                ${resourceLinkHtml ? `<div style="margin-top:6px;">${resourceLinkHtml}</div>` : ""}
+            </div>
+
+            <hr>
+            <button onclick="quickToggleClosed('${escapeHtml(t.id)}', ${t.closed ? "false" : "true"})">
+                ${t.closed ? "Reopen" : "Close"}
+            </button>
+            <button onclick="quickToggleEscalate('${escapeHtml(t.id)}', ${t.escalate ? "false" : "true"})">
+                ${t.escalate ? "De-escalate" : "Escalate"}
+            </button>
+        `;
+
+        div.querySelector(".ago").textContent = `• ${timeAgo(t.creationDate)}`;
+        return div;
+    }
+
+    // --------------------------
+    // ACTIONS
+    // --------------------------
+    async function quickToggleClosed(id, closed) {
+        try {
+            await api(`/moderation/tickets/${encodeURIComponent(id)}`, "PATCH", { closed });
+            notify("Updated ticket!", "success", true);
+            await listTickets();
+        } catch (e) { notify(e); }
+    }
+
+    async function quickToggleEscalate(id, escalate) {
+        try {
+            await api(`/moderation/tickets/${encodeURIComponent(id)}`, "PATCH", { escalate });
+            notify("Updated ticket!", "success", true);
+            await listTickets();
+        } catch (e) { notify(e); }
+    }
+
+    // --------------------------
+    // LOAD
+    // --------------------------
+    async function listTickets() {
+        try {
+            const q = buildTicketQuery();
+            const page = await api("/moderation/tickets?" + q);
+
+            ticketState.totalPages = page.totalPages;
+
+            const out = document.getElementById("tickets");
+            out.innerHTML = "";
+
+            for (const t of page.content) {
+                out.appendChild(await renderTicketCard(t));
+            }
+
+            document.getElementById("ticketPageInfo").textContent =
+                `Page ${page.number + 1} / ${page.totalPages}`;
+        } catch (e) {
+            notify(e);
+        }
+
+        updateTicketPagerButtons();
+    }
+</script>
+</body>
+</html>

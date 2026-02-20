@@ -70,4 +70,14 @@ public class StaticPageController {
     public String login() {
         return "login";
     }
+
+    @GetMapping("/moderation")
+    public String moderation(){
+        return "moderation";
+    }
+
+    @GetMapping("/ticket")
+    public String ticket(){
+        return "ticket";
+    }
 }

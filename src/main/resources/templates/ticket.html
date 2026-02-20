@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title id="winTitle">Ticket | Eventbubble</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<script src="/base.js"></script>
+
+<div th:replace="fragments/header :: header"></div>
+
+<main>
+    <section class="page-width">
+        <div id="loading" class="box">
+            <h1>Loading...</h1>
+        </div>
+
+        <div id="invalid" class="box" style="display:none;">
+            <h1>Missing or inaccessible ticket (404)</h1>
+        </div>
+
+        <div id="valid" class="box" style="display:none;"></div>
+    </section>
+
+    <section class="page-width" id="auditSection" style="display:none;">
+        <h2>Audit</h2>
+        <div id="auditLog" class="box"></div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const ticketId = params.get("id");
+
+    window.addEventListener("load", () => {
+        bootstrapSession({
+            onAuthenticated: async () => {
+                if (!ticketId) {
+                    notify("Missing ticket id", "warn");
+                    showInvalid();
+                    return;
+                }
+                await loadTicket(ticketId);
+                // show audit entries for this ticket (Admin only per your helper)
+                await loadLatestAuditLogsIfAdmin(`resourceType=TICKET&resourceId=${encodeURIComponent(ticketId)}`);
+            },
+            onAnonymous: async () => {
+                window.location.replace("/login?re=/ticket?id=" + encodeURIComponent(ticketId || ""));
+            }
+        });
+    });
+
+    function showInvalid() {
+        loading.style.display = "none";
+        valid.style.display = "none";
+        invalid.style.display = "block";
+        winTitle.innerText = "Ticket | Eventbubble";
+    }
+
+    function showValid() {
+        loading.style.display = "none";
+        invalid.style.display = "none";
+        valid.style.display = "block";
+    }
+
+    function linkToResource(details) {
+        if (!details) return null;
+
+        const entityType = details.entityType || details.entity_type;
+        const resourceId = details.resourceId || details.resource_id;
+
+        if (!entityType || !resourceId) return null;
+
+        const type = String(entityType).toUpperCase();
+        if (type === "EVENT") return `/event?id=${encodeURIComponent(resourceId)}`;
+        if (type === "PROFILE") return `/profile?id=${encodeURIComponent(resourceId)}`;
+        if (type === "USER") return `/profile?id=${encodeURIComponent(resourceId)}`;
+        return null;
+    }
+
+    function renderDetailsMap(details) {
+        if (!details || typeof details !== "object") return "<i>no details</i>";
+
+        const keys = Object.keys(details);
+        if (keys.length === 0) return "<i>no details</i>";
+
+        return keys.map(k => {
+            const v = details[k];
+            const vv = (v === null || v === undefined) ? "-" : escapeHtml(String(v));
+            return `<div><small><b>${escapeHtml(k)}:</b> ${vv}</small></div>`;
+        }).join("");
+    }
+
+    async function loadTicket(id) {
+        try {
+            const t = await api(`/moderation/tickets/${encodeURIComponent(id)}`);
+
+            const createdBy = t.createdBy || null;
+            const assignedTo = t.assignedTo || null;
+
+            const createdBySnippet = createdBy ? await buildUserSnippet(createdBy) : "<i>unknown</i>";
+            const assignedToSnippet = assignedTo ? await buildUserSnippet(assignedTo) : "<i>unassigned</i>";
+
+            const resLink = linkToResource(t.details);
+
+            valid.innerHTML = `
+                <h2>
+                    ${escapeHtml(t.ticketType || "TICKET")}
+                    <small class="timestamp">#${escapeHtml(t.id)}</small>
+                    <small class="timestamp ago" data-timestamp="${t.creationDate}"></small>
+                </h2>
+
+                <div style="margin-top:8px;">
+                    <small>Created by: ${createdBySnippet}</small><br>
+                    <small>Assigned to: ${assignedToSnippet}</small><br>
+                    <small class="timestamp">Created: ${escapeHtml(t.creationDate || "-")}</small><br>
+                    <small class="timestamp">Modified: ${escapeHtml(t.modificationDate || "-")}</small>
+                </div>
+
+                <hr>
+
+                <div>
+                    <h3>Message</h3>
+                    <div class="event">${escapeHtml(t.message || "")}</div>
+                </div>
+
+                <div style="margin-top:16px;">
+                    <h3>Status</h3>
+                    <small><b>Closed:</b> ${t.closed ? "true" : "false"}</small><br>
+                    <small><b>Escalate:</b> ${t.escalate ? "true" : "false"}</small><br>
+                    <small><b>Comment:</b> ${escapeHtml(t.comment || "")}</small>
+                </div>
+
+                <div style="margin-top:16px;">
+                    <h3>Details</h3>
+                    ${renderDetailsMap(t.details)}
+                    ${resLink ? `<div style="margin-top:8px;"><a href="${resLink}">Open related resource</a></div>` : ""}
+                </div>
+
+                <hr>
+
+                <div>
+                    <h3>Update</h3>
+
+                    <label>
+                        <span>Closed</span>
+                        <select id="u_closed">
+                            <option value="">(no change)</option>
+                            <option value="true">true</option>
+                            <option value="false">false</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Escalate</span>
+                        <select id="u_escalate">
+                            <option value="">(no change)</option>
+                            <option value="true">true</option>
+                            <option value="false">false</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>AssignedTo (user externalId) — empty to unassign</span>
+                        <input id="u_assignedTo" placeholder="user externalId or empty">
+                    </label>
+
+                    <label>
+                        <span>Comment (empty to clear)</span>
+                        <textarea id="u_comment" placeholder="comment..."></textarea>
+                    </label>
+
+                    <button onclick="updateTicket('${escapeHtml(t.id)}')">Save</button>
+
+                    ${(t.ticketType || "").toUpperCase() === "REPORT" ? `
+                        <hr>
+                        <h3>Report-only</h3>
+                        <label>
+                            <span>Outcome</span>
+                            <input id="u_outcome" placeholder="DELETED / NOTHING / ...">
+                        </label>
+                        <button onclick="updateReportOutcome('${escapeHtml(t.id)}')">Save Outcome</button>
+                    ` : ""}
+                </div>
+            `;
+
+            // fill relative time
+            const agoEl = valid.querySelector(".ago");
+            if (agoEl) agoEl.textContent = `• ${timeAgo(t.creationDate)}`;
+
+            winTitle.innerText = `${t.ticketType || "Ticket"} #${t.id} | Eventbubble`;
+            showValid();
+        } catch (e) {
+            notify(e);
+            showInvalid();
+        }
+    }
+
+    async function updateTicket(id) {
+        try {
+            const body = {};
+
+            if (u_closed.value !== "") body.closed = (u_closed.value === "true");
+            if (u_escalate.value !== "") body.escalate = (u_escalate.value === "true");
+
+            // if provided: allow unassign with blank string
+            if (typeof u_assignedTo.value === "string") body.assignedToUserId = u_assignedTo.value.trim();
+
+            // comment: null means "no change" - here we always send string (including empty = clear)
+            if (typeof u_comment.value === "string") body.comment = u_comment.value;
+
+            await api(`/moderation/tickets/${encodeURIComponent(id)}`, "PATCH", body);
+            notify("Ticket updated!", "success", true);
+            await loadTicket(id);
+            await loadLatestAuditLogsIfAdmin(`resourceType=TICKET&resourceId=${encodeURIComponent(id)}`);
+        } catch (e) { notify(e); }
+    }
+
+    async function updateReportOutcome(id) {
+        try {
+            const outcome = (u_outcome.value || "").trim();
+            if (!outcome) {
+                notify("Outcome required", "warn");
+                return;
+            }
+            // Only if you implemented this endpoint; otherwise delete this block.
+            await api(`/moderation/reports/${encodeURIComponent(id)}`, "PATCH", { outcome });
+            notify("Outcome updated!", "success", true);
+            await loadTicket(id);
+            await loadLatestAuditLogsIfAdmin(`resourceType=TICKET&resourceId=${encodeURIComponent(id)}`);
+        } catch (e) { notify(e); }
+    }
+</script>
+</body>
+</html>

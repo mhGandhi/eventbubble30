@@ -12,6 +12,10 @@
 <div th:replace="fragments/header :: header"></div>
 <main>
 
+    <div class="box" id="moderationBox" style="display:none;">
+        <a href="/moderation"><b>Moderation</b></a>
+    </div>
+
 <section class="page-width" id="eventSection">
     <h2>Events</h2>
     <div class="box" id="createEvent">
@@ -180,6 +184,8 @@
         try {
             const data = await getMe();
             updateAuthUi(data!==null);
+            const isMod = loggedIn && ((data.roles || []).includes("MODERATOR")||(data.roles || []).includes("ADMIN"))
+            document.getElementById("moderationBox").style.display = isMod ? "block" : "none";
         } catch (e) { notify(e); updateAuthUi(true); }
     }
     EventBubbleBus.addEventListener("auth:refreshed", async () => {await updateAuthUIR();});
