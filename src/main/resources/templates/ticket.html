@@ -5,6 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title id="winTitle">Ticket | Eventbubble</title>
     <link rel="stylesheet" href="/style.css">
+
+    <!-- Ticket-only UI polish (keeps style.css untouched) -->
+    <style>
+        /* Layout helpers */
+        .ticket-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .ticket-head h2 { margin: 0; }
+        .ticket-subline {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        @media (min-width: 720px) {
+            .ticket-subline { grid-template-columns: 1fr 1fr; }
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Pills / badges */
+        .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e2e6ea;
+            background: rgba(52, 152, 219, 0.08);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            color: #2c3e50;
+        }
+        .pill b { font-weight: 700; }
+        .pill.ok {
+            background: rgba(46, 204, 113, 0.12);
+            border-color: rgba(46, 204, 113, 0.35);
+        }
+        .pill.bad {
+            background: rgba(231, 76, 60, 0.10);
+            border-color: rgba(231, 76, 60, 0.35);
+        }
+        .pill.warn {
+            background: rgba(241, 196, 15, 0.14);
+            border-color: rgba(241, 196, 15, 0.45);
+        }
+        .pill.neutral {
+            background: rgba(149, 165, 166, 0.10);
+            border-color: rgba(149, 165, 166, 0.35);
+        }
+
+        /* Section blocks inside the card */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 10px 0;
+        }
+        .section-title .icon {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid #e2e6ea;
+            background: #fff;
+            font-size: 14px;
+        }
+        .mini-card {
+            border: 1px solid #e2e6ea;
+            border-radius: 10px;
+            padding: 12px;
+            background: #fff;
+        }
+        .mini-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        @media (min-width: 860px) {
+            .mini-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .keyline {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .keyline .k { opacity: 0.75; }
+        .keyline .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+        /* Details list */
+        .details-wrap { margin-top: 8px; }
+        .details-primary {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        @media (min-width: 720px) {
+            .details-primary { grid-template-columns: 1fr 1fr; }
+        }
+        .details-kv {
+            border: 1px dashed #d7dde3;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.02);
+        }
+        .details-kv .k { font-size: 12px; opacity: 0.8; }
+        .details-kv .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; margin-top: 4px; word-break: break-word; }
+
+        /* <details> for extra info */
+        details.extra {
+            margin-top: 10px;
+            border: 1px solid #e2e6ea;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.02);
+        }
+        details.extra summary {
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .muted { opacity: 0.75; }
+
+        /* Dark mode mirrors (without touching style.css) */
+        @media (prefers-color-scheme: dark) {
+            .pill { color: #e6e8eb; border-color: #2a2f38; background: rgba(108, 182, 255, 0.10); }
+            .pill.ok { border-color: rgba(46, 204, 113, 0.35); background: rgba(46, 204, 113, 0.12); }
+            .pill.bad { border-color: rgba(231, 76, 60, 0.35); background: rgba(231, 76, 60, 0.12); }
+            .pill.warn { border-color: rgba(241, 196, 15, 0.45); background: rgba(241, 196, 15, 0.14); }
+            .pill.neutral { border-color: rgba(149, 165, 166, 0.35); background: rgba(149, 165, 166, 0.12); }
+            .section-title .icon { background: #0f1216; border-color: #2a2f38; }
+            .mini-card { background: #161a20; border-color: #2a2f38; }
+            .details-kv { border-color: #2a2f38; background: rgba(255,255,255,0.04); }
+            details.extra { border-color: #2a2f38; background: rgba(255,255,255,0.04); }
+        }
+    </style>
 </head>
 <body>
 <script src="/base.js"></script>
@@ -82,17 +231,138 @@
         return null;
     }
 
-    function renderDetailsMap(details) {
-        if (!details || typeof details !== "object") return "<i>no details</i>";
+    function booleanPill(label, value, opts = {}) {
+        const v = !!value;
+        const icon = v ? (opts.trueIcon || "✅") : (opts.falseIcon || "❌");
+        const cls  = v ? (opts.trueClass || "ok") : (opts.falseClass || "neutral");
+        const text = v ? (opts.trueText || "Yes") : (opts.falseText || "No");
+        return `<span class="pill ${cls}" title="${escapeHtml(label)}"><span>${icon}</span><b>${escapeHtml(label)}:</b> ${escapeHtml(text)}</span>`;
+    }
 
-        const keys = Object.keys(details);
-        if (keys.length === 0) return "<i>no details</i>";
+    function textPill(label, value, cls = "neutral", icon = "🏷️") {
+        const vv = (value === null || value === undefined || String(value).trim() === "") ? "-" : String(value);
+        return `<span class="pill ${cls}" title="${escapeHtml(label)}"><span>${icon}</span><b>${escapeHtml(label)}:</b> ${escapeHtml(vv)}</span>`;
+    }
 
-        return keys.map(k => {
-            const v = details[k];
-            const vv = (v === null || v === undefined) ? "-" : escapeHtml(String(v));
-            return `<div><small><b>${escapeHtml(k)}:</b> ${vv}</small></div>`;
-        }).join("");
+    function pickEnumClass(key, value) {
+        const k = String(key || "").toUpperCase();
+        const v = String(value || "").toUpperCase();
+
+        // Reason
+        if (k === "REASON") {
+            if (v === "HATE_SPEECH") return "bad";
+            if (v === "CYBER_BULLYING") return "warn";
+            if (v === "MISINFORMATION") return "warn";
+            if (v === "INAPPROPRIATE") return "warn";
+            if (v === "SPAM") return "neutral";
+            return "neutral";
+        }
+
+        // Outcome
+        if (k === "OUTCOME") {
+            if (v === "DELETED" || v === "CREATOR_BANNED") return "ok";
+            if (v === "NOTHING") return "neutral";
+            return "warn";
+        }
+
+        // Ticket type-ish
+        if (k === "TICKETTYPE") {
+            if (v === "REPORT") return "warn";
+            return "neutral";
+        }
+
+        return "neutral";
+    }
+
+    function iconForKey(key) {
+        const k = String(key || "").toUpperCase();
+        if (k === "ENTITYTYPE") return "🧩";
+        if (k === "RESOURCEID") return "🆔";
+        if (k === "REASON") return "🚩";
+        if (k === "REASONTEXT") return "📝";
+        if (k === "OUTCOME") return "✅";
+        return "🔎";
+    }
+
+    function renderDetailsPretty(details) {
+        if (!details || typeof details !== "object") {
+            return `<div class="muted"><i>no details</i></div>`;
+        }
+
+        const normalized = {};
+        // preserve original keys
+        for (const k of Object.keys(details)) normalized[k] = details[k];
+
+        const get = (a, b) => {
+            if (a in details) return details[a];
+            if (b && b in details) return details[b];
+            return undefined;
+        };
+
+        // common fields (your sample + typical)
+        const entityType = get("entityType", "entity_type");
+        const resourceId = get("resourceId", "resource_id");
+        const reason = get("reason");
+        const reasonText = get("reasonText", "reason_text");
+        const outcome = get("outcome");
+
+        // collect "rest" keys to show in a collapsible block
+        const primaryKeys = new Set(["entityType","entity_type","resourceId","resource_id","reason","reasonText","reason_text","outcome"]);
+        const restKeys = Object.keys(details).filter(k => !primaryKeys.has(k));
+
+        const primaryHtml = `
+            <div class="details-primary">
+                ${entityType !== undefined ? `
+                    <div class="details-kv">
+                        <div class="k">Entity</div>
+                        <div class="v">${escapeHtml(String(entityType))}</div>
+                    </div>` : ``}
+                ${resourceId !== undefined ? `
+                    <div class="details-kv">
+                        <div class="k">Resource ID</div>
+                        <div class="v">${escapeHtml(String(resourceId))}</div>
+                    </div>` : ``}
+                ${reason !== undefined ? `
+                    <div class="details-kv">
+                        <div class="k">Reason</div>
+                        <div class="v">${escapeHtml(String(reason))}</div>
+                    </div>` : ``}
+                ${(reasonText !== undefined && String(reasonText || "").trim() !== "") ? `
+                    <div class="details-kv">
+                        <div class="k">Reason text</div>
+                        <div class="v">${escapeHtml(String(reasonText))}</div>
+                    </div>` : ``}
+                ${outcome !== undefined ? `
+                    <div class="details-kv">
+                        <div class="k">Outcome</div>
+                        <div class="v">${escapeHtml(String(outcome))}</div>
+                    </div>` : ``}
+            </div>
+        `;
+
+        const restHtml = (restKeys.length === 0)
+            ? ""
+            : `
+                <details class="extra">
+                    <summary>More details (${restKeys.length})</summary>
+                    <div style="margin-top:10px;">
+                        ${restKeys.map(k => {
+                const v = details[k];
+                const vv = (v === null || v === undefined) ? "-" : String(v);
+                return `
+                                <div class="keyline" style="margin: 6px 0;">
+                                    <span class="pill neutral" style="padding:4px 8px;">
+                                        <span>${iconForKey(k)}</span><b>${escapeHtml(k)}</b>
+                                    </span>
+                                    <span class="v">${escapeHtml(vv)}</span>
+                                </div>
+                            `;
+            }).join("")}
+                    </div>
+                </details>
+            `;
+
+        return `<div class="details-wrap">${primaryHtml}${restHtml || ""}</div>`;
     }
 
     async function loadTicket(id) {
@@ -107,84 +377,192 @@
 
             const resLink = linkToResource(t.details);
 
+            const ticketType = (t.ticketType || "TICKET");
+            const typeCls = pickEnumClass("ticketType", ticketType);
+
+            // status pills
+            const closedP = booleanPill("Closed", !!t.closed, {
+                trueIcon: "✅",
+                falseIcon: "🟦",
+                trueClass: "ok",
+                falseClass: "neutral",
+                trueText: "Closed",
+                falseText: "Open"
+            });
+
+            const escalP = booleanPill("Escalate", !!t.escalate, {
+                trueIcon: "🚨",
+                falseIcon: "🟩",
+                trueClass: "warn",
+                falseClass: "neutral",
+                trueText: "Escalated",
+                falseText: "Normal"
+            });
+
+            const assignedP = assignedTo
+                ? `<span class="pill ok" title="Assigned"><span>👤</span><b>Assigned:</b> ${assignedToSnippet}</span>`
+                : `<span class="pill neutral" title="Assigned"><span>👤</span><b>Assigned:</b> <i>unassigned</i></span>`;
+
+            const creatorP = `<span class="pill neutral" title="Created by"><span>🧑‍💻</span><b>Created:</b> ${createdBySnippet}</span>`;
+            const typeP = `<span class="pill ${typeCls}" title="Ticket type"><span>🎫</span><b>Type:</b> ${escapeHtml(ticketType)}</span>`;
+
+            // details summary pills (if present)
+            const d = t.details || {};
+            const reason = d.reason ?? d.reasonText ?? d.reason_text ?? null;
+            const outcome = d.outcome ?? null;
+            const entityType = d.entityType ?? d.entity_type ?? null;
+
+            const reasonP = (d.reason !== undefined && d.reason !== null)
+                ? textPill("Reason", d.reason, pickEnumClass("reason", d.reason), "🚩")
+                : "";
+            const outcomeP = (outcome !== null && outcome !== undefined)
+                ? textPill("Outcome", outcome, pickEnumClass("outcome", outcome), "✅")
+                : "";
+            const entityP = (entityType !== null && entityType !== undefined)
+                ? textPill("Entity", entityType, "neutral", "🧩")
+                : "";
+
             valid.innerHTML = `
-                <h2>
-                    ${escapeHtml(t.ticketType || "TICKET")}
-                    <small class="timestamp">#${escapeHtml(t.id)}</small>
-                    <small class="timestamp ago" data-timestamp="${t.creationDate}"></small>
-                </h2>
+                <div class="ticket-head">
+                    <h2>
+                        ${escapeHtml(ticketType)}
+                        <small class="timestamp">#${escapeHtml(t.id)}</small>
+                        <small class="timestamp ago" data-timestamp="${t.creationDate}"></small>
+                    </h2>
 
-                <div style="margin-top:8px;">
-                    <small>Created by: ${createdBySnippet}</small><br>
-                    <small>Assigned to: ${assignedToSnippet}</small><br>
-                    <small class="timestamp">Created: ${escapeHtml(t.creationDate || "-")}</small><br>
-                    <small class="timestamp">Modified: ${escapeHtml(t.modificationDate || "-")}</small>
+                    <div class="meta-row">
+                        <span class="pill neutral" title="Created at">
+                            <span>🗓️</span><b>Created:</b> ${escapeHtml(t.creationDate || "-")}
+                        </span>
+                        <span class="pill neutral" title="Modified at">
+                            <span>🛠️</span><b>Modified:</b> ${escapeHtml(t.modificationDate || "-")}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="pill-row">
+                    ${typeP}
+                    ${closedP}
+                    ${escalP}
+                    ${entityP}
+                    ${reasonP}
+                    ${outcomeP}
+                </div>
+
+                <div class="ticket-subline">
+                    <div class="mini-card">
+                        <div class="keyline">
+                            <span class="pill neutral" style="padding:4px 8px;"><span>🧑‍💻</span><b>Created by</b></span>
+                            <span>${createdBySnippet}</span>
+                        </div>
+                        <div class="keyline" style="margin-top:8px;">
+                            <span class="pill neutral" style="padding:4px 8px;"><span>👤</span><b>Assigned to</b></span>
+                            <span>${assignedToSnippet}</span>
+                        </div>
+                        ${t.comment ? `
+                            <details class="extra" style="margin-top:10px;">
+                                <summary>Moderator comment</summary>
+                                <div style="margin-top:10px;" class="event">${escapeHtml(String(t.comment))}</div>
+                            </details>
+                        ` : `
+                            <div class="muted" style="margin-top:10px;"><small>No moderator comment.</small></div>
+                        `}
+                    </div>
+
+                    <div class="mini-card">
+                        <div class="section-title">
+                            <span class="icon">💬</span>
+                            <h3 style="margin:0;">Message</h3>
+                        </div>
+                        <div class="event">${escapeHtml(t.message || "")}</div>
+                    </div>
                 </div>
 
                 <hr>
 
-                <div>
-                    <h3>Message</h3>
-                    <div class="event">${escapeHtml(t.message || "")}</div>
-                </div>
+                <div class="mini-grid">
+                    <div class="mini-card">
+                        <div class="section-title">
+                            <span class="icon">🧾</span>
+                            <h3 style="margin:0;">Details</h3>
+                        </div>
 
-                <div style="margin-top:16px;">
-                    <h3>Status</h3>
-                    <small><b>Closed:</b> ${t.closed ? "true" : "false"}</small><br>
-                    <small><b>Escalate:</b> ${t.escalate ? "true" : "false"}</small><br>
-                    <small><b>Comment:</b> ${escapeHtml(t.comment || "")}</small>
-                </div>
+                        ${renderDetailsPretty(t.details)}
 
-                <div style="margin-top:16px;">
-                    <h3>Details</h3>
-                    ${renderDetailsMap(t.details)}
-                    ${resLink ? `<div style="margin-top:8px;"><a href="${resLink}">Open related resource</a></div>` : ""}
-                </div>
+                        ${resLink ? `
+                            <div style="margin-top:10px;">
+                                <a class="pill ok" style="text-decoration:none;" href="${resLink}">
+                                    <span>🔗</span><b>Open related resource</b>
+                                </a>
+                            </div>
+                        ` : `
+                            <div class="muted" style="margin-top:10px;">
+                                <small>No related resource link.</small>
+                            </div>
+                        `}
+                    </div>
 
-                <hr>
+                    <div class="mini-card">
+                        <div class="section-title">
+                            <span class="icon">✍️</span>
+                            <h3 style="margin:0;">Update</h3>
+                        </div>
 
-                <div>
-                    <h3>Update</h3>
+                        <div class="pill-row" style="margin-top:0;">
+                            ${closedP}
+                            ${escalP}
+                            ${assignedP}
+                            ${creatorP}
+                        </div>
 
-                    <label>
-                        <span>Closed</span>
-                        <select id="u_closed">
-                            <option value="">(no change)</option>
-                            <option value="true">true</option>
-                            <option value="false">false</option>
-                        </select>
-                    </label>
+                        <div style="margin-top:12px;">
+                            <label>
+                                <span>Closed</span>
+                                <select id="u_closed">
+                                    <option value="">(no change)</option>
+                                    <option value="true">✅ close</option>
+                                    <option value="false">🟦 reopen</option>
+                                </select>
+                            </label>
 
-                    <label>
-                        <span>Escalate</span>
-                        <select id="u_escalate">
-                            <option value="">(no change)</option>
-                            <option value="true">true</option>
-                            <option value="false">false</option>
-                        </select>
-                    </label>
+                            <label>
+                                <span>Escalate</span>
+                                <select id="u_escalate">
+                                    <option value="">(no change)</option>
+                                    <option value="true">🚨 escalate</option>
+                                    <option value="false">🟩 normal</option>
+                                </select>
+                            </label>
 
-                    <label>
-                        <span>AssignedTo (user externalId) — empty to unassign</span>
-                        <input id="u_assignedTo" placeholder="user externalId or empty">
-                    </label>
+                            <label>
+                                <span>AssignedTo (user externalId) — empty to unassign</span>
+                                <input id="u_assignedTo" placeholder="user externalId or empty">
+                            </label>
 
-                    <label>
-                        <span>Comment (empty to clear)</span>
-                        <textarea id="u_comment" placeholder="comment..."></textarea>
-                    </label>
+                            <label>
+                                <span>Comment (empty to clear)</span>
+                                <textarea id="u_comment" placeholder="comment..."></textarea>
+                            </label>
 
-                    <button onclick="updateTicket('${escapeHtml(t.id)}')">Save</button>
+                            <button onclick="updateTicket('${escapeHtml(t.id)}')">Save</button>
 
-                    ${(t.ticketType || "").toUpperCase() === "REPORT" ? `
-                        <hr>
-                        <h3>Report-only</h3>
-                        <label>
-                            <span>Outcome</span>
-                            <input id="u_outcome" placeholder="DELETED / NOTHING / ...">
-                        </label>
-                        <button onclick="updateReportOutcome('${escapeHtml(t.id)}')">Save Outcome</button>
-                    ` : ""}
+                            ${(ticketType || "").toUpperCase() === "REPORT" ? `
+                                <hr>
+                                <div class="section-title" style="margin-top:0;">
+                                    <span class="icon">🚩</span>
+                                    <h3 style="margin:0;">Report-only</h3>
+                                </div>
+                                <label>
+                                    <span>Outcome</span>
+                                    <input id="u_outcome" placeholder="DELETED / CREATOR_BANNED / NOTHING / ...">
+                                </label>
+                                <button onclick="updateReportOutcome('${escapeHtml(t.id)}')">Save Outcome</button>
+                                <div class="muted" style="margin-top:8px;">
+                                    <small>Tip: outcomes are enums (e.g. <span class="v">DELETED</span>, <span class="v">CREATOR_BANNED</span>, <span class="v">NOTHING</span> …)</small>
+                                </div>
+                            ` : ""}
+                        </div>
+                    </div>
                 </div>
             `;
 
