@@ -38,7 +38,7 @@ public class TicketService {
         // enforce "reasonText required if OTHER"
         if (req.reason() == Report.Reason.OTHER) {
             if (req.reasonText() == null || req.reasonText().isBlank()) {
-                throw new IllegalArgumentException("reasonText is required when reason=OTHER");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"reasonText is required when reason=OTHER");
             }
         }
 
