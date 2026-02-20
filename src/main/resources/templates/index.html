@@ -184,7 +184,7 @@
         try {
             const data = await getMe();
             updateAuthUi(data!==null);
-            const isMod = loggedIn && ((data.roles || []).includes("MODERATOR")||(data.roles || []).includes("ADMIN"))
+            const isMod = data!==null && ((data.roles || []).includes("MODERATOR")||(data.roles || []).includes("ADMIN"))
             document.getElementById("moderationBox").style.display = isMod ? "block" : "none";
         } catch (e) { notify(e); updateAuthUi(true); }
     }

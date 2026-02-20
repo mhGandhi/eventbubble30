@@ -130,7 +130,7 @@
         bootstrapSession({
             onAuthenticated: async () => {
                 const me = await getMe();
-                const isMod = me && (me.roles || []).includes("MODERATOR");
+                const isMod = me && ((me.roles || []).includes("MODERATOR")||(me.roles || []).includes("ADMIN"));
                 if (!isMod) {
                     modGate.style.display = "block";
                     modMain.style.display = "none";
