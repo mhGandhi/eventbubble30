@@ -56,6 +56,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/audit-log/stream").hasRole("ADMIN")
 
+                        //mod
+                        .requestMatchers("/api/moderation/**").authenticated()//todo mby public method somewhere else und das nur für mods und admins?
+
                         //auth
                         .requestMatchers("/api/auth/**").permitAll()
 

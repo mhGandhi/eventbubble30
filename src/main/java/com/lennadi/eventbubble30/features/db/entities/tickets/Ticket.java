@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -24,9 +25,18 @@ import java.util.UUID;
                 @Index(name = "idx_assigned_to", columnList = "assigned_to"),
         }
 )
+@DiscriminatorColumn(
+        name = "ticket_type",
+        discriminatorType = DiscriminatorType.STRING,
+        length = 32
+)
+@DiscriminatorValue("TICKET")
 public class Ticket{
     public static final EntityType TYPE = EntityType.TICKET;
 
+    @Column(name = "ticket_type", insertable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private String ticketType;
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id", unique = true, nullable = false, updatable = false)
@@ -87,19 +97,33 @@ public class Ticket{
     }
 
     public EntityType getType() {return TYPE;}
+    @Transient
+    public Map<String, Object> getDetails() {return null;}
 
     public Ticket(String message, Benutzer createdBy) {
         this.message = message;
         this.createdBy = createdBy;
     }
 
-    public record TicketDTO(
-            String id, Instant creationDate, Instant modificationDate, String message, Long createdById, boolean closed, boolean escalate, String comment, Long assignedToId
+    public record DTO(
+            String id,
+            Instant creationDate, Instant modificationDate,
+            String message, Benutzer.DTO createdBy,
+            boolean closed, boolean escalate,
+            String comment, Benutzer.DTO assignedTo,
+            String ticketType,
+            Map<String, Object> details
     ){};
 
-    public TicketDTO toTicketDTO(){
-        return new TicketDTO(
-                this.externalId, this.creationDate, this.modificationDate, this.message, this.createdBy==null?null:this.createdBy.getId(), this.closed, this.escalate, this.comment, this.assignedTo==null?null:this.assignedTo.getId()
+    public DTO toDTO(){
+        return new DTO(
+                this.externalId,
+                this.creationDate, this.modificationDate,
+                this.message, this.createdBy==null?null:this.createdBy.toDTO(),
+                this.closed, this.escalate,
+                this.comment, this.assignedTo==null?null:this.assignedTo.toDTO(),
+                this.getTicketType(),
+                this.getDetails()
         );
     }
 }

@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Entity
 @Table(
@@ -18,8 +19,8 @@ import java.time.Instant;
         }
 )
 @Getter @Setter
+@DiscriminatorValue("REPORT")
 public class Report extends Ticket{
-
     /// ///////////////////////////////////////////////////////////////////////////userspace
     @Column(name="entity_type", nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
@@ -61,43 +62,17 @@ public class Report extends Ticket{
 
     }
 
-    public enum Reason {OTHER, SPAM, INAPPROPRIATE, HATE_SPEECH, CYBER_BULLYING, MISINFORMATION}
-
-    public enum Outcome { DELETED, CREATOR_BANNED, NOTHING, STRAIGHT_UP_CALLED_THE_POPO_ON_THIS_FREAK}
-
-    public record ReportDTO(
-            String id,
-            Instant creationDate,
-            Instant modificationDate,
-            String message,
-            Long createdById,
-            boolean closed,
-            boolean escalate,
-            String comment,
-            Long assignedToId,
-            EntityType entityType,
-            String resourceId,
-            Reason reason,
-            String reasonText,
-            Outcome outcome
-    ){};
-
-    public ReportDTO toDTO(){
-        return new ReportDTO(
-                this.getExternalId(),
-                this.getCreationDate(),
-                this.getModificationDate(),
-                this.getMessage(),
-                this.getCreatedBy()==null?null:this.getCreatedBy().getId(),
-                this.isClosed(),
-                this.isEscalate(),
-                this.getComment(),
-                this.getAssignedTo()==null?null:this.getAssignedTo().getId(),
-                this.getEntityType(),
-                this.getResourceId(),
-                this.getReason(),
-                this.getReason_text(),
-                this.getOutcome()
+    @Transient
+    @Override
+    public Map<String, Object> getDetails(){
+        return Map.of(
+                "entityType", entityType,
+                "resourceId", resourceId,
+                "reason", reason,
+                "reasonText", reason_text,
+                "outcome", outcome
         );
     }
+    public enum Reason {OTHER, SPAM, INAPPROPRIATE, HATE_SPEECH, CYBER_BULLYING, MISINFORMATION}
+    public enum Outcome { DELETED, CREATOR_BANNED, NOTHING, STRAIGHT_UP_CALLED_THE_POPO_ON_THIS_FREAK}
 }

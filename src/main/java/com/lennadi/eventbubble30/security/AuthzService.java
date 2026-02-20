@@ -2,7 +2,10 @@ package com.lennadi.eventbubble30.security;
 
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.entities.tickets.Ticket;
+import com.lennadi.eventbubble30.features.db.repository.tickets.TicketRepository;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
+import com.lennadi.eventbubble30.features.service.TicketService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class AuthzService {
     private final VeranstaltungService veranstaltungService;
     private final BenutzerService benutzerService;
+    private final TicketRepository ticketRepository;
 
     public boolean isEventOwner(String eventExtId) {
         Benutzer current = benutzerService.getCurrentUserOrNull();
@@ -31,6 +35,24 @@ public class AuthzService {
             throw new AccessDeniedException(
                     "User " + current.getId() + " is not the owner of event " + eventExtId
             );
+        }
+
+        return true;
+    }
+
+    public boolean isTicketAuthor(String ticketExtId) {
+        Benutzer current = benutzerService.getCurrentUserOrNull();
+        if(current == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        Ticket t = ticketRepository.findByExternalIdIgnoreCase(ticketExtId).orElse(null);
+        if(t==null) {
+            throw new AccessDeniedException("Ticket " + ticketExtId + " does not exist");
+        }
+
+        if(!t.getCreatedBy().getId().equals(current.getId())) {
+            throw new AccessDeniedException("User " + current.getId() + " is not the owner of ticket " + ticketExtId);
         }
 
         return true;

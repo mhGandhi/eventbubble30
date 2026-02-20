@@ -10,6 +10,9 @@ server:
     whitelabel:
       enabled: false
 spring:
+  jpa:
+    properties:
+      hibernate.hibernate.default_batch_fetch_size: 50
   profiles:
     active: keinCaptcha, EMAIL_dummy, memoryStorage
   application:
