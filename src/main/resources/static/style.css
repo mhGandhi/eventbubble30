@@ -151,6 +151,14 @@ header a {
     }
 }
 
+.notify-details summary { cursor: pointer; }
+.notify-pre {
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+    max-height: 240px;
+    overflow: auto;
+}
+
 
 /* -------------------------
    Typography

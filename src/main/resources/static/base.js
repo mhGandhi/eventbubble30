@@ -219,6 +219,29 @@ function notify(e, status = null, expire = false) {
     div.classList.add(type);
     div.textContent = text;
 
+    //col start
+    const collapse = httpCode != null && httpCode >= 500;
+    if (collapse) {
+        const details = document.createElement("details");
+        details.className = "notify-details";
+        details.open = false; // collapsed by default
+
+        const summary = document.createElement("summary");
+        summary.className = "notify-summary";
+        summary.textContent = `Server error (HTTP ${httpCode}) — click for details`;
+
+        const pre = document.createElement("pre");
+        pre.className = "notify-pre";
+        pre.textContent = text;
+
+        details.appendChild(summary);
+        details.appendChild(pre);
+        div.appendChild(details);
+    } else {
+        div.textContent = text;
+    }
+    //col end
+
     const close = document.createElement("span");
     close.className = "notify-close";
     close.textContent = "×";
