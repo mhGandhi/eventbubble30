@@ -23,6 +23,7 @@ import java.util.UUID;
                 @Index(name = "idx_escalate", columnList = "escalate"),
                 @Index(name = "idx_created_by", columnList = "created_by"),
                 @Index(name = "idx_assigned_to", columnList = "assigned_to"),
+                @Index(name = "idx_ticket_external_id", columnList = "external_id"),
         }
 )
 @DiscriminatorColumn(

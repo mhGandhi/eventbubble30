@@ -14,7 +14,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @Table(indexes = {
-        @Index(name = "idx_external_id", columnList = "external_id")
+        @Index(name = "idx_profile_external_id", columnList = "external_id")
 })
 public class Profil {//todo inheritance based mit inheritance type joined stattdessen (aufwändig lass mal nd machen)
     public static final EntityType TYPE = EntityType.PROFILE;
