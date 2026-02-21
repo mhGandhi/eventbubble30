@@ -53,19 +53,7 @@ public class Veranstaltung extends BaseEntity {
             String description,
             Location location,
 
-            Benutzer.DTO besitzer
+            Benutzer.DTO besitzer,
+            boolean bookmarked
     ) {}
-
-    public DTO toDTO() {
-        return new DTO(
-                this.getExternalId(),
-                this.getCreationDate(),
-                this.getModificationDate(),
-                this.getTermin(),
-                this.getTitle(),
-                this.getDescription(),
-                this.getLocation(),
-                (this.getBesitzer()!=null?this.getBesitzer().toDTO():null)
-        );
-    }
 }

@@ -1,7 +1,9 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.exceptions.ErrorCodes;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.Location;
+import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import com.lennadi.eventbubble30.logging.Audit;
@@ -68,7 +70,7 @@ public class VeranstaltungController {
 
     @GetMapping("/{id}")
     public Veranstaltung.DTO getVeranstaltungById(@PathVariable String id) {
-        return veranstaltungService.getVeranstaltungById(id).toDTO();
+        return veranstaltungService.toDTO(veranstaltungService.getVeranstaltungById(id));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.EVENT, resourceIdParam = "id")
@@ -93,7 +95,7 @@ public class VeranstaltungController {
 
         return ResponseEntity
                 .created(URI.create("/api/events/" + vs.getExternalId()))
-                .body(vs.toDTO());
+                .body(veranstaltungService.toDTO(vs));
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.EVENT, resourceIdParam = "id")
@@ -112,7 +114,7 @@ public class VeranstaltungController {
 
         return ResponseEntity
                 .ok()
-                .body(vs.toDTO());
+                .body(veranstaltungService.toDTO(vs));
     }
 
     @GetMapping({"", "/"})
@@ -139,7 +141,7 @@ public class VeranstaltungController {
 
         return veranstaltungService
                 .search(search, page, size)
-                .map(Veranstaltung::toDTO);
+                .map(veranstaltungService::toDTO);
     }
 
     private static final double MAX_RADIUS_KM = 100.0;
@@ -248,5 +250,17 @@ public class VeranstaltungController {
                 .header("Content-Disposition", "attachment; filename=event-"+id+".ics")
                 .header("Content-Type", "text/calendar; charset=utf-8")
                 .body(icsData);
+    }
+
+    @PostMapping("/{id}/bookmark")
+    public Veranstaltung.DTO bookmark(@PathVariable String id) {
+        Veranstaltung v = veranstaltungService.getVeranstaltungById(id);
+        return veranstaltungService.bookmark(v, true);
+    }
+
+    @DeleteMapping("/{id}/bookmark")
+    public Veranstaltung.DTO unbookmark(@PathVariable String id) {
+        Veranstaltung v = veranstaltungService.getVeranstaltungById(id);
+        return veranstaltungService.bookmark(v, false);
     }
 }

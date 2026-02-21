@@ -4,6 +4,7 @@ import com.lennadi.eventbubble30.config.ServerConfig;
 import com.lennadi.eventbubble30.features.controller.BenutzerController;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.logging.AuditService;
@@ -23,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -257,6 +259,17 @@ public class BenutzerService {
 
         // save not required (dirty checking)
         return b;
+    }
+
+    public boolean isEventBookmarked(String veranstaltungExtId) {
+        Benutzer cur = getBenutzer(veranstaltungExtId);
+        if(cur == null) return false;
+
+        return repository.existsByIdAndBookmarkedVeranstaltungen_ExternalId(cur.getId(), veranstaltungExtId);
+    }
+
+    public Set<Veranstaltung> getBookmarked(String benExtId) {
+        return repository.findBookmarkedEvents(benExtId);
     }
 
 }

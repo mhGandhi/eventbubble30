@@ -2,6 +2,8 @@ package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
@@ -15,6 +17,9 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.lennadi.eventbubble30.logging.AuditLog.Action.UPDATE;
 
@@ -24,6 +29,7 @@ import static com.lennadi.eventbubble30.logging.AuditLog.Action.UPDATE;
 public class BenutzerController {
 
     private final BenutzerService service;
+    private final VeranstaltungService veranstaltungService;
 
     private String resolveExtId(String segment) {
         if ("me".equalsIgnoreCase(segment)) {
@@ -109,6 +115,14 @@ public class BenutzerController {
         Benutzer ret = service.getBenutzer(extId);
 
         return ret.toDTO();
+    }
+
+    @GetMapping("/{segment}/bookmarked")
+    public Set<Veranstaltung.DTO> getBookmarked(@PathVariable String segment) {
+        String extId = resolveExtId(segment);
+
+        Set<Veranstaltung> ret = service.getBookmarked(extId);
+        return ret.stream().map(veranstaltungService::toDTO).collect(Collectors.toSet());
     }
 
     @GetMapping({"", "/"})

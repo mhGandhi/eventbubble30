@@ -1,10 +1,12 @@
 package com.lennadi.eventbubble30.features.service;
 
 import com.lennadi.eventbubble30.config.ServerConfig;
+import com.lennadi.eventbubble30.exceptions.ErrorCodes;
 import com.lennadi.eventbubble30.features.controller.VeranstaltungController;
 import com.lennadi.eventbubble30.features.db.Location;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
 import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,12 +19,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class VeranstaltungService {
     private final VeranstaltungsRepository veranstaltungRepo;
     private final BenutzerService benutzerService;
+    private final BenutzerRepository benutzerRepository;
 
 
     public Veranstaltung getVeranstaltungById(String extId) {
@@ -133,6 +137,36 @@ public class VeranstaltungService {
                 spec,
                 PageRequest.of(page, size, sort)
         );
+    }
+
+    public Veranstaltung.DTO toDTO(Veranstaltung veranstaltung) {
+        boolean bookmarked = benutzerService.isEventBookmarked(veranstaltung.getExternalId());
+
+        return new Veranstaltung.DTO(
+                veranstaltung.getExternalId(),
+                veranstaltung.getCreationDate(),
+                veranstaltung.getModificationDate(),
+                veranstaltung.getTermin(),
+                veranstaltung.getTitle(),
+                veranstaltung.getDescription(),
+                veranstaltung.getLocation(),
+                (veranstaltung.getBesitzer()!=null?veranstaltung.getBesitzer().toDTO():null),
+                bookmarked
+        );
+    }
+
+    public Veranstaltung.DTO bookmark(Veranstaltung pV, boolean bookmarked) {
+        Benutzer cur = benutzerService.getCurrentUser();
+        if(cur==null)throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.LOG_IN_FIRST.toString());
+
+        Set<Veranstaltung> bo = cur.getBookmarkedVeranstaltungen();
+        if(bookmarked){
+            if(!bo.contains(pV)) cur.getBookmarkedVeranstaltungen().add(pV);
+        }else{
+            if(bo.contains(pV)) cur.getBookmarkedVeranstaltungen().remove(pV);
+        }
+
+        return toDTO(veranstaltungRepo.save(pV));
     }
 
 
