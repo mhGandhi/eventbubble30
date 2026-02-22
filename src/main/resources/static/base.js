@@ -219,12 +219,15 @@ function notify(e, status = null, expire = false) {
     div.classList.add(type);
     div.textContent = text;
 
-    //col start
+    // collapse server errors (>=500)
+    const httpCodeMatch = text.match(/HTTP\s(\d+)/);
+    const httpCode = httpCodeMatch ? parseInt(httpCodeMatch[1], 10) : null;
+
     const collapse = httpCode != null && httpCode >= 500;
     if (collapse) {
         const details = document.createElement("details");
         details.className = "notify-details";
-        details.open = false; // collapsed by default
+        details.open = false;
 
         const summary = document.createElement("summary");
         summary.className = "notify-summary";
@@ -240,7 +243,6 @@ function notify(e, status = null, expire = false) {
     } else {
         div.textContent = text;
     }
-    //col end
 
     const close = document.createElement("span");
     close.className = "notify-close";
