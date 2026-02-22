@@ -130,12 +130,8 @@ public class SecurityConfiguration {
                 : 401;
 
         ApiErrorResponse body = new ApiErrorResponse(
-                Instant.now(),
-                status,
-                status == 419 ? "Authentication Timeout" : "Unauthorized",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null,
                 state
         );
 
@@ -155,12 +151,8 @@ public class SecurityConfiguration {
         }
 
         ApiErrorResponse body = new ApiErrorResponse(
-                Instant.now(),
-                403,
-                "Forbidden",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null,
                 state
         );
 

@@ -5,6 +5,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,13 +43,11 @@ public class ApiExceptionHandler {
         );
 
         ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.toString(),
                 "Validation failed",
                 request.getRequestURI(),
                 errors,
-                getAuthState(request)
+                getAuthState(request),
+                null
         );
 
         return ResponseEntity.badRequest().body(response);
@@ -56,12 +57,8 @@ public class ApiExceptionHandler {
     public ResponseEntity<?> handleMissingBody(HttpMessageNotReadableException ex, HttpServletRequest request) {
 
         ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.toString(),
                 "HttpMessage nicht lesbar (fehlender Body?)",
                 request.getRequestURI(),
-                null,
                 getAuthState(request)
         );
 
@@ -76,12 +73,8 @@ public class ApiExceptionHandler {
             HttpServletRequest request
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                ex.getStatusCode().value(),
-                ex.getStatusCode().toString(),
                 ex.getReason(),
                 request.getRequestURI(),
-                null,
                 getAuthState(request)
         );
 
@@ -96,12 +89,8 @@ public class ApiExceptionHandler {
             HttpServletRequest request
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.METHOD_NOT_ALLOWED.value(),
-                HttpStatus.METHOD_NOT_ALLOWED.toString(),
                 ex.getMessage(),
                 request.getRequestURI(),
-                null,
                 getAuthState(request)
         );
 
@@ -116,12 +105,8 @@ public class ApiExceptionHandler {
             HttpServletRequest request
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.toString(),
                 ex.getMessage(),
                 request.getRequestURI(),
-                null,
                 getAuthState(request)
         );
 
@@ -130,17 +115,25 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAnyException(Exception e, HttpServletRequest request) {
+        boolean admin = isAdmin();
+
         ApiErrorResponse body = new ApiErrorResponse(
-                Instant.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                e.getClass().getSimpleName(),
-                e.getMessage()+"\n"+ Arrays.toString(e.getStackTrace()),//todo dass später weg um keine internals zu leaken, vlt mit profile entscheiden?
+                admin ? e.getMessage() : HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 request.getRequestURI(),
                 null,
-                getAuthState(request)
+                getAuthState(request),
+                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).toList()
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities() == null) return false;
+
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ADMIN"));
+    }
 }
