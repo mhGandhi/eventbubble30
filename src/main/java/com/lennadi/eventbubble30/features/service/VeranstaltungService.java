@@ -139,23 +139,7 @@ public class VeranstaltungService {
         );
     }
 
-    public Veranstaltung.DTO toDTO(Veranstaltung veranstaltung) {
-        boolean bookmarked = benutzerService.isEventBookmarked(veranstaltung.getExternalId());
-
-        return new Veranstaltung.DTO(
-                veranstaltung.getExternalId(),
-                veranstaltung.getCreationDate(),
-                veranstaltung.getModificationDate(),
-                veranstaltung.getTermin(),
-                veranstaltung.getTitle(),
-                veranstaltung.getDescription(),
-                veranstaltung.getLocation(),
-                (veranstaltung.getBesitzer()!=null?veranstaltung.getBesitzer().toDTO():null),
-                bookmarked
-        );
-    }
-
-    public Veranstaltung.DTO bookmark(Veranstaltung pV, boolean bookmarked) {
+    public Veranstaltung bookmark(Veranstaltung pV, boolean bookmarked) {
         Benutzer cur = benutzerService.getCurrentUser();
         if(cur==null)throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, ErrorCodes.LOG_IN_FIRST.toString());
 
@@ -166,7 +150,7 @@ public class VeranstaltungService {
             if(bo.contains(pV)) cur.getBookmarkedVeranstaltungen().remove(pV);
         }
 
-        return toDTO(veranstaltungRepo.save(pV));
+        return veranstaltungRepo.save(pV);
     }
 
 

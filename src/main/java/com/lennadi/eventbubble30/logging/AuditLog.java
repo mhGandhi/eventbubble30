@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.logging;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import jakarta.persistence.*;
@@ -106,18 +107,10 @@ public class AuditLog {
         public static final Set<Action> AUTH = new HashSet<>(List.of(SIGNUP, LOGIN, REFRESH, INVALIDATE_TOKENS, MAIL_REQUEST));
     }
 
-    public DTO toDTO(){
-        return new DTO(
-                this.id, this.benutzer!=null?this.benutzer.toDTO():null, this.ipAddress, this.usernameSnapshot, this.roleSnapshot,
-                this.action, this.payload, this.success, this.endpoint,
-                this.timestamp,
-                this.resourceType, this.resourceId
-        );
-    }
     public record DTO (
-            Long id, Benutzer.DTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
+            Long id, IDTO user, String ipAddress, String usernameSnapshot, Set<Benutzer.Role> roleSnapshot,
             Action action, String payload, boolean success, String endpoint,
             Instant timestamp,
             EntityType resourceType, String resourceId
-    ) { }
+    ) implements IDTO { }
 }

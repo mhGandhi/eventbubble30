@@ -1,8 +1,11 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.DTOLevel;
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.features.service.VeranstaltungService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
@@ -30,6 +33,7 @@ public class BenutzerController {
 
     private final BenutzerService service;
     private final VeranstaltungService veranstaltungService;
+    private final DtoService dtoService;
 
     private String resolveExtId(String segment) {
         if ("me".equalsIgnoreCase(segment)) {
@@ -73,18 +77,18 @@ public class BenutzerController {
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.USER, resourceIdExpression = "#result.body.id")
     @PostMapping("/create")
-    public ResponseEntity<Benutzer.DTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
+    public ResponseEntity<IDTO> createUser(@Valid @RequestBody CreateBenutzerRequest req) {
 
         Benutzer neu = service.createBenutzer(req);
 
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getExternalId())) // Location Header
-                .body(neu.toDTO());                                     // Response Body
+                .body(dtoService.get(neu));                                     // Response Body
     }
 
     @Audit(action = UPDATE, resourceType = EntityType.USER, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
-    public ResponseEntity<Benutzer.DTO> patchUser(
+    public ResponseEntity<IDTO> patchUser(
             @PathVariable String segment,
             @Valid @RequestBody PatchBenutzerRequest req
     ) {
@@ -94,7 +98,7 @@ public class BenutzerController {
 
         return ResponseEntity
                 .ok()
-                .body(b.toDTO());
+                .body(dtoService.get(b));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.USER, resourceIdExpression = "#request.getAttribute('auditResourceId')")
@@ -110,27 +114,27 @@ public class BenutzerController {
     }
 
     @GetMapping("/{segment}")
-    public Benutzer.DTO findUser(@PathVariable String segment) {
+    public IDTO findUser(@PathVariable String segment, @RequestParam(defaultValue = "FULL") DTOLevel level) {
         String extId = resolveExtId(segment);
         Benutzer ret = service.getBenutzer(extId);
 
-        return ret.toDTO();
+        return dtoService.get(ret, level);
     }
 
     @GetMapping("/{segment}/bookmarked")
-    public Set<Veranstaltung.DTO> getBookmarked(@PathVariable String segment) {
+    public Set<IDTO> getBookmarked(@PathVariable String segment) {
         String extId = resolveExtId(segment);
 
         Set<Veranstaltung> ret = service.getBookmarked(extId);
-        return ret.stream().map(veranstaltungService::toDTO).collect(Collectors.toSet());
+        return ret.stream().map((Veranstaltung v)->dtoService.get(v, true, DTOLevel.CARD)).collect(Collectors.toSet());
     }
 
     @GetMapping({"", "/"})
-    public Page<Benutzer.DTO> listUsers(//todo pages
+    public Page<IDTO> listUsers(//todo pages
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return service.list(page, size).map(Benutzer::toDTO);
+        return service.list(page, size).map(dtoService::get);
     }
 
     @Audit(
@@ -145,7 +149,7 @@ public class BenutzerController {
         Benutzer benutzer = service.getCurrentUser();
         service.changePassword(benutzer.getExternalId(), req.oldPassword, req.newPassword);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/count")

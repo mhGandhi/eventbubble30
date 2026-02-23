@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.Location;
 import jakarta.persistence.*;
@@ -44,16 +45,20 @@ public class Veranstaltung extends BaseEntity {
     }
 
 
-    public static record DTO(
-            String id,
-            Instant creationDate,
-            Instant modificationDate,
-            Instant termin,
-            String title,
-            String description,
-            Location location,
+    public record DTO(
+            String id, String title, Instant termin, IDTO besitzer, Location location, boolean bookmarked,
+            String description, Instant creationDate
 
-            Benutzer.DTO besitzer,
-            boolean bookmarked
-    ) {}
+    ) implements IDTO {}
+
+    public record CardDTO(
+            String id, String title, Instant termin, IDTO besitzer, Location location, boolean bookmarked
+    ) implements IDTO {}
+
+    public record ModDTO(
+            String id, String title, Instant termin, IDTO besitzer, Location location, boolean bookmarked,
+            String description, Instant creationDate,
+            Instant modificationDate
+
+    ) implements IDTO {}
 }

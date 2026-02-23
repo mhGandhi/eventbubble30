@@ -37,7 +37,7 @@ public class LastSeenFilter extends OncePerRequestFilter {
                     && auth.getPrincipal() instanceof BenutzerDetails details) {
 
                 Long userId = details.getId();
-                log.info("[Anfrage] {}@{}: {}", benutzerService.requireUser(userId).getUsername(), ip, request.getRequestURI());
+                log.info("[Anfrage] {}@{}: {}", auth.getName(), ip, request.getRequestURI());
 
                 try {
                     benutzerService.seen(userId);

@@ -1,10 +1,13 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.DTOLevel;
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.tickets.Report;
 import com.lennadi.eventbubble30.features.db.entities.tickets.Ticket;
 import com.lennadi.eventbubble30.features.db.repository.tickets.TicketRepository;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.features.service.TicketService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
@@ -27,6 +30,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class ModerationController {
     private final TicketService ticketService;
+    private final DtoService dtoService;
 
     public record CreateTicketRequest(
             @NotBlank
@@ -89,51 +93,51 @@ public class ModerationController {
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PostMapping("/tickets")
-    public ResponseEntity<Ticket.DTO> createTicket(@Valid @RequestBody CreateTicketRequest req) {
+    public ResponseEntity<IDTO> createTicket(@Valid @RequestBody CreateTicketRequest req) {
         Ticket neu = ticketService.createTicket(req);
 
         return ResponseEntity
                 .created(URI.create("/api/moderation/tickets/" + neu.getExternalId()))
-                .body(neu.toDTO());
+                .body(dtoService.get(neu));
     }
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PostMapping("/reports")
-    public ResponseEntity<Ticket.DTO> createReport(@Valid @RequestBody CreateReportRequest req) {
+    public ResponseEntity<IDTO> createReport(@Valid @RequestBody CreateReportRequest req) {
         Report neu = ticketService.createReport(req);
 
         return ResponseEntity
                 .created(URI.create("/api/moderation/tickets/" + neu.getExternalId()))
-                .body(neu.toDTO());
+                .body(dtoService.get(neu));
     }
 
     @GetMapping("/tickets/{id}")
-    public Ticket.DTO getTicket(@PathVariable("id") String externalId) {
-        return ticketService.getByExternalIdOrThrow(externalId).toDTO();
+    public IDTO getTicket(@PathVariable("id") String externalId) {
+        return dtoService.get(ticketService.getByExternalIdOrThrow(externalId));
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PatchMapping("/tickets/{id}")
-    public ResponseEntity<Ticket.DTO> patchTicket(
+    public ResponseEntity<IDTO> patchTicket(
             @PathVariable("id") String id,
             @RequestBody PatchTicketRequest req
     ) {
         Ticket updated = ticketService.patchTicket(id, req);
-        return ResponseEntity.ok(updated.toDTO());
+        return ResponseEntity.ok(dtoService.get(updated));
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.TICKET, resourceIdExpression = "#result.body.id")
     @PatchMapping("/reports/{id}")
-    public ResponseEntity<Ticket.DTO> patchReport(
+    public ResponseEntity<IDTO> patchReport(
             @PathVariable("id") String id,
             @RequestBody PatchReportRequest req
     ) {
         Ticket updated = ticketService.patchReport(id, req);
-        return ResponseEntity.ok(updated.toDTO());
+        return ResponseEntity.ok(dtoService.get(updated));
     }
 
     @GetMapping({"/tickets", "/tickets/"})
-    public Page<Ticket.DTO> listTickets(
+    public Page<IDTO> listTickets(
             @RequestParam(required = false) String q,
 
             @RequestParam(required = false) Boolean closed,
@@ -172,7 +176,7 @@ public class ModerationController {
 
         return ticketService
                 .searchTickets(search, page, size)
-                .map(Ticket::toDTO);
+                .map(t->dtoService.get(t, DTOLevel.CARD));
     }
 
     private TicketSearch parseSearch(

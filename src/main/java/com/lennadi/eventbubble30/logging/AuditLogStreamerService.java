@@ -1,6 +1,7 @@
 package com.lennadi.eventbubble30.logging;
 
 import com.lennadi.eventbubble30.features.db.EntityType;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 @Slf4j
 public class AuditLogStreamerService {
+    private final DtoService dtoService;
 
     /**
      * Best-effort multicast:
@@ -80,7 +82,7 @@ public class AuditLogStreamerService {
                                 emitter.send(
                                         SseEmitter.event()
                                                 .name("audit-log")
-                                                .data(logEntry.toDTO())
+                                                .data(dtoService.get(logEntry))
                                 );
                             } catch (Exception e) {
                                 log.debug("SSE client disconnected", e);

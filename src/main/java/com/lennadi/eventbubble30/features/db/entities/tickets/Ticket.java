@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities.tickets;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import jakarta.persistence.*;
@@ -109,22 +110,10 @@ public class Ticket{
     public record DTO(
             String id,
             Instant creationDate, Instant modificationDate,
-            String message, Benutzer.DTO createdBy,
+            String message, IDTO createdBy,
             boolean closed, boolean escalate,
-            String comment, Benutzer.DTO assignedTo,
+            String comment, IDTO assignedTo,
             String ticketType,
             Map<String, Object> details
-    ){};
-
-    public DTO toDTO(){
-        return new DTO(
-                this.externalId,
-                this.creationDate, this.modificationDate,
-                this.message, this.createdBy==null?null:this.createdBy.toDTO(),
-                this.closed, this.escalate,
-                this.comment, this.assignedTo==null?null:this.assignedTo.toDTO(),
-                this.getTicketType(),
-                this.getDetails()
-        );
-    }
+    ) implements IDTO {};
 }

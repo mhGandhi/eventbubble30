@@ -1,8 +1,10 @@
 package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.exceptions.ErrorCodes;
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.db.repository.BenutzerRepository;
@@ -52,6 +54,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordResetService  passwordResetService;
     private final EmailService emailService;
+    private final DtoService dtoService;
 
     // ==== DTO ====
 
@@ -81,7 +84,7 @@ public class AuthController {
             Instant accessTokenExpiry,
             String refreshToken,
             Instant refreshTokenExpiry,
-            Benutzer.DTO benutzerDTO
+            IDTO benutzerDTO
     ) {}
 
     @Audit(
@@ -90,23 +93,21 @@ public class AuthController {
             resourceIdExpression = "#request.getAttribute('auditResourceId')"
     )
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest req) {
+    public ResponseEntity<IDTO> signup(@Valid @RequestBody SignupRequest req) {
 
         // 1. CAPTCHA prüfen
         if (!captchaService.verify(req.captchaToken())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid CAPTCHA");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, ErrorCodes.BAD_CAPTCHA.toString());
         }
 
         // 2. prüfen ob username schon existiert
         if (benutzerRepository.existsByUsernameIgnoreCase(req.username())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Username already taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ErrorCodes.USERNAME_TAKEN.toString());
         }
 
         // 3. prüfen ob email existiert
         if (benutzerRepository.existsByEmail(req.email())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Email already taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ErrorCodes.EMAIL_TAKEN.toString());
         }
 
         // 4. Benutzer erstellen
@@ -122,7 +123,7 @@ public class AuthController {
         // 5. 201 Created zurück
         return ResponseEntity
                 .created(URI.create("/api/user/" + neu.getExternalId()))
-                .body(neu.toDTO());
+                .body(dtoService.get(neu));
     }
 
     @Audit(
@@ -172,7 +173,7 @@ public class AuthController {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         return ResponseEntity.ok(
-                new AuthResponse(accessToken, null, refreshToken, null, b.toDTO())//todo
+                new AuthResponse(accessToken, null, refreshToken, null, dtoService.get(b))//todo
         );
     }
 
@@ -199,7 +200,7 @@ public class AuthController {
 
             Benutzer benutzer = benutzerService.getBenutzer(details.getExternalId());
             return ResponseEntity.ok(
-                    new AuthResponse(newAccess, accessExpiry, refreshToken, refreshExpiry, benutzer.toDTO())//todo
+                    new AuthResponse(newAccess, accessExpiry, refreshToken, refreshExpiry, dtoService.get(benutzer))//todo
             );
         } catch (TokenException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());

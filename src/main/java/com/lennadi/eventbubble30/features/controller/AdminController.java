@@ -1,6 +1,8 @@
 package com.lennadi.eventbubble30.features.controller;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.logging.AuditLogRepository;
@@ -26,10 +28,11 @@ public class AdminController {
     private final AuditLogRepository auditLogRepository;
     private final ServerConfigService serverConfigService;
     private final AuditLogStreamerService  auditLogStreamerService;
+    private final DtoService dtoService;
 
 
     @GetMapping("/audit-log")
-    public Page<AuditLog.DTO> listAuditLogs(
+    public Page<IDTO> listAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
 
@@ -88,7 +91,7 @@ public class AdminController {
 
         return auditLogRepository
                 .findAll(finalSpec, pageable)
-                .map(AuditLog::toDTO);
+                .map(dtoService::get);
 
     }
 

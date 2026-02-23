@@ -262,7 +262,7 @@ public class BenutzerService {
     }
 
     public boolean isEventBookmarked(String veranstaltungExtId) {
-        Benutzer cur = getBenutzer(veranstaltungExtId);
+        Benutzer cur = getCurrentUserOrNull();
         if(cur == null) return false;
 
         return repository.existsByIdAndBookmarkedVeranstaltungen_ExternalId(cur.getId(), veranstaltungExtId);

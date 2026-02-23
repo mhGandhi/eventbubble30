@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.fileStorage.templates.StoredFile;
 import jakarta.persistence.*;
@@ -17,8 +18,6 @@ import java.time.Instant;
         @Index(name = "idx_profile_external_id", columnList = "external_id")
 })
 public class Profil {//todo inheritance based mit inheritance type joined stattdessen (aufwändig lass mal nd machen)
-    public static final EntityType TYPE = EntityType.PROFILE;
-
     @Id
     @Column(name="id", unique = true, nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
@@ -37,7 +36,7 @@ public class Profil {//todo inheritance based mit inheritance type joined stattd
     @Setter(AccessLevel.NONE)
     private Instant modificationDate;
 
-    public Profil() {
+    protected Profil() {
 
     }
 
@@ -74,8 +73,10 @@ public class Profil {//todo inheritance based mit inheritance type joined stattd
         this.name = pName;
     }
 
-    public record DTO(String id, String name, URL avatarURL, String bio) {}
-    public record SmallDTO(String id, String name, URL avatarURL) {}
-
-    public EntityType getType() {return TYPE;}
+    public record DTO (String id, String name, URL avatarURL, String bio) implements IDTO {}
+    public record CardDTO(String id, String name, URL avatarURL) implements IDTO {}
+    public record ModDTO(
+            String id, String name, URL avatarURL, String bio,
+            Instant creationDate, Instant modificationDate
+    ) implements IDTO {}
 }

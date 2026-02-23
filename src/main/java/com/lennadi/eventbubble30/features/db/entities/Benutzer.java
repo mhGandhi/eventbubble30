@@ -1,5 +1,6 @@
 package com.lennadi.eventbubble30.features.db.entities;
 
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -81,41 +82,19 @@ public class Benutzer extends BaseEntity{
         }
     }
 
-    public DTO toDTO() {
-        return new DTO(this.getExternalId(), this.username, this.roles);
-    }
-
     @Override
     public EntityType getType() {
         return TYPE;
     }
 
-    public record DTO(
-            String id,
-            String username,
-            Set<Role> roles
-    ) { }
+    public record DTO(String id, String username, Set<Role> roles) implements IDTO { }
 
-    public LargeDTO toLargeDTO() {
-        return new LargeDTO(
-                this.getExternalId(), this.getUsername(),
-                this.getEmail(), this.getRoles(),
-                this.getLastLoginDate(), this.getLastSeen(), this.getPasswordChangedAt(), this.getTokensInvalidatedAt(),
-                this.isEmailVerified()
-        );
-    }
-
-    public record LargeDTO(
-            String id,
-            String username,
-            String email,
-            Set<Role> roles,
-            Instant lastLoginDate,
-            Instant lastSeen,
-            Instant passwordChangedAt,
-            Instant tokensInvalidatedAt,
-            boolean emailVerified
-    ) { }
+    public record ModDTO(
+            String id, String username, Set<Role> roles,
+            String email, boolean emailVerified,
+            Instant lastLoginDate, Instant lastSeen,
+            Instant passwordChangedAt, Instant tokensInvalidatedAt
+    ) implements IDTO { }
 
     public enum Role{
         USER,

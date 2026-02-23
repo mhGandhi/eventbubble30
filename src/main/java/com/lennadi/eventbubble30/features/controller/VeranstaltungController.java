@@ -1,11 +1,14 @@
 package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.exceptions.ErrorCodes;
+import com.lennadi.eventbubble30.features.DTOLevel;
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.Location;
 import com.lennadi.eventbubble30.features.db.entities.Benutzer;
 import com.lennadi.eventbubble30.features.db.entities.Veranstaltung;
 import com.lennadi.eventbubble30.features.db.repository.VeranstaltungsRepository;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
 import com.lennadi.eventbubble30.features.service.BenutzerService;
@@ -30,6 +33,7 @@ public class VeranstaltungController {
 
     private final VeranstaltungService veranstaltungService;
     private final BenutzerService benutzerService;
+    private final DtoService dtoService;
 
     public record CreateVeranstaltungRequest(
             Instant termin,
@@ -69,8 +73,8 @@ public class VeranstaltungController {
     ) {}
 
     @GetMapping("/{id}")
-    public Veranstaltung.DTO getVeranstaltungById(@PathVariable String id) {
-        return veranstaltungService.toDTO(veranstaltungService.getVeranstaltungById(id));
+    public IDTO getVeranstaltungById(@PathVariable String id, @RequestParam(defaultValue = "FULL") DTOLevel level) {
+        return dtoService.get(veranstaltungService.getVeranstaltungById(id),benutzerService.isEventBookmarked(id), level);
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.EVENT, resourceIdParam = "id")
@@ -82,7 +86,7 @@ public class VeranstaltungController {
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.EVENT)
     @PostMapping("/create")
-    public ResponseEntity<Veranstaltung.DTO> createVeranstaltung(
+    public ResponseEntity<IDTO> createVeranstaltung(
             @Valid @RequestBody CreateVeranstaltungRequest req
     ) {
         Veranstaltung vs = veranstaltungService.createVeranstaltung(
@@ -95,12 +99,12 @@ public class VeranstaltungController {
 
         return ResponseEntity
                 .created(URI.create("/api/events/" + vs.getExternalId()))
-                .body(veranstaltungService.toDTO(vs));
+                .body(dtoService.get(vs,benutzerService.isEventBookmarked(vs.getExternalId())));
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.EVENT, resourceIdParam = "id")
     @PatchMapping("/{id}")
-    public ResponseEntity<Veranstaltung.DTO> patchVeranstaltung(
+    public ResponseEntity<IDTO> patchVeranstaltung(
             @PathVariable String id,
             @Valid @RequestBody PatchVeranstaltungRequest req
     ) {
@@ -114,11 +118,11 @@ public class VeranstaltungController {
 
         return ResponseEntity
                 .ok()
-                .body(veranstaltungService.toDTO(vs));
+                .body(dtoService.get(vs,benutzerService.isEventBookmarked(vs.getExternalId())));
     }
 
     @GetMapping({"", "/"})
-    public Page<Veranstaltung.DTO> listVeranstaltungen(
+    public Page<IDTO> listVeranstaltungen(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String bbox,
@@ -141,7 +145,7 @@ public class VeranstaltungController {
 
         return veranstaltungService
                 .search(search, page, size)
-                .map(veranstaltungService::toDTO);
+                .map(v->dtoService.get(v,benutzerService.isEventBookmarked(v.getExternalId()),DTOLevel.CARD));
     }
 
     private static final double MAX_RADIUS_KM = 100.0;
@@ -253,14 +257,14 @@ public class VeranstaltungController {
     }
 
     @PostMapping("/{id}/bookmark")
-    public Veranstaltung.DTO bookmark(@PathVariable String id) {
+    public IDTO bookmark(@PathVariable String id) {
         Veranstaltung v = veranstaltungService.getVeranstaltungById(id);
-        return veranstaltungService.bookmark(v, true);
+        return dtoService.get(veranstaltungService.bookmark(v, true),benutzerService.isEventBookmarked(v.getExternalId()));
     }
 
     @DeleteMapping("/{id}/bookmark")
-    public Veranstaltung.DTO unbookmark(@PathVariable String id) {
+    public IDTO unbookmark(@PathVariable String id) {
         Veranstaltung v = veranstaltungService.getVeranstaltungById(id);
-        return veranstaltungService.bookmark(v, false);
+        return dtoService.get(veranstaltungService.bookmark(v, false),benutzerService.isEventBookmarked(v.getExternalId()));
     }
 }

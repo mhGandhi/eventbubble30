@@ -122,14 +122,6 @@ public class ProfilService {
         return benutzerService.getCurrentUser().getExternalId();
     }
 
-    public Profil.DTO toDTO(Profil p){
-        return new Profil.DTO(p.getExternalId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null, p.getBio());
-    }
-
-    public Profil.SmallDTO toSmallDTO(Profil p){
-        return new Profil.SmallDTO(p.getExternalId(), p.getName(), p.hasAvatar()?fileManagerService.getURL(p.getAvatar()):null);
-    }
-
     public boolean exists(String extId) {
         return profilRepo.existsByExternalId(extId);
     }

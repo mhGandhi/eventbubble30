@@ -1,8 +1,10 @@
 package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.features.DTOLevel;
+import com.lennadi.eventbubble30.features.IDTO;
 import com.lennadi.eventbubble30.features.db.EntityType;
 import com.lennadi.eventbubble30.features.db.entities.Profil;
+import com.lennadi.eventbubble30.features.service.DtoService;
 import com.lennadi.eventbubble30.features.service.ProfilService;
 import com.lennadi.eventbubble30.logging.Audit;
 import com.lennadi.eventbubble30.logging.AuditLog;
@@ -23,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -31,6 +32,7 @@ import java.util.Locale;
 public class ProfilController {
 
     private final ProfilService profilService;
+    private final DtoService dtoService;
 
     // ----------------------------------------------------------
     // DTOs
@@ -69,7 +71,7 @@ public class ProfilController {
 
     @Audit(action = AuditLog.Action.CREATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PostMapping("/{segment}")
-    public ResponseEntity<Profil.DTO> createProfil(
+    public ResponseEntity<IDTO> createProfil(
             @PathVariable String segment,
             @Valid @RequestBody CreateProfilRequest request
     ) {
@@ -78,43 +80,35 @@ public class ProfilController {
 
         return ResponseEntity
                 .created(URI.create("/api/profiles/" + extId))
-                .body(profilService.toDTO(created));
+                .body(dtoService.get(created));
     }
 
     @GetMapping("/{segment}")
-    public ResponseEntity<?> getProfil(
+    public ResponseEntity<IDTO> getProfil(
             @PathVariable String segment,
-            @RequestParam(defaultValue = "full") String level
+            @RequestParam(defaultValue = "FULL") DTOLevel level
     ) throws BadRequestException {
-        DTOLevel dtoLevel;
-        try{
-            dtoLevel = DTOLevel.valueOf(level.toUpperCase(Locale.ROOT));
-        }catch(Exception e){
-            throw new BadRequestException(e.getMessage());
-        }
-
         String extId = resolveExtId(segment);
         Profil profil = profilService.getProfil(extId);
 
         return ResponseEntity.ok(
-                dtoLevel==DTOLevel.CARD ?
-                profilService.toSmallDTO(profil)
-                : profilService.toDTO(profil)
+                dtoService.get(profil, level)
         );
     }
 
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PatchMapping("/{segment}")
-    public ResponseEntity<Profil.DTO> updateProfil(
+    public ResponseEntity<IDTO> updateProfil(
             @PathVariable String segment,
             @Valid @RequestBody UpdateProfilRequest request
     ) {
         String extId = resolveExtId(segment);
         Profil updated = profilService.updateProfil(extId, request);
-        return ResponseEntity.ok(profilService.toDTO(updated));
+        return ResponseEntity.ok(dtoService.get(updated));
     }
 
-    @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")    @DeleteMapping("/{segment}")
+    @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
+    @DeleteMapping("/{segment}")
     public ResponseEntity<Void> deleteProfil(@PathVariable String segment) {
         String extId = resolveExtId(segment);
 
@@ -132,13 +126,12 @@ public class ProfilController {
     }
 
 
-
     @Audit(action = AuditLog.Action.UPDATE, resourceType = EntityType.PROFILE, resourceIdExpression = "#result.body.id")
     @PutMapping(
             value = "/{segment}/avatar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public Profil.DTO uploadAvatar(
+    public IDTO uploadAvatar(
             @PathVariable String segment,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
@@ -148,12 +141,12 @@ public class ProfilController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file");
         }
 
-        return profilService.toDTO(profilService.updateAvatar(extId, file));
+        return dtoService.get(profilService.updateAvatar(extId, file));
     }
 
     @Audit(action = AuditLog.Action.DELETE, resourceType = EntityType.PROFILE, resourceIdExpression = "#request.getAttribute('auditResourceId')")
     @DeleteMapping("/{segment}/avatar")
-    public ResponseEntity<?> deleteAvatar(@PathVariable String segment) {
+    public ResponseEntity<Void> deleteAvatar(@PathVariable String segment) {
         String extId = resolveExtId(segment);
         RequestContextHolder.currentRequestAttributes()
                 .setAttribute("auditResourceId", extId, RequestAttributes.SCOPE_REQUEST);
@@ -175,6 +168,6 @@ public class ProfilController {
         return ResponseEntity.ok(URI.create(url.toString()));
     }
 
-    //todo events // was?
+    //todo events // was? (mby events von profil?)
 
 }
