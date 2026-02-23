@@ -582,7 +582,7 @@ async function buildUserSnippet(besitzer) {
 
 ////////////////////////////////AUDIT
 function renderAuditEntry(entry) {
-    const safePayload = JSON.stringify(entry.payload);
+    const payloadPretty = formatPayloadForDisplay(entry.payload);
     let userStr = "?";
 
     if (entry.user) {
@@ -597,24 +597,61 @@ function renderAuditEntry(entry) {
     div.classList.add("audit", entry.success ? "success" : "fail");
 
     div.innerHTML = `
-        <details>
-            <summary>
-                <b>${entry.action}</b> durch <b>${userStr}</b>
-                an <b>${entry.resourceType} #${entry.resourceId || "-"}</b>
-                <small class="ipaddress">${entry.ipAddress}</small>
-                <small class="timestamp ago" data-timestamp="${entry.timestamp}"></small>
-            </summary>
-            <small class="timestamp">(${entry.timestamp})</small>
-            <small>[${entry.id}]</small><br>
-            Endpoint: ${entry.endpoint}<br>
-            Payload: ${safePayload}
-        </details>
+      <details>
+        <summary class="audit-summary">
+          <span class="audit-summary-left">
+            <b>${escapeHtml(entry.action)}</b> durch <b>${escapeHtml(userStr)}</b>
+            an <b>${escapeHtml(entry.resourceType)} #${escapeHtml(entry.resourceId || "-")}</b>
+            <small class="ipaddress">${escapeHtml(entry.ipAddress || "")}</small>
+            <small class="timestamp ago" data-timestamp="${escapeHtml(entry.timestamp)}"></small>
+          </span>
+    
+          <small class="audit-endpoint" title="${escapeHtml(entry.endpoint || "")}">
+            ${escapeHtml(entry.endpoint || "")}
+          </small>
+        </summary>
+    
+        <small class="timestamp">(${escapeHtml(entry.timestamp)})</small>
+        <small>[${escapeHtml(entry.id)}]</small><br>
+        Payload:
+        <pre class="audit-payload">${payloadPretty}</pre>
+      </details>
     `;
 
     // Initial render
     div.querySelector(".ago").textContent = `• ${timeAgo(entry.timestamp)}`;
 
     return div;
+}
+
+function formatPayloadForDisplay(payload) {
+    if (payload == null) return "";
+
+    // If backend sends a JSON string, parse it once to remove escaping.
+    let value = payload;
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+
+        // Try JSON parse only if it looks like JSON
+        if (
+            (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+            (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+            (trimmed.startsWith('"') && trimmed.endsWith('"'))
+        ) {
+            try {
+                value = JSON.parse(trimmed);
+            } catch {
+                // keep as raw string if parsing fails
+                value = payload;
+            }
+        }
+    }
+
+    // Pretty print objects/arrays; keep strings as-is.
+    if (typeof value === "object") {
+        return escapeHtml(JSON.stringify(value, null, 2));
+    }
+    return escapeHtml(String(value));
 }
 
 async function loadLatestAuditLogs(q = null, domId = null) {

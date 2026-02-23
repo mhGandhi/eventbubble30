@@ -380,6 +380,40 @@ button.danger {
 .audit-live-status.connecting { color: #f1c40f; }
 .audit-live-status.error      { color: #e74c3c; }
 
+.audit-payload{
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.06);
+    overflow: auto;
+    white-space: pre;       /* keep formatting */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.audit-summary{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.audit-summary-left{
+    min-width: 0;           /* allows ellipsis on the right side item */
+    flex: 1 1 auto;
+}
+
+.audit-endpoint{
+    flex: 0 1 40%;
+    text-align: right;
+    opacity: 0.65;          /* subtle */
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* long endpoints don’t blow up layout */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
 /* -------------------------
    Mobile tweaks
 ------------------------- */
