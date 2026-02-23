@@ -287,8 +287,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /////////////////////////////UTIL
-function escapeHtml(str) {
-    if (!str) return "";
+function escapeHtml(value) {
+    if (value === null || value === undefined) return "";
+    const str = String(value); // <-- ensures replace exists
     return str.replace(/[&<>"']/g, c => ({
         "&": "&amp;",
         "<": "&lt;",
