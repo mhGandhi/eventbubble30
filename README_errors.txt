@@ -1,7 +1,4 @@
 public record ApiErrorResponse(
-        Instant timestamp,
-        int status,
-        String error,
         String message,
         String path,
         Map<String, String> validationErrors,
@@ -10,11 +7,10 @@ public record ApiErrorResponse(
 
 
 das ist eine error response.
+timestamp, code (4xx,5xx dies das) sind im Header
 
-status -> 500, 404, 401 etc
-error -> zugehöriger text (kommt vlt weg weil wozu digga)
-message -> noch was dazu. Wenn mit "E_" anfängt dann ist das maschinenlesbar und kann ausgewertet werden um zeugs anzuzeigen.
-validationErrors -> wenn irgendwelche Werte abgelehnt werden (falsche Länge, falsches format, leerer Wert etc)
+message -> noch was dazu. Wenn mit "E_" anfängt dann ist das maschinenlesbar und kann ausgewertet werden um Zeugs anzuzeigen.
+validationErrors -> wenn irgendwelche Werte abgelehnt werden (falsche Länge, falsches Format, leerer Wert etc)
 
 Zu message:
 Oft noch einfache Texte, ändert sich nach und nach zu "E_[...]". Nur in dem Maschinenformat an Nutzer weiterleiten!!!
