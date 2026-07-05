@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lennadi.eventbubble30.exceptions.ApiErrorResponse;
 import com.lennadi.eventbubble30.filter.JwtAuthFilter;
 import com.lennadi.eventbubble30.filter.LastSeenFilter;
+import com.lennadi.eventbubble30.logging.RequestLogFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,8 @@ public class SecurityConfiguration {
     private final BenutzerDetailsService benutzerDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
     private final ObjectMapper objectMapper;
+
+    private final RequestLogFilter requestLogFilter;
 
     @Bean
     public SecurityFilterChain secFilterChain(HttpSecurity http, LastSeenFilter lastSeenFilter) throws Exception {
@@ -86,7 +89,9 @@ public class SecurityConfiguration {
 
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(lastSeenFilter, JwtAuthFilter.class);
+                .addFilterAfter(lastSeenFilter, JwtAuthFilter.class)
+
+                .addFilterAfter(requestLogFilter, LastSeenFilter.class);
         ;
 
         return http.build();

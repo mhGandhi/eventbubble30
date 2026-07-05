@@ -26,3 +26,6 @@ app:
     refresh-token-validity-ms: 2592000000 #30d
 cleanup:
   BenutzerEmailVer-d: 7
+telegram:
+  bot-token: ${TELEGRAM_BOT_TOKEN:_}
+  chat-id: ${TELEGRAM_CHAT_ID:_}
