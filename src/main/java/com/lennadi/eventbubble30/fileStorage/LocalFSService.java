@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -104,6 +106,17 @@ public class LocalFSService implements FileStorageService {
         try {
             return Files.exists(filePath) ? Files.newInputStream(filePath) : null;
         } catch (IOException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Resource getFileResource(String key) {
+        Path filePath = resolveFilePath(key);
+        try {
+            Resource resource = new UrlResource(filePath.toUri());
+            return (resource.exists() && resource.isReadable()) ? resource : null;
+        } catch (MalformedURLException e) {
             return null;
         }
     }

@@ -1,5 +1,7 @@
 package com.lennadi.eventbubble30.fileStorage;
 
+import org.springframework.core.io.Resource;
+
 import java.io.InputStream;
 import java.net.URL;
 
@@ -34,6 +36,11 @@ public interface FileStorageService {
      * Returns the MIME type for a stored file.
      */
     String getMimeType(String key);
+
+    /**
+     * Used to provide Content in Resource Form
+     */
+    Resource getFileResource(String key);
 
 
     //Todo s3 Speicher (temporäre URLs, andere Domain und anderer Path)

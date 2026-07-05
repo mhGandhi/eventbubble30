@@ -1,7 +1,9 @@
 package com.lennadi.eventbubble30.fileStorage;
 
+import jdk.jshell.spi.ExecutionControl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -79,4 +81,8 @@ public class MemoryFSService implements FileStorageService{
         return file.mimeType;
     }
 
+    @Override
+    public Resource getFileResource(String key) {
+        return null; //TODO
+    }
 }
