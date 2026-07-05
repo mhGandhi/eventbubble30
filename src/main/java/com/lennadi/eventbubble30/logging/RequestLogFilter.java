@@ -54,6 +54,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/base.js",
             "/style.css",
             "/json",
+            "/SDK/webLanguage",
             "/"
     );
 
