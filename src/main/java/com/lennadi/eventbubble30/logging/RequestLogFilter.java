@@ -55,7 +55,8 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/style.css",
             "/json",
             "/SDK/webLanguage",
-            "/"
+            "/",
+            "/ui"
     );
 
     private static final List<String> IGNORED_PATH_PREFIXES = List.of(
