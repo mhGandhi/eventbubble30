@@ -31,7 +31,7 @@ import java.util.function.Predicate;
 public class RequestLogFilter extends OncePerRequestFilter {
 
     private static final Duration GEO_TIMEOUT = Duration.ofSeconds(2);
-    private static final int SEND_DELAY_SECONDS = 3;
+    private static final int SEND_DELAY_SECONDS = 5;
 
     private static final Set<String> SUPPRESSED_PATH_SUBSTRINGS = Set.of(
             "/.env",
@@ -53,7 +53,8 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/sitemap.xml",
             "/base.js",
             "/style.css",
-            "/json"
+            "/json",
+            "/"
     );
 
     private static final List<String> IGNORED_PATH_PREFIXES = List.of(
@@ -96,7 +97,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
 
         String ip = extractClientIp(request);
-        String userAgent = shorten(request.getHeader("User-Agent"), 120);
+        String userAgent = shorten(request.getHeader("User-Agent"), 300);
         String bucketKey = ip + "|" + userAgent;
 
         Bucket bucket = buckets.computeIfAbsent(bucketKey, k -> {
