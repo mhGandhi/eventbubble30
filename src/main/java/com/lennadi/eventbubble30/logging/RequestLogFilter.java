@@ -44,7 +44,14 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/.git/config",
             "/wp-config.php",
             "/server-status",
-            "/actuator/env"
+            "/actuator/env",
+            "/service-account.json",
+            "/docker-compose.prod.yml",
+            "/docker-compose.yml",
+            "/secrets.yml",
+            "/application.properties",
+            "/config.js",
+            "/config.php"
     );
 
     private static final Set<String> IGNORED_EXACT_PATHS = Set.of(
@@ -56,7 +63,15 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/json",
             "/SDK/webLanguage",
             "/",
-            "/ui"
+
+            "/ui",
+            "/ui/",
+            "/wsman",
+            "/mcp",
+            "/zc",
+            "/sse",
+            "/local.settings.json",
+            "/codex/auth.json"
     );
 
     private static final List<String> IGNORED_PATH_PREFIXES = List.of(
@@ -69,7 +84,14 @@ public class RequestLogFilter extends OncePerRequestFilter {
             "/js/",
             "/images/",
             "/img/",
-            "/webjars/"
+            "/webjars/",
+            "/api",
+            "/goform",
+            "/onvif",
+            "/root",
+            "/storage",
+            "/.aws",
+            "/aws"
     );
 
     private final TelegramNotifier telegramNotifier;
