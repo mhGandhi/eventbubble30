@@ -86,7 +86,8 @@ public class RequestLogFilter extends OncePerRequestFilter {
     private final List<Predicate<Bucket>> suppressors = List.of(
             this::isOnly404Noise,
             this::containsSuppressedProbe,
-            this::containsOnlyIgnoredPaths
+            this::containsOnlyIgnoredPaths,
+            this::outsideGermany
     );
 
     @Override
@@ -189,6 +190,13 @@ public class RequestLogFilter extends OncePerRequestFilter {
                 && bucket.entries.stream()
                 .map(RequestEntry::path)
                 .allMatch(this::isIgnoredPath);
+    }
+
+    private boolean outsideGermany(Bucket bucket) {
+        if(!bucket.locationFuture.isDone()){
+            return false;
+        }
+        return !bucket.location.toLowerCase().contains("germany");
     }
 
     private boolean isIgnoredPath(String path) {
