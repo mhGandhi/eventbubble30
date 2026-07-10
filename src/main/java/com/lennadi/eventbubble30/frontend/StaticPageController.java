@@ -47,9 +47,21 @@ public class StaticPageController {
         return "event";
     }
 
+    @GetMapping(value = "/hase-meme", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> haseBildH() throws IOException {
+        telegramNotifier.send("HASE (-)");
+
+        ClassPathResource imgFile = new ClassPathResource("static/images/hase.jpg");
+        byte[] bytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(bytes);
+    }
     @GetMapping(value = "/hase_meme", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> haseBild() throws IOException {
-        telegramNotifier.send("HASE");
+        telegramNotifier.send("HASE (_)");
 
         ClassPathResource imgFile = new ClassPathResource("static/images/hase.jpg");
         byte[] bytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
