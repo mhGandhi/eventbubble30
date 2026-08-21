@@ -49,8 +49,6 @@ public class StaticPageController {
 
     @GetMapping(value = "/hase-meme", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> haseBildH() throws IOException {
-        telegramNotifier.send("HASE (-)");
-
         ClassPathResource imgFile = new ClassPathResource("static/images/hase.jpg");
         byte[] bytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
 
@@ -61,8 +59,6 @@ public class StaticPageController {
     }
     @GetMapping(value = "/hase_meme", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> haseBild() throws IOException {
-        telegramNotifier.send("HASE (_)");
-
         ClassPathResource imgFile = new ClassPathResource("static/images/hase.jpg");
         byte[] bytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
 
