@@ -2,12 +2,10 @@ package com.lennadi.eventbubble30.features.controller;
 
 import com.lennadi.eventbubble30.fileStorage.FileStorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
@@ -19,7 +17,7 @@ public class FileController {
 
     private final FileStorageService storage;
 
-    private static final String SHARED_PASSWORD = "abcdiekatzeliefimschnee";
+    private static final String SHARED_STORAGE_KEYHAHAHA = "abcdiekatzeliefimschnee";
 
     @GetMapping("/{key}")
     public ResponseEntity<?> getFile(
@@ -104,7 +102,7 @@ public class FileController {
 
             // parts[1] is the password in a "user:pass" payload
             String providedPassword = parts.length > 1 ? parts[1] : parts[0];
-            return SHARED_PASSWORD.equals(providedPassword);
+            return SHARED_STORAGE_KEYHAHAHA.equals(providedPassword);
         } catch (Exception e) {
             return false;
         }
